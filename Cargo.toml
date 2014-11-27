@@ -1,0 +1,5 @@
+[package]
+
+name = "ascii"
+version = "0.0.1"
+authors = ["Simon Sapin <simon.sapin@exyr.org>"]
