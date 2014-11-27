@@ -12,18 +12,23 @@
 
 //! Operations on ASCII strings and characters
 
+#![feature(macro_rules, globs)]
 #![unstable = "unsure about placement and naming"]
 #![allow(deprecated)]
 
-use core::kinds::Sized;
-use fmt;
-use iter::IteratorExt;
-use mem;
-use option::{Option, Some, None};
-use slice::{SlicePrelude, AsSlice};
-use str::{Str, StrPrelude};
-use string::{String, IntoString};
-use vec::Vec;
+// FIXME: Work around std::ascii traits being in the prelude
+#![no_implicit_prelude]
+
+use std::kinds::Sized;
+use std::fmt;
+use std::mem;
+use std::iter::IteratorExt;
+use std::option::{Option, Some, None};
+use std::slice::{SlicePrelude, AsSlice};
+use std::str::{Str, StrPrelude};
+use std::string::{String, IntoString};
+use std::vec::Vec;
+
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
 #[deriving(Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
@@ -626,10 +631,9 @@ static ASCII_UPPER_MAP: [u8, ..256] = [
 
 #[cfg(test)]
 mod tests {
-    use prelude::*;
+    use std::prelude::*;
     use super::*;
-    use char::from_u32;
-    use str::StrPrelude;
+    use std::char::from_u32;
 
     macro_rules! v2ascii (
         ( [$($e:expr),*]) => (&[$(Ascii{chr:$e}),*]);
