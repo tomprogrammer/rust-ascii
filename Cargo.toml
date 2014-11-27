@@ -3,3 +3,6 @@
 name = "ascii"
 version = "0.0.1"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
+
+description = "Copy of std::ascii, see README.md and https://github.com/rust-lang/rfcs/pull/486"
+license = "Apache-2.0 / MIT"
