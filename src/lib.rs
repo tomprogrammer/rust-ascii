@@ -35,23 +35,11 @@ impl Ascii {
         self.chr
     }
 
-    /// Deprecated: use `as_byte` isntead.
-    #[deprecated = "use as_byte"]
-    pub fn to_byte(self) -> u8 {
-        self.as_byte()
-    }
-
     /// Converts an ascii character into a `char`.
     #[inline]
     #[unstable = "recently renamed"]
     pub fn as_char(&self) -> char {
         self.chr as char
-    }
-
-    /// Deprecated: use `as_char` isntead.
-    #[deprecated = "use as_char"]
-    pub fn to_char(self) -> char {
-        self.as_char()
     }
 
     /// Convert to lowercase.
@@ -66,13 +54,6 @@ impl Ascii {
     #[stable]
     pub fn to_uppercase(&self) -> Ascii {
         Ascii{chr: self.chr.to_ascii_uppercase()}
-    }
-
-    /// Compares two ascii characters of equality, ignoring case.
-    #[inline]
-    #[deprecated = "normalize with to_lowercase"]
-    pub fn eq_ignore_case(self, other: Ascii) -> bool {
-        self.chr.eq_ignore_ascii_case(&other.chr)
     }
 
     // the following methods are like ctype, and the implementation is inspired by musl
@@ -281,26 +262,6 @@ impl OwnedAsciiCast<[u8]> for Vec<u8> {
 pub trait AsciiStr for Sized? {
     /// Convert to a string.
     fn as_str_ascii<'a>(&'a self) -> &'a str;
-
-    /// Deprecated: use `to_lowercase`
-    #[deprecated="renamed `to_lowercase`"]
-    fn to_lower(&self) -> Vec<Ascii>;
-
-    /// Convert to vector representing a lower cased ascii string.
-    #[deprecated = "use iterators instead"]
-    fn to_lowercase(&self) -> Vec<Ascii>;
-
-    /// Deprecated: use `to_uppercase`
-    #[deprecated="renamed `to_uppercase`"]
-    fn to_upper(&self) -> Vec<Ascii>;
-
-    /// Convert to vector representing a upper cased ascii string.
-    #[deprecated = "use iterators instead"]
-    fn to_uppercase(&self) -> Vec<Ascii>;
-
-    /// Compares two Ascii strings ignoring case.
-    #[deprecated = "use iterators instead"]
-    fn eq_ignore_case(&self, other: &[Ascii]) -> bool;
 }
 
 #[experimental = "may be replaced by generic conversion traits"]
@@ -308,31 +269,6 @@ impl AsciiStr for [Ascii] {
     #[inline]
     fn as_str_ascii<'a>(&'a self) -> &'a str {
         unsafe { mem::transmute(self) }
-    }
-
-    #[inline]
-    fn to_lower(&self) -> Vec<Ascii> {
-      self.to_lowercase()
-    }
-
-    #[inline]
-    fn to_lowercase(&self) -> Vec<Ascii> {
-        self.iter().map(|a| a.to_lowercase()).collect()
-    }
-
-    #[inline]
-    fn to_upper(&self) -> Vec<Ascii> {
-      self.to_uppercase()
-    }
-
-    #[inline]
-    fn to_uppercase(&self) -> Vec<Ascii> {
-        self.iter().map(|a| a.to_uppercase()).collect()
-    }
-
-    #[inline]
-    fn eq_ignore_case(&self, other: &[Ascii]) -> bool {
-        self.iter().zip(other.iter()).all(|(&a, &b)| a.eq_ignore_case(b))
     }
 }
 
@@ -383,20 +319,10 @@ mod tests {
 
     #[test]
     fn test_ascii() {
-        assert_eq!(65u8.to_ascii().to_byte(), 65u8);
-        assert_eq!(65u8.to_ascii().to_char(), 'A');
-        assert_eq!('A'.to_ascii().to_char(), 'A');
-        assert_eq!('A'.to_ascii().to_byte(), 65u8);
-
-        assert_eq!('A'.to_ascii().to_lowercase().to_char(), 'a');
-        assert_eq!('Z'.to_ascii().to_lowercase().to_char(), 'z');
-        assert_eq!('a'.to_ascii().to_uppercase().to_char(), 'A');
-        assert_eq!('z'.to_ascii().to_uppercase().to_char(), 'Z');
-
-        assert_eq!('@'.to_ascii().to_lowercase().to_char(), '@');
-        assert_eq!('['.to_ascii().to_lowercase().to_char(), '[');
-        assert_eq!('`'.to_ascii().to_uppercase().to_char(), '`');
-        assert_eq!('{'.to_ascii().to_uppercase().to_char(), '{');
+        assert_eq!(65u8.to_ascii().as_byte(), 65u8);
+        assert_eq!(65u8.to_ascii().as_char(), 'A');
+        assert_eq!('A'.to_ascii().as_char(), 'A');
+        assert_eq!('A'.to_ascii().as_byte(), 65u8);
 
         assert!('0'.to_ascii().is_digit());
         assert!('9'.to_ascii().is_digit());
@@ -417,24 +343,6 @@ mod tests {
         let v = vec![40u8, 32u8, 59u8];
         assert_eq!(v.as_slice().to_ascii(), b);
         assert_eq!("( ;".to_string().as_slice().to_ascii(), b);
-
-        assert_eq!("abCDef&?#".to_ascii().to_lowercase().into_string(), "abcdef&?#".to_string());
-        assert_eq!("abCDef&?#".to_ascii().to_uppercase().into_string(), "ABCDEF&?#".to_string());
-
-        assert_eq!("".to_ascii().to_lowercase().into_string(), "".to_string());
-        assert_eq!("YMCA".to_ascii().to_lowercase().into_string(), "ymca".to_string());
-        let mixed = "abcDEFxyz:.;".to_ascii();
-        assert_eq!(mixed.to_uppercase().into_string(), "ABCDEFXYZ:.;".to_string());
-    }
-
-    #[test]
-    fn test_ascii_vec_ng() {
-        assert_eq!("abCDef&?#".to_ascii().to_lowercase().into_string(), "abcdef&?#".to_string());
-        assert_eq!("abCDef&?#".to_ascii().to_uppercase().into_string(), "ABCDEF&?#".to_string());
-        assert_eq!("".to_ascii().to_lowercase().into_string(), "".to_string());
-        assert_eq!("YMCA".to_ascii().to_lowercase().into_string(), "ymca".to_string());
-        let mixed = "abcDEFxyz:.;".to_ascii();
-        assert_eq!(mixed.to_uppercase().into_string(), "ABCDEFXYZ:.;".to_string());
     }
 
     #[test]
