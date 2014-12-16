@@ -145,13 +145,13 @@ impl<'a> fmt::Show for Ascii {
 /// Trait for converting into an ascii type.
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait AsciiCast<T, U = Self> for Sized?: AsciiExt<U> {
-    /// Convert to an ascii type, return None on non-ASCII input.
+    /// Convert to an ascii type, return Err(()) on non-ASCII input.
     #[inline]
-    fn to_ascii(&self) -> Option<T> {
+    fn to_ascii(&self) -> Result<T, ()> {
         if self.is_ascii() {
-            Some(unsafe { self.to_ascii_nocheck() })
+            Ok(unsafe { self.to_ascii_nocheck() })
         } else {
-            None
+            Err(())
         }
     }
 
@@ -195,16 +195,16 @@ impl AsciiCast<Ascii> for char {
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait OwnedAsciiCast<Sized? T, U = Self>
 where T: BorrowFrom<Self> + AsciiExt<U> {
-    /// Take ownership and cast to an ascii vector. Return None on non-ASCII input.
+    /// Take ownership and cast to an ascii vector. Return Err(()) on non-ASCII input.
     #[inline]
-    fn into_ascii(self) -> Option<Vec<Ascii>> {
+    fn into_ascii(self) -> Result<Vec<Ascii>, Self> {
         if {
             let borrowed: &T = BorrowFrom::borrow_from(&self);
             borrowed.is_ascii()
         } {
-            Some(unsafe { self.into_ascii_nocheck() })
+            Ok(unsafe { self.into_ascii_nocheck() })
         } else {
-            None
+            Err(self)
         }
     }
 
@@ -316,9 +316,9 @@ mod tests {
         assert!(!'/'.to_ascii().unwrap().is_digit());
         assert!(!':'.to_ascii().unwrap().is_digit());
 
-        assert!((0x1fu8).to_ascii().unwrap().is_control());
+        assert!(0x1f_u8.to_ascii().unwrap().is_control());
         assert!(!' '.to_ascii().unwrap().is_control());
-        assert!((0x7fu8).to_ascii().unwrap().is_control());
+        assert!(0x7f_u8.to_ascii().unwrap().is_control());
     }
 
     #[test]
@@ -357,32 +357,32 @@ mod tests {
 
     #[test]
     fn test_opt() {
-        assert_eq!(65u8.to_ascii(), Some(Ascii { chr: 65u8 }));
-        assert_eq!(255u8.to_ascii(), None);
+        assert_eq!(65u8.to_ascii(), Ok(Ascii { chr: 65u8 }));
+        assert_eq!(255u8.to_ascii(), Err(()));
 
-        assert_eq!('A'.to_ascii(), Some(Ascii { chr: 65u8 }));
-        assert_eq!('λ'.to_ascii(), None);
+        assert_eq!('A'.to_ascii(), Ok(Ascii { chr: 65u8 }));
+        assert_eq!('λ'.to_ascii(), Err(()));
 
-        assert_eq!("zoä华".to_ascii(), None);
+        assert_eq!("zoä华".to_ascii(), Err(()));
 
         let test1 = &[127u8, 128u8, 255u8];
-        assert_eq!((test1).to_ascii(), None);
+        assert_eq!(test1.to_ascii(), Err(()));
 
         let v = [40u8, 32u8, 59u8];
         let v2: &[_] = v2ascii!(&[40, 32, 59]);
-        assert_eq!(v.to_ascii(), Some(v2));
+        assert_eq!(v.to_ascii(), Ok(v2));
         let v = [127u8, 128u8, 255u8];
-        assert_eq!(v.to_ascii(), None);
+        assert_eq!(v.to_ascii(), Err(()));
 
         let v = "( ;";
-        assert_eq!(v.to_ascii(), Some(v2));
-        assert_eq!("zoä华".to_ascii(), None);
+        assert_eq!(v.to_ascii(), Ok(v2));
+        assert_eq!("zoä华".to_ascii(), Err(()));
 
-        assert_eq!((vec![40u8, 32u8, 59u8]).into_ascii(), Some(vec2ascii![40, 32, 59]));
-        assert_eq!((vec![127u8, 128u8, 255u8]).into_ascii(), None);
+        assert_eq!(vec![40u8, 32u8, 59u8].into_ascii(), Ok(vec2ascii![40, 32, 59]));
+        assert_eq!(vec![127u8, 128u8, 255u8].into_ascii(), Err(vec![127u8, 128u8, 255u8]));
 
-        assert_eq!(("( ;".to_string()).into_ascii(), Some(vec2ascii![40, 32, 59]));
-        assert_eq!(("zoä华".to_string()).into_ascii(), None);
+        assert_eq!("( ;".to_string().into_ascii(), Ok(vec2ascii![40, 32, 59]));
+        assert_eq!("zoä华".to_string().into_ascii(), Err("zoä华".to_string()));
     }
 
     #[test]
