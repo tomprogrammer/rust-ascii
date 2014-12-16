@@ -4,5 +4,6 @@ name = "ascii"
 version = "0.1.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 
-description = "Copy of std::ascii, see README.md and https://github.com/rust-lang/rfcs/pull/486"
+description = "`Ascii` type and related functionality, previously in `std::ascii`."
 license = "Apache-2.0 / MIT"
+repository = "https://github.com/SimonSapin/rust-ascii"
