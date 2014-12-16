@@ -145,13 +145,6 @@ impl<'a> fmt::Show for Ascii {
 /// Trait for converting into an ascii type.
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait AsciiCast<T, U = Self> for Sized?: AsciiExt<U> {
-    /// Convert to an ascii type, panic on non-ASCII input.
-    #[inline]
-    fn to_ascii(&self) -> T {
-        assert!(self.is_ascii());
-        unsafe {self.to_ascii_nocheck()}
-    }
-
     /// Convert to an ascii type, return None on non-ASCII input.
     #[inline]
     fn to_ascii_opt(&self) -> Option<T> {
@@ -202,19 +195,6 @@ impl AsciiCast<Ascii> for char {
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait OwnedAsciiCast<Sized? T, U = Self>
 where T: BorrowFrom<Self> + AsciiExt<U> {
-    /// Take ownership and cast to an ascii vector.
-    /// # Panics
-    ///
-    /// Panic on non-ASCII input.
-    #[inline]
-    fn into_ascii(self) -> Vec<Ascii> {
-        assert!({
-            let borrowed: &T = BorrowFrom::borrow_from(&self);
-            borrowed.is_ascii()
-        });
-        unsafe {self.into_ascii_nocheck()}
-    }
-
     /// Take ownership and cast to an ascii vector. Return None on non-ASCII input.
     #[inline]
     fn into_ascii_opt(self) -> Option<Vec<Ascii>> {
@@ -326,36 +306,30 @@ mod tests {
 
     #[test]
     fn test_ascii() {
-        assert_eq!(65u8.to_ascii().as_byte(), 65u8);
-        assert_eq!(65u8.to_ascii().as_char(), 'A');
-        assert_eq!('A'.to_ascii().as_char(), 'A');
-        assert_eq!('A'.to_ascii().as_byte(), 65u8);
+        assert_eq!(65u8.to_ascii_opt().unwrap().as_byte(), 65u8);
+        assert_eq!(65u8.to_ascii_opt().unwrap().as_char(), 'A');
+        assert_eq!('A'.to_ascii_opt().unwrap().as_char(), 'A');
+        assert_eq!('A'.to_ascii_opt().unwrap().as_byte(), 65u8);
 
-        assert!('0'.to_ascii().is_digit());
-        assert!('9'.to_ascii().is_digit());
-        assert!(!'/'.to_ascii().is_digit());
-        assert!(!':'.to_ascii().is_digit());
+        assert!('0'.to_ascii_opt().unwrap().is_digit());
+        assert!('9'.to_ascii_opt().unwrap().is_digit());
+        assert!(!'/'.to_ascii_opt().unwrap().is_digit());
+        assert!(!':'.to_ascii_opt().unwrap().is_digit());
 
-        assert!((0x1fu8).to_ascii().is_control());
-        assert!(!' '.to_ascii().is_control());
-        assert!((0x7fu8).to_ascii().is_control());
+        assert!((0x1fu8).to_ascii_opt().unwrap().is_control());
+        assert!(!' '.to_ascii_opt().unwrap().is_control());
+        assert!((0x7fu8).to_ascii_opt().unwrap().is_control());
     }
 
     #[test]
     fn test_ascii_vec() {
         let test = &[40u8, 32u8, 59u8];
         let b: &[_] = v2ascii!([40, 32, 59]);
-        assert_eq!(test.to_ascii(), b);
-        assert_eq!("( ;".to_ascii(), b);
+        assert_eq!(test.to_ascii_opt().unwrap(), b);
+        assert_eq!("( ;".to_ascii_opt().unwrap(), b);
         let v = vec![40u8, 32u8, 59u8];
-        assert_eq!(v.as_slice().to_ascii(), b);
-        assert_eq!("( ;".to_string().as_slice().to_ascii(), b);
-    }
-
-    #[test]
-    fn test_owned_ascii_vec() {
-        assert_eq!(("( ;".to_string()).into_ascii(), vec2ascii![40, 32, 59]);
-        assert_eq!((vec![40u8, 32u8, 59u8]).into_ascii(), vec2ascii![40, 32, 59]);
+        assert_eq!(v.as_slice().to_ascii_opt().unwrap(), b);
+        assert_eq!("( ;".to_string().as_slice().to_ascii_opt().unwrap(), b);
     }
 
     #[test]
@@ -380,18 +354,6 @@ mod tests {
     fn test_ascii_to_bytes() {
         assert_eq!(vec2ascii![40, 32, 59].into_bytes(), vec![40u8, 32u8, 59u8]);
     }
-
-    #[test] #[should_fail]
-    fn test_ascii_vec_panic_u8_slice()  { (&[127u8, 128u8, 255u8]).to_ascii(); }
-
-    #[test] #[should_fail]
-    fn test_ascii_vec_panic_str_slice() { "zoä华".to_ascii(); }
-
-    #[test] #[should_fail]
-    fn test_ascii_panic_u8_slice() { 255u8.to_ascii(); }
-
-    #[test] #[should_fail]
-    fn test_ascii_panic_char_slice() { 'λ'.to_ascii(); }
 
     #[test]
     fn test_opt() {
