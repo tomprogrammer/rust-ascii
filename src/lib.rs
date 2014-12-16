@@ -24,7 +24,7 @@ use std::ascii::AsciiExt;
 
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
-#[deriving(Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
+#[deriving(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 pub struct Ascii { chr: u8 }
 
 impl Ascii {
@@ -305,7 +305,6 @@ impl IntoBytes for Vec<Ascii> {
 
 #[cfg(test)]
 mod tests {
-    use std::prelude::*;
     use super::*;
 
     macro_rules! v2ascii (
