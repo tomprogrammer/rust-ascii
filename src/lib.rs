@@ -261,13 +261,13 @@ impl OwnedAsciiCast<[u8]> for Vec<u8> {
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait AsciiStr for Sized? {
     /// Convert to a string.
-    fn as_str_ascii<'a>(&'a self) -> &'a str;
+    fn as_str<'a>(&'a self) -> &'a str;
 }
 
 #[experimental = "may be replaced by generic conversion traits"]
 impl AsciiStr for [Ascii] {
     #[inline]
-    fn as_str_ascii<'a>(&'a self) -> &'a str {
+    fn as_str<'a>(&'a self) -> &'a str {
         unsafe { mem::transmute(self) }
     }
 }
@@ -353,7 +353,7 @@ mod tests {
     #[test]
     fn test_ascii_as_str() {
         let v = v2ascii!([40, 32, 59]);
-        assert_eq!(v.as_str_ascii(), "( ;");
+        assert_eq!(v.as_str(), "( ;");
     }
 
     #[test]
