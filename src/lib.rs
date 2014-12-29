@@ -298,11 +298,11 @@ mod tests {
     macro_rules! v2ascii (
         ( [$($e:expr),*]) => (&[$(Ascii{chr:$e}),*]);
         (&[$($e:expr),*]) => (&[$(Ascii{chr:$e}),*]);
-    )
+    );
 
     macro_rules! vec2ascii (
         ($($e:expr),*) => ([$(Ascii{chr:$e}),*].to_vec());
-    )
+    );
 
     #[test]
     fn test_ascii() {
