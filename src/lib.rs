@@ -12,19 +12,21 @@
 
 //! Operations on ASCII strings and characters
 
-#![feature(macro_rules, globs, default_type_params)]
+#![feature(macro_rules, globs, default_type_params, old_orphan_check)]
+// added old_orphan_check to work around https://github.com/rust-lang/rust/issues/20477
+
 #![unstable = "unsure about placement and naming"]
 #![allow(deprecated)]
 
 //use std::kinds::Sized;
+
 use std::fmt;
 use std::mem;
 use std::borrow::BorrowFrom;
 use std::ascii::AsciiExt;
 
-
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
-#[deriving(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
+#[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 pub struct Ascii { chr: u8 }
 
 impl Ascii {
@@ -144,7 +146,7 @@ impl<'a> fmt::Show for Ascii {
 
 /// Trait for converting into an ascii type.
 #[experimental = "may be replaced by generic conversion traits"]
-pub trait AsciiCast<T, U = Self> for Sized?: AsciiExt<U> {
+pub trait AsciiCast<T, U = Self> : AsciiExt<U> {
     /// Convert to an ascii type, return Err(()) on non-ASCII input.
     #[inline]
     fn to_ascii(&self) -> Result<T, ()> {
@@ -193,7 +195,7 @@ impl AsciiCast<Ascii> for char {
 
 /// Trait for copyless casting to an ascii vector.
 #[experimental = "may be replaced by generic conversion traits"]
-pub trait OwnedAsciiCast<Sized? T, U = Self>
+pub trait OwnedAsciiCast<T: ?Sized, U = Self> : Sized
 where T: BorrowFrom<Self> + AsciiExt<U> {
     /// Take ownership and cast to an ascii vector. Return Err(()) on non-ASCII input.
     #[inline]
@@ -236,10 +238,17 @@ impl OwnedAsciiCast<[u8]> for Vec<u8> {
     }
 }
 
+/// Trait for converting a type to a string, consuming it in the process.
+#[experimental = "may be replaced by generic conversion traits"]
+pub trait IntoString {
+    /// Consume and convert to a string.
+    fn into_string(self) -> String;
+}
+
 /// Trait for converting an ascii type to a string. Needed to convert
 /// `&[Ascii]` to `&str`.
 #[experimental = "may be replaced by generic conversion traits"]
-pub trait AsciiStr for Sized? {
+pub trait AsciiStr {
     /// Convert to a string.
     fn as_str<'a>(&'a self) -> &'a str;
 
