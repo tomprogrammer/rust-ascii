@@ -197,7 +197,8 @@ impl AsciiCast<Ascii> for char {
 #[experimental = "may be replaced by generic conversion traits"]
 pub trait OwnedAsciiCast<T: ?Sized, U = Self> : Sized
 where T: BorrowFrom<Self> + AsciiExt<U> {
-    /// Take ownership and cast to an ascii vector. Return Err(()) on non-ASCII input.
+    /// Take ownership and cast to an ascii vector. On non-ASCII input return ownership of data
+    /// that was attempted to cast to ascii in `Err(Self)`.
     #[inline]
     fn into_ascii(self) -> Result<Vec<Ascii>, Self> {
         if {
