@@ -12,9 +12,6 @@
 
 //! Operations on ASCII strings and characters
 
-#![feature(macro_rules, globs, default_type_params, old_orphan_check)]
-// added old_orphan_check to work around https://github.com/rust-lang/rust/issues/20477
-
 #![unstable = "unsure about placement and naming"]
 #![allow(deprecated)]
 
