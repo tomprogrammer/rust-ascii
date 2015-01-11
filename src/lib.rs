@@ -135,11 +135,42 @@ impl Ascii {
     }
 }
 
-impl<'a> fmt::Show for Ascii {
+impl fmt::String for Ascii {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        (self.chr as char).fmt(f)
+        fmt::String::fmt(&(self.chr as char), f)
     }
 }
+
+impl fmt::String for Vec<Ascii> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::String::fmt(&self[], f)
+    }
+}
+
+impl fmt::String for [Ascii] {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::String::fmt(self.as_str(), f)
+    }
+}
+
+impl fmt::Show for Ascii {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Show::fmt(&(self.chr as char), f)
+    }
+}
+
+// TODO: The following impls conflict with the generic impls in std.
+// impl fmt::Show for Vec<Ascii> {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         fmt::Show::fmt(&self[], f)
+//     }
+// }
+
+// impl fmt::Show for [Ascii] {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         fmt::Show::fmt(self.as_str(), f)
+//     }
+// }
 
 /// Trait for converting into an ascii type.
 #[experimental = "may be replaced by generic conversion traits"]
@@ -393,14 +424,41 @@ mod tests {
     }
 
     #[test]
-    fn test_to_string() {
-        let s = Ascii{ chr: b't' }.to_string();
-        assert_eq!(s, "t".to_string());
+    fn fmt_string_ascii() {
+        let s = Ascii{ chr: b't' };
+        assert_eq!(format!("{}", s), "t".to_string());
     }
 
     #[test]
-    fn test_show() {
-        let c = Ascii { chr: b't' };
-        assert_eq!(format!("{}", c), "t".to_string());
+    fn fmt_string_ascii_slice() {
+        let s = "abc".to_ascii().unwrap();
+        assert_eq!(format!("{}", s), "abc".to_string());
     }
+
+    #[test]
+    fn fmt_string_ascii_vec() {
+        let s = "abc".to_string().into_ascii().unwrap();
+        assert_eq!(format!("{}", s), "abc".to_string());
+    }
+
+    #[test]
+    fn fmt_show_ascii() {
+        let c = Ascii { chr: b't' };
+        assert_eq!(format!("{:?}", c), "'t'".to_string());
+    }
+
+    // NOTE: The following tests fail intentionally until custom `fmt::Show`
+    //       implementations for `Vec<Ascii>` and `&[Ascii]` can be provided.
+    //       (Or the current types are newtyped.)
+    // #[test]
+    // fn fmt_show_ascii_slice() {
+    //     let s = "abc".to_ascii().unwrap();
+    //     assert_eq!(format!("{}", s), "\"abc\"".to_string());
+    // }
+
+    // #[test]
+    // fn fmt_show_ascii_vec() {
+    //     let s = "abc".to_string().into_ascii().unwrap();
+    //     assert_eq!(format!("{}", s), "\"abc\"".to_string());
+    // }
 }
