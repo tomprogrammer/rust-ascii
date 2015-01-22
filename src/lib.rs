@@ -344,30 +344,30 @@ mod tests {
 
     #[test]
     fn test_ascii() {
-        assert_eq!(65u8.to_ascii().unwrap().as_byte(), 65u8);
-        assert_eq!(65u8.to_ascii().unwrap().as_char(), 'A');
-        assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
-        assert_eq!('A'.to_ascii().unwrap().as_byte(), 65u8);
+        assert_eq!(65u8.to_ascii().ok().unwrap().as_byte(), 65u8);
+        assert_eq!(65u8.to_ascii().ok().unwrap().as_char(), 'A');
+        assert_eq!('A'.to_ascii().ok().unwrap().as_char(), 'A');
+        assert_eq!('A'.to_ascii().ok().unwrap().as_byte(), 65u8);
 
-        assert!('0'.to_ascii().unwrap().is_digit());
-        assert!('9'.to_ascii().unwrap().is_digit());
-        assert!(!'/'.to_ascii().unwrap().is_digit());
-        assert!(!':'.to_ascii().unwrap().is_digit());
+        assert!('0'.to_ascii().ok().unwrap().is_digit());
+        assert!('9'.to_ascii().ok().unwrap().is_digit());
+        assert!(!'/'.to_ascii().ok().unwrap().is_digit());
+        assert!(!':'.to_ascii().ok().unwrap().is_digit());
 
-        assert!(0x1f_u8.to_ascii().unwrap().is_control());
-        assert!(!' '.to_ascii().unwrap().is_control());
-        assert!(0x7f_u8.to_ascii().unwrap().is_control());
+        assert!(0x1f_u8.to_ascii().ok().unwrap().is_control());
+        assert!(!' '.to_ascii().ok().unwrap().is_control());
+        assert!(0x7f_u8.to_ascii().ok().unwrap().is_control());
     }
 
     #[test]
     fn test_ascii_vec() {
         let test = &[40u8, 32u8, 59u8];
         let b: &[_] = v2ascii!([40, 32, 59]);
-        assert_eq!(test.to_ascii().unwrap(), b);
-        assert_eq!("( ;".to_ascii().unwrap(), b);
+        assert_eq!(test.to_ascii().ok().unwrap(), b);
+        assert_eq!("( ;".to_ascii().ok().unwrap(), b);
         let v = vec![40u8, 32u8, 59u8];
-        assert_eq!(v.as_slice().to_ascii().unwrap(), b);
-        assert_eq!("( ;".to_string().as_slice().to_ascii().unwrap(), b);
+        assert_eq!(v.as_slice().to_ascii().ok().unwrap(), b);
+        assert_eq!("( ;".to_string().as_slice().to_ascii().ok().unwrap(), b);
     }
 
     #[test]
@@ -431,7 +431,7 @@ mod tests {
 
     #[test]
     fn fmt_string_ascii_slice() {
-        let s = "abc".to_ascii().unwrap();
+        let s = "abc".to_ascii().ok().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
     }
 
