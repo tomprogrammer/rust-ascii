@@ -135,27 +135,27 @@ impl Ascii {
     }
 }
 
-impl fmt::String for Ascii {
+impl fmt::Display for Ascii {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::String::fmt(&(self.chr as char), f)
+        fmt::Display::fmt(&(self.chr as char), f)
     }
 }
 
-impl fmt::String for Vec<Ascii> {
+impl fmt::Display for Vec<Ascii> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::String::fmt(&self[], f)
+        fmt::Display::fmt(&self[], f)
     }
 }
 
-impl fmt::String for [Ascii] {
+impl fmt::Display for [Ascii] {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::String::fmt(self.as_str(), f)
+        fmt::Display::fmt(self.as_str(), f)
     }
 }
 
-impl fmt::Show for Ascii {
+impl fmt::Debug for Ascii {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Show::fmt(&(self.chr as char), f)
+        fmt::Debug::fmt(&(self.chr as char), f)
     }
 }
 
