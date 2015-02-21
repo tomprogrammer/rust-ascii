@@ -12,11 +12,6 @@
 
 //! Operations on ASCII strings and characters
 
-#![unstable = "unsure about placement and naming"]
-#![allow(deprecated)]
-
-//use std::kinds::Sized;
-
 use std::fmt;
 use std::mem;
 use std::borrow::BorrowFrom;
@@ -29,28 +24,24 @@ pub struct Ascii { chr: u8 }
 impl Ascii {
     /// Converts an ascii character into a `u8`.
     #[inline]
-    #[unstable = "recently renamed"]
     pub fn as_byte(&self) -> u8 {
         self.chr
     }
 
     /// Converts an ascii character into a `char`.
     #[inline]
-    #[unstable = "recently renamed"]
     pub fn as_char(&self) -> char {
         self.chr as char
     }
 
     /// Convert to lowercase.
     #[inline]
-    #[stable]
     pub fn to_lowercase(&self) -> Ascii {
         Ascii{chr: self.chr.to_ascii_lowercase()}
     }
 
     /// Convert to uppercase.
     #[inline]
-    #[stable]
     pub fn to_uppercase(&self) -> Ascii {
         Ascii{chr: self.chr.to_ascii_uppercase()}
     }
@@ -59,77 +50,66 @@ impl Ascii {
 
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
-    #[stable]
     pub fn is_alphabetic(&self) -> bool {
         (self.chr >= 0x41 && self.chr <= 0x5A) || (self.chr >= 0x61 && self.chr <= 0x7A)
     }
 
     /// Check if the character is a number (0-9)
     #[inline]
-    #[unstable = "may be renamed"]
     pub fn is_digit(&self) -> bool {
         self.chr >= 0x30 && self.chr <= 0x39
     }
 
     /// Check if the character is a letter or number
     #[inline]
-    #[stable]
     pub fn is_alphanumeric(&self) -> bool {
         self.is_alphabetic() || self.is_digit()
     }
 
     /// Check if the character is a space or horizontal tab
     #[inline]
-    #[experimental = "likely to be removed"]
     pub fn is_blank(&self) -> bool {
         self.chr == b' ' || self.chr == b'\t'
     }
 
     /// Check if the character is a control character
     #[inline]
-    #[stable]
     pub fn is_control(&self) -> bool {
         self.chr < 0x20 || self.chr == 0x7F
     }
 
     /// Checks if the character is printable (except space)
     #[inline]
-    #[experimental = "unsure about naming, or whether this is needed"]
     pub fn is_graph(&self) -> bool {
         (self.chr - 0x21) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
     #[inline]
-    #[unstable = "unsure about naming"]
     pub fn is_print(&self) -> bool {
         (self.chr - 0x20) < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
     #[inline]
-    #[stable]
     pub fn is_lowercase(&self) -> bool {
         (self.chr - b'a') < 26
     }
 
     /// Checks if the character is alphabetic and uppercase
     #[inline]
-    #[stable]
     pub fn is_uppercase(&self) -> bool {
         (self.chr - b'A') < 26
     }
 
     /// Checks if the character is punctuation
     #[inline]
-    #[stable]
     pub fn is_punctuation(&self) -> bool {
         self.is_graph() && !self.is_alphanumeric()
     }
 
     /// Checks if the character is a valid hex digit
     #[inline]
-    #[stable]
     pub fn is_hex(&self) -> bool {
         self.is_digit() || ((self.chr | 32u8) - b'a') < 6
     }
@@ -173,7 +153,6 @@ impl fmt::Debug for Ascii {
 // }
 
 /// Trait for converting into an ascii type.
-#[experimental = "may be replaced by generic conversion traits"]
 pub trait AsciiCast<T, U = Self> : AsciiExt<U> {
     /// Convert to an ascii type, return Err(()) on non-ASCII input.
     #[inline]
@@ -189,7 +168,6 @@ pub trait AsciiCast<T, U = Self> : AsciiExt<U> {
     unsafe fn to_ascii_nocheck(&self) -> T;
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl<'a> AsciiCast<&'a[Ascii], Vec<u8>> for [u8] {
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> &'a[Ascii] {
@@ -197,7 +175,6 @@ impl<'a> AsciiCast<&'a[Ascii], Vec<u8>> for [u8] {
     }
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl<'a> AsciiCast<&'a [Ascii], String> for str {
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> &'a [Ascii] {
@@ -205,7 +182,6 @@ impl<'a> AsciiCast<&'a [Ascii], String> for str {
     }
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl AsciiCast<Ascii> for u8 {
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> Ascii {
@@ -213,7 +189,6 @@ impl AsciiCast<Ascii> for u8 {
     }
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl AsciiCast<Ascii> for char {
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> Ascii {
@@ -222,7 +197,6 @@ impl AsciiCast<Ascii> for char {
 }
 
 /// Trait for copyless casting to an ascii vector.
-#[experimental = "may be replaced by generic conversion traits"]
 pub trait OwnedAsciiCast<T: ?Sized, U = Self> : Sized
 where T: BorrowFrom<Self> + AsciiExt<U> {
     /// Take ownership and cast to an ascii vector. On non-ASCII input return ownership of data
@@ -244,7 +218,6 @@ where T: BorrowFrom<Self> + AsciiExt<U> {
     unsafe fn into_ascii_nocheck(self) -> Vec<Ascii>;
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl OwnedAsciiCast<str> for String {
     #[inline]
     unsafe fn into_ascii_nocheck(self) -> Vec<Ascii> {
@@ -252,7 +225,6 @@ impl OwnedAsciiCast<str> for String {
     }
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl OwnedAsciiCast<[u8]> for Vec<u8> {
     #[inline]
     unsafe fn into_ascii_nocheck(self) -> Vec<Ascii> {
@@ -268,7 +240,6 @@ impl OwnedAsciiCast<[u8]> for Vec<u8> {
 }
 
 /// Trait for converting a type to a string, consuming it in the process.
-#[experimental = "may be replaced by generic conversion traits"]
 pub trait IntoString {
     /// Consume and convert to a string.
     fn into_string(self) -> String;
@@ -276,7 +247,6 @@ pub trait IntoString {
 
 /// Trait for converting an ascii type to a string. Needed to convert
 /// `&[Ascii]` to `&str`.
-#[experimental = "may be replaced by generic conversion traits"]
 pub trait AsciiStr {
     /// Convert to a string.
     fn as_str<'a>(&'a self) -> &'a str;
@@ -285,7 +255,6 @@ pub trait AsciiStr {
     fn as_bytes<'a>(&'a self) -> &'a [u8];
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl AsciiStr for [Ascii] {
     #[inline]
     fn as_str<'a>(&'a self) -> &'a str {
@@ -306,13 +275,11 @@ impl IntoString for Vec<Ascii> {
 }
 
 /// Trait to convert to an owned byte vector by consuming self
-#[experimental = "may be replaced by generic conversion traits"]
 pub trait IntoBytes {
     /// Converts to an owned byte vector by consuming self
     fn into_bytes(self) -> Vec<u8>;
 }
 
-#[experimental = "may be replaced by generic conversion traits"]
 impl IntoBytes for Vec<Ascii> {
     fn into_bytes(self) -> Vec<u8> {
         unsafe {
