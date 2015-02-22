@@ -12,10 +12,12 @@
 
 //! Operations on ASCII strings and characters
 
+#![feature(ascii,std_misc)]
+
 use std::fmt;
 use std::mem;
 use std::borrow::Borrow;
-use std::ascii::AsciiExt;
+use std::ascii::{AsciiExt, OwnedAsciiExt};
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
@@ -151,6 +153,89 @@ impl fmt::Debug for Ascii {
 //         fmt::Show::fmt(self.as_str(), f)
 //     }
 // }
+
+impl AsciiExt for Ascii {
+    type Owned = Ascii;
+
+    #[inline]
+    fn is_ascii(&self) -> bool {
+        true
+    }
+
+    fn to_ascii_uppercase(&self) -> Ascii {
+        self.to_uppercase()
+    }
+
+    fn to_ascii_lowercase(&self) -> Ascii {
+        self.to_lowercase()
+    }
+
+    fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.chr.eq_ignore_ascii_case(&other.chr)
+    }
+
+    #[inline]
+    fn make_ascii_uppercase(&mut self) {
+        self.chr.make_ascii_uppercase()
+    }
+
+    #[inline]
+    fn make_ascii_lowercase(&mut self) {
+        self.chr.make_ascii_lowercase()
+    }
+}
+
+impl AsciiExt for [Ascii] {
+    type Owned = Vec<Ascii>;
+
+    #[inline]
+    fn is_ascii(&self) -> bool {
+        true
+    }
+
+    fn to_ascii_uppercase(&self) -> Vec<Ascii> {
+        let mut vec = self.to_vec();
+        vec.make_ascii_uppercase();
+        vec
+    }
+
+    fn to_ascii_lowercase(&self) -> Vec<Ascii> {
+        let mut vec = self.to_vec();
+        vec.make_ascii_lowercase();
+        vec
+    }
+
+    fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.len() == other.len() &&
+        self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b))
+    }
+
+    fn make_ascii_uppercase(&mut self) {
+        for ascii in self {
+            ascii.make_ascii_uppercase();
+        }
+    }
+
+    fn make_ascii_lowercase(&mut self) {
+        for ascii in self {
+            ascii.make_ascii_lowercase();
+        }
+    }
+}
+
+impl OwnedAsciiExt for Vec<Ascii> {
+    #[inline]
+    fn into_ascii_uppercase(mut self) -> Vec<Ascii> {
+        self.make_ascii_uppercase();
+        self
+    }
+
+    #[inline]
+    fn into_ascii_lowercase(mut self) -> Vec<Ascii> {
+        self.make_ascii_lowercase();
+        self
+    }
+}
 
 /// Trait for converting into an ascii type.
 pub trait AsciiCast : AsciiExt {
