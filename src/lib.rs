@@ -123,7 +123,7 @@ impl fmt::Display for Ascii {
 
 impl fmt::Display for Vec<Ascii> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self[], f)
+        fmt::Display::fmt(&self[..], f)
     }
 }
 
@@ -139,14 +139,14 @@ impl fmt::Debug for Ascii {
     }
 }
 
-// TODO: The following impls conflict with the generic impls in std.
-// impl fmt::Show for Vec<Ascii> {
+// NOTE: The following impls conflict with the generic impls in std.
+// impl fmt::Debug for Vec<Ascii> {
 //     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         fmt::Show::fmt(&self[], f)
+//         fmt::Show::fmt(&self[..], f)
 //     }
 // }
 
-// impl fmt::Show for [Ascii] {
+// impl fmt::Debug for [Ascii] {
 //     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 //         fmt::Show::fmt(self.as_str(), f)
 //     }
@@ -340,8 +340,8 @@ mod tests {
         assert_eq!(test.to_ascii().unwrap(), b);
         assert_eq!("( ;".to_ascii().unwrap(), b);
         let v = vec![40u8, 32u8, 59u8];
-        assert_eq!(v.as_slice().to_ascii().unwrap(), b);
-        assert_eq!("( ;".to_string().as_slice().to_ascii().unwrap(), b);
+        assert_eq!(v.to_ascii().unwrap(), b);
+        assert_eq!("( ;".to_string().to_ascii().unwrap(), b);
     }
 
     #[test]
@@ -416,7 +416,7 @@ mod tests {
     }
 
     #[test]
-    fn fmt_show_ascii() {
+    fn fmt_debug_ascii() {
         let c = Ascii { chr: b't' };
         assert_eq!(format!("{:?}", c), "'t'".to_string());
     }
