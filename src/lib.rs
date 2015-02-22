@@ -14,7 +14,7 @@
 
 use std::fmt;
 use std::mem;
-use std::borrow::BorrowFrom;
+use std::borrow::Borrow;
 use std::ascii::AsciiExt;
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
@@ -207,16 +207,13 @@ impl AsciiCast for char {
 }
 
 /// Trait for copyless casting to an ascii vector.
-pub trait OwnedAsciiCast<T: ?Sized, U = Self> : Sized
-where T: BorrowFrom<Self> + AsciiExt<U> {
+pub trait OwnedAsciiCast<T: ?Sized> : Sized + Borrow<T>
+where T: AsciiExt<Owned=Self> {
     /// Take ownership and cast to an ascii vector. On non-ASCII input return ownership of data
     /// that was attempted to cast to ascii in `Err(Self)`.
     #[inline]
     fn into_ascii(self) -> Result<Vec<Ascii>, Self> {
-        if {
-            let borrowed: &T = BorrowFrom::borrow_from(&self);
-            borrowed.is_ascii()
-        } {
+        if self.borrow().is_ascii() {
             Ok(unsafe { self.into_ascii_nocheck() })
         } else {
             Err(self)
