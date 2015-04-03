@@ -16,7 +16,10 @@
 
 use std::fmt;
 use std::mem;
-use std::borrow::Borrow;
+use std::borrow::{Borrow, ToOwned};
+use std::ops::{Deref, DerefMut};
+use std::cmp::{Ord, Ordering};
+use std::str::FromStr;
 use std::ascii::{AsciiExt, OwnedAsciiExt};
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
@@ -119,40 +122,286 @@ impl Ascii {
 
 impl fmt::Display for Ascii {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&(self.chr as char), f)
-    }
-}
-
-impl fmt::Display for Vec<Ascii> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self[..], f)
-    }
-}
-
-impl fmt::Display for [Ascii] {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self.as_str(), f)
+        self.as_char().fmt(f)
     }
 }
 
 impl fmt::Debug for Ascii {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(&(self.chr as char), f)
+        self.as_char().fmt(f)
+     }
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct AsciiString {
+    vec: Vec<Ascii>,
+}
+
+impl AsciiString {
+    pub fn new() -> AsciiString {
+        AsciiString { vec: Vec::new() }
+    }
+
+    pub fn from_bytes<B>(bytes: B) -> Result<AsciiString, B> where B: Into<Vec<u8>> + AsRef<[u8]> {
+        if bytes.as_ref().is_ascii() {
+            unsafe { Ok( AsciiString::from_vec(bytes.into()) ) }
+        } else {
+            Err(bytes)
+        }
+    }
+
+    unsafe fn from_vec(src: Vec<u8>) -> AsciiString {
+        let vec = Vec::from_raw_parts(src.as_ptr() as *mut Ascii,
+                                      src.len(),
+                                      src.capacity());
+
+        // We forget `src` to avoid freeing it at the end of the scope.
+        // Otherwise, the returned `AsciiString` would point to freed memory.
+        mem::forget(src);
+        AsciiString { vec: vec }
     }
 }
 
-// NOTE: The following impls conflict with the generic impls in std.
-// impl fmt::Debug for Vec<Ascii> {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         fmt::Show::fmt(&self[..], f)
-//     }
-// }
+impl FromStr for AsciiString {
+    type Err = ();
 
-// impl fmt::Debug for [Ascii] {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         fmt::Show::fmt(self.as_str(), f)
-//     }
-// }
+    fn from_str(s: &str) -> Result<AsciiString, ()> {
+        if s.is_ascii() {
+            unsafe { Ok(AsciiString::from_vec(s.as_bytes().to_vec())) }
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl Deref for AsciiString {
+    type Target = AsciiStr;
+
+    fn deref<'a>(&'a self) -> &'a AsciiStr {
+        unsafe { mem::transmute(&self.vec[..]) }
+    }
+}
+
+impl DerefMut for AsciiString {
+    fn deref_mut<'a>(&'a mut self) -> &'a mut AsciiStr {
+        unsafe { mem::transmute(&mut self.vec[..]) }
+    }
+}
+
+impl Borrow<AsciiStr> for AsciiString {
+    fn borrow(&self) -> &AsciiStr {
+        &*self
+    }
+}
+
+impl Into<Vec<u8>> for AsciiString {
+    fn into(self) -> Vec<u8> {
+        unsafe {
+            let v = Vec::from_raw_parts(self.vec.as_ptr() as *mut u8,
+                                        self.vec.len(),
+                                        self.vec.capacity());
+
+            // We forget `self` to avoid freeing it at the end of the scope.
+            // Otherwise, the returned `Vec` would point to freed memory.
+            mem::forget(self);
+            v
+        }
+    }
+}
+
+impl Into<String> for AsciiString {
+    fn into(self) -> String {
+        unsafe { String::from_utf8_unchecked(self.into()) }
+    }
+}
+
+impl AsRef<AsciiStr> for AsciiString {
+    fn as_ref(&self) -> &AsciiStr {
+        &*self
+    }
+}
+
+impl fmt::Display for AsciiString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&**self, f)
+    }
+}
+
+impl fmt::Debug for AsciiString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+#[derive(Hash)]
+pub struct AsciiStr {
+    slice: [Ascii],
+}
+
+impl AsciiStr {
+    pub fn new<S: AsRef<AsciiStr> + ?Sized>(s: &S) -> &AsciiStr {
+        s.as_ref()
+    }
+
+    pub fn as_str(&self) -> &str {
+        unsafe { mem::transmute(&self.slice) }
+    }
+
+    pub fn to_ascii_string(&self) -> AsciiString {
+        AsciiString { vec: self.slice.to_vec() }
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        unsafe { mem::transmute(&self.slice) }
+    }
+
+    pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Option<&'a AsciiStr> where B: AsRef<[u8]> {
+        if bytes.as_ref().is_ascii() {
+            unsafe { Some( mem::transmute(bytes.as_ref()) ) }
+        } else {
+            None
+        }
+    }
+
+    pub fn from_str<'a>(s: &'a str) -> Option<&'a AsciiStr> {
+        AsciiStr::from_bytes(s.as_bytes())
+    }
+
+    pub fn len(&self) -> usize {
+        self.slice.len()
+    }
+}
+
+impl PartialEq for AsciiStr {
+    fn eq(&self, other: &AsciiStr) -> bool {
+        self.as_bytes().eq(other.as_bytes())
+    }
+}
+
+impl Eq for AsciiStr {}
+
+impl PartialOrd for AsciiStr {
+    #[inline]
+    fn partial_cmp(&self, other: &AsciiStr) -> Option<Ordering> {
+        self.as_bytes().partial_cmp(other.as_bytes())
+    }
+
+    #[inline]
+    fn lt(&self, other: &AsciiStr) -> bool {
+        self.as_bytes().lt(other.as_bytes())
+    }
+
+    #[inline]
+    fn le(&self, other: &AsciiStr) -> bool {
+        self.as_bytes().le(other.as_bytes())
+    }
+
+    #[inline]
+    fn gt(&self, other: &AsciiStr) -> bool {
+        self.as_bytes().gt(other.as_bytes())
+    }
+
+    #[inline]
+    fn ge(&self, other: &AsciiStr) -> bool {
+        self.as_bytes().ge(other.as_bytes())
+    }
+}
+
+/*
+impl PartialOrd<AsciiString> for AsciiStr {
+    #[inline]
+    fn partial_cmp(&self, other: &AsciiString) -> Option<Ordering> {
+        self.as_bytes().partial_cmp(other.as_bytes())
+    }
+}
+*/
+
+impl Ord for AsciiStr {
+    #[inline]
+    fn cmp(&self, other: &AsciiStr) -> Ordering {
+        self.as_bytes().cmp(other.as_bytes())
+    }
+}
+
+impl ToOwned for AsciiStr {
+    type Owned = AsciiString;
+
+    fn to_owned(&self) -> AsciiString {
+        self.to_ascii_string()
+    }
+}
+
+impl AsRef<[u8]> for AsciiStr {
+    fn as_ref(&self) -> &[u8] {
+        unsafe { mem::transmute(&self.slice) }
+    }
+}
+
+impl AsRef<str> for AsciiStr {
+    fn as_ref(&self) -> &str {
+        unsafe { mem::transmute(&self.slice) }
+    }
+}
+
+impl fmt::Display for AsciiStr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self.as_str(), f)
+    }
+}
+
+impl fmt::Debug for AsciiStr {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+       fmt::Debug::fmt(self.as_str(), f)
+   }
+}
+
+macro_rules! impl_eq {
+    ($lhs:ty, $rhs:ty) => {
+        impl<'a> PartialEq<$rhs> for $lhs {
+            #[inline]
+            fn eq(&self, other: &$rhs) -> bool {
+                PartialEq::eq(&**self, &**other)
+            }
+            #[inline]
+            fn ne(&self, other: &$rhs) -> bool {
+                PartialEq::ne(&**self, &**other)
+            }
+        }
+    }
+}
+
+impl_eq! { AsciiString, String }
+impl_eq! { &'a AsciiStr, String }
+impl_eq! { String, AsciiString }
+impl_eq! { String, &'a AsciiStr }
+impl_eq! { &'a AsciiStr, AsciiString }
+impl_eq! { AsciiString, &'a AsciiStr }
+impl_eq! { &'a str, AsciiString }
+impl_eq! { AsciiString, &'a str }
+
+impl PartialEq<str> for AsciiString {
+    fn eq(&self, other: &str) -> bool {
+        **self == *other
+    }
+}
+
+impl PartialEq<AsciiString> for str {
+    fn eq(&self, other: &AsciiString) -> bool {
+        **other == *self
+    }
+}
+
+impl PartialEq<str> for AsciiStr {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+
+impl PartialEq<AsciiStr> for str {
+    fn eq(&self, other: &AsciiStr) -> bool {
+        other.as_str() == self
+    }
+}
 
 impl AsciiExt for Ascii {
     type Owned = Ascii;
@@ -185,53 +434,53 @@ impl AsciiExt for Ascii {
     }
 }
 
-impl AsciiExt for [Ascii] {
-    type Owned = Vec<Ascii>;
+impl AsciiExt for AsciiStr {
+    type Owned = AsciiString;
 
     #[inline]
     fn is_ascii(&self) -> bool {
         true
     }
 
-    fn to_ascii_uppercase(&self) -> Vec<Ascii> {
-        let mut vec = self.to_vec();
-        vec.make_ascii_uppercase();
-        vec
+    fn to_ascii_uppercase(&self) -> AsciiString {
+        let mut ascii_string = self.to_ascii_string();
+        ascii_string.make_ascii_uppercase();
+        ascii_string
     }
 
-    fn to_ascii_lowercase(&self) -> Vec<Ascii> {
-        let mut vec = self.to_vec();
-        vec.make_ascii_lowercase();
-        vec
+    fn to_ascii_lowercase(&self) -> AsciiString {
+        let mut ascii_string = self.to_ascii_string();
+        ascii_string.make_ascii_uppercase();
+        ascii_string
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-        self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b))
+        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b))
     }
 
     fn make_ascii_uppercase(&mut self) {
-        for ascii in self {
+        for ascii in &mut self.slice {
             ascii.make_ascii_uppercase();
         }
     }
 
     fn make_ascii_lowercase(&mut self) {
-        for ascii in self {
+        for ascii in &mut self.slice {
             ascii.make_ascii_lowercase();
         }
     }
 }
 
-impl OwnedAsciiExt for Vec<Ascii> {
+impl OwnedAsciiExt for AsciiString {
     #[inline]
-    fn into_ascii_uppercase(mut self) -> Vec<Ascii> {
+    fn into_ascii_uppercase(mut self) -> AsciiString {
         self.make_ascii_uppercase();
         self
     }
 
     #[inline]
-    fn into_ascii_lowercase(mut self) -> Vec<Ascii> {
+    fn into_ascii_lowercase(mut self) -> AsciiString {
         self.make_ascii_lowercase();
         self
     }
@@ -256,19 +505,19 @@ pub trait AsciiCast : AsciiExt {
 }
 
 impl<'a> AsciiCast for [u8] {
-    type Target = &'a [Ascii];
+    type Target = &'a AsciiStr;
 
     #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> &'a[Ascii] {
+    unsafe fn to_ascii_nocheck(&self) -> &'a AsciiStr {
         mem::transmute(self)
     }
 }
 
 impl<'a> AsciiCast for str {
-    type Target = &'a [Ascii];
+    type Target = &'a AsciiStr;
 
     #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> &'a [Ascii] {
+    unsafe fn to_ascii_nocheck(&self) -> &'a AsciiStr {
         mem::transmute(self)
     }
 }
@@ -297,7 +546,7 @@ where T: AsciiExt<Owned=Self> {
     /// Take ownership and cast to an ascii vector. On non-ASCII input return ownership of data
     /// that was attempted to cast to ascii in `Err(Self)`.
     #[inline]
-    fn into_ascii(self) -> Result<Vec<Ascii>, Self> {
+    fn into_ascii(self) -> Result<AsciiString, Self> {
         if self.borrow().is_ascii() {
             Ok(unsafe { self.into_ascii_nocheck() })
         } else {
@@ -307,19 +556,19 @@ where T: AsciiExt<Owned=Self> {
 
     /// Take ownership and cast to an ascii vector.
     /// Does not perform validation checks.
-    unsafe fn into_ascii_nocheck(self) -> Vec<Ascii>;
+    unsafe fn into_ascii_nocheck(self) -> AsciiString;
 }
 
 impl OwnedAsciiCast<str> for String {
     #[inline]
-    unsafe fn into_ascii_nocheck(self) -> Vec<Ascii> {
+    unsafe fn into_ascii_nocheck(self) -> AsciiString {
         self.into_bytes().into_ascii_nocheck()
     }
 }
 
 impl OwnedAsciiCast<[u8]> for Vec<u8> {
     #[inline]
-    unsafe fn into_ascii_nocheck(self) -> Vec<Ascii> {
+    unsafe fn into_ascii_nocheck(self) -> AsciiString {
         let v = Vec::from_raw_parts(self.as_ptr() as *mut Ascii,
                                     self.len(),
                                     self.capacity());
@@ -327,79 +576,13 @@ impl OwnedAsciiCast<[u8]> for Vec<u8> {
         // We forget `self` to avoid freeing it at the end of the scope
         // Otherwise, the returned `Vec` would point to freed memory
         mem::forget(self);
-        v
+        AsciiString { vec: v }
     }
 }
-
-/// Trait for converting a type to a string, consuming it in the process.
-pub trait IntoString {
-    /// Consume and convert to a string.
-    fn into_string(self) -> String;
-}
-
-/// Trait for converting an ascii type to a string. Needed to convert
-/// `&[Ascii]` to `&str`.
-pub trait AsciiStr {
-    /// Convert to a string.
-    fn as_str<'a>(&'a self) -> &'a str;
-
-    /// Convert to bytes.
-    fn as_bytes<'a>(&'a self) -> &'a [u8];
-}
-
-impl AsciiStr for [Ascii] {
-    #[inline]
-    fn as_str<'a>(&'a self) -> &'a str {
-        unsafe { mem::transmute(self) }
-    }
-
-    #[inline]
-    fn as_bytes<'a>(&'a self) -> &'a [u8] {
-        unsafe { mem::transmute(self) }
-    }
-}
-
-impl IntoString for Vec<Ascii> {
-    #[inline]
-    fn into_string(self) -> String {
-        unsafe { String::from_utf8_unchecked(self.into_bytes()) }
-    }
-}
-
-/// Trait to convert to an owned byte vector by consuming self
-pub trait IntoBytes {
-    /// Converts to an owned byte vector by consuming self
-    fn into_bytes(self) -> Vec<u8>;
-}
-
-impl IntoBytes for Vec<Ascii> {
-    fn into_bytes(self) -> Vec<u8> {
-        unsafe {
-            let v = Vec::from_raw_parts(self.as_ptr() as *mut u8,
-                                        self.len(),
-                                        self.capacity());
-
-            // We forget `self` to avoid freeing it at the end of the scope
-            // Otherwise, the returned `Vec` would point to freed memory
-            mem::forget(self);
-            v
-        }
-    }
-}
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    macro_rules! v2ascii (
-        ( [$($e:expr),*]) => (&[$(Ascii{chr:$e}),*]);
-        (&[$($e:expr),*]) => (&[$(Ascii{chr:$e}),*]);
-    );
-
-    macro_rules! vec2ascii (
-        ($($e:expr),*) => ([$(Ascii{chr:$e}),*].to_vec());
-    );
 
     #[test]
     fn test_ascii() {
@@ -420,8 +603,8 @@ mod tests {
 
     #[test]
     fn test_ascii_vec() {
-        let test = &[40u8, 32u8, 59u8];
-        let b: &[_] = v2ascii!([40, 32, 59]);
+        let test  = &[40u8, 32u8, 59u8];
+        let b = AsciiStr::from_bytes(test).unwrap();
         assert_eq!(test.to_ascii().unwrap(), b);
         assert_eq!("( ;".to_ascii().unwrap(), b);
         let v = vec![40u8, 32u8, 59u8];
@@ -431,71 +614,76 @@ mod tests {
 
     #[test]
     fn test_ascii_as_str() {
-        let v = v2ascii!([40, 32, 59]);
+        let b = &[40_u8, 32, 59];
+        let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_str(), "( ;");
     }
 
     #[test]
     fn test_ascii_as_bytes() {
-        let v = v2ascii!([40, 32, 59]);
+        let b = &[40_u8, 32, 59];
+        let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
     }
 
     #[test]
     fn test_ascii_into_string() {
-        assert_eq!(vec2ascii![40, 32, 59].into_string(), "( ;".to_string());
-        assert_eq!(vec2ascii!(40, 32, 59).into_string(), "( ;".to_string());
+        let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        assert_eq!(Into::<String>::into(v), "( ;".to_string());
     }
 
     #[test]
     fn test_ascii_to_bytes() {
-        assert_eq!(vec2ascii![40, 32, 59].into_bytes(), vec![40u8, 32u8, 59u8]);
+        let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59])
     }
 
     #[test]
     fn test_opt() {
-        assert_eq!(65u8.to_ascii(), Ok(Ascii { chr: 65u8 }));
-        assert_eq!(255u8.to_ascii(), Err(()));
+        assert_eq!(65_u8.to_ascii(), Ok(Ascii { chr: 65_u8 }));
+        assert_eq!(255_u8.to_ascii(), Err(()));
 
-        assert_eq!('A'.to_ascii(), Ok(Ascii { chr: 65u8 }));
+        assert_eq!('A'.to_ascii(), Ok(Ascii { chr: 65_u8 }));
         assert_eq!('λ'.to_ascii(), Err(()));
 
         assert_eq!("zoä华".to_ascii(), Err(()));
 
-        let test1 = &[127u8, 128u8, 255u8];
+        let test1 = &[127_u8, 128, 255];
         assert_eq!(test1.to_ascii(), Err(()));
 
-        let v = [40u8, 32u8, 59u8];
-        let v2: &[_] = v2ascii!(&[40, 32, 59]);
-        assert_eq!(v.to_ascii(), Ok(v2));
-        let v = [127u8, 128u8, 255u8];
+        let v = [40_u8, 32, 59];
+        let v1 = AsciiStr::from_bytes(&v).unwrap();
+        assert_eq!(v.to_ascii(), Ok(v1));
+        let v = [127_u8, 128, 255];
         assert_eq!(v.to_ascii(), Err(()));
 
         let v = "( ;";
-        assert_eq!(v.to_ascii(), Ok(v2));
+        assert_eq!(v.to_ascii(), Ok(v1));
         assert_eq!("zoä华".to_ascii(), Err(()));
 
-        assert_eq!(vec![40u8, 32u8, 59u8].into_ascii(), Ok(vec2ascii![40, 32, 59]));
-        assert_eq!(vec![127u8, 128u8, 255u8].into_ascii(), Err(vec![127u8, 128u8, 255u8]));
+        let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        assert_eq!(vec![40_u8, 32, 59].into_ascii(), Ok(v1));
+        assert_eq!(vec![127_u8, 128, 255].into_ascii(), Err(vec![127_u8, 128, 255]));
 
-        assert_eq!("( ;".to_string().into_ascii(), Ok(vec2ascii![40, 32, 59]));
+        let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        assert_eq!("( ;".to_string().into_ascii(), Ok(v1));
         assert_eq!("zoä华".to_string().into_ascii(), Err("zoä华".to_string()));
     }
 
     #[test]
-    fn fmt_string_ascii() {
+    fn fmt_display_ascii() {
         let s = Ascii{ chr: b't' };
         assert_eq!(format!("{}", s), "t".to_string());
     }
 
     #[test]
-    fn fmt_string_ascii_slice() {
+    fn fmt_display_ascii_str() {
         let s = "abc".to_ascii().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
     }
 
     #[test]
-    fn fmt_string_ascii_vec() {
+    fn fmt_display_ascii_string() {
         let s = "abc".to_string().into_ascii().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
     }
@@ -506,18 +694,24 @@ mod tests {
         assert_eq!(format!("{:?}", c), "'t'".to_string());
     }
 
-    // NOTE: The following tests fail intentionally until custom `fmt::Show`
-    //       implementations for `Vec<Ascii>` and `&[Ascii]` can be provided.
-    //       (Or the current types are newtyped.)
-    // #[test]
-    // fn fmt_show_ascii_slice() {
-    //     let s = "abc".to_ascii().unwrap();
-    //     assert_eq!(format!("{}", s), "\"abc\"".to_string());
-    // }
+    #[test]
+    fn fmt_debug_ascii_str() {
+        let s = "abc".to_ascii().unwrap();
+        assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
+    }
 
-    // #[test]
-    // fn fmt_show_ascii_vec() {
-    //     let s = "abc".to_string().into_ascii().unwrap();
-    //     assert_eq!(format!("{}", s), "\"abc\"".to_string());
-    // }
+    #[test]
+    fn fmt_debug_ascii_string() {
+        let s = "abc".to_string().into_ascii().unwrap();
+        assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
+    }
+
+    #[test]
+    fn compare_ascii_string_ascii_str() {
+        let v = b"abc";
+        let ascii_string = AsciiString::from_bytes(&v[..]).unwrap();
+        let ascii_str = AsciiStr::from_bytes(v).unwrap();
+        assert!(ascii_string == ascii_str);
+        assert!(ascii_str == ascii_string);
+    }
 }
