@@ -585,7 +585,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ascii() {
+    fn ascii() {
         assert_eq!(65u8.to_ascii().unwrap().as_byte(), 65u8);
         assert_eq!(65u8.to_ascii().unwrap().as_char(), 'A');
         assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
@@ -602,44 +602,46 @@ mod tests {
     }
 
     #[test]
-    fn test_ascii_vec() {
-        let test  = &[40u8, 32u8, 59u8];
+    fn ascii_vec() {
+        let test = &[40_u8, 32, 59];
         let b = AsciiStr::from_bytes(test).unwrap();
         assert_eq!(test.to_ascii().unwrap(), b);
         assert_eq!("( ;".to_ascii().unwrap(), b);
-        let v = vec![40u8, 32u8, 59u8];
+        let v = vec![40_u8, 32, 59];
         assert_eq!(v.to_ascii().unwrap(), b);
         assert_eq!("( ;".to_string().to_ascii().unwrap(), b);
     }
 
     #[test]
-    fn test_ascii_as_str() {
+    fn ascii_str_as_str() {
         let b = &[40_u8, 32, 59];
         let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_str(), "( ;");
+        assert_eq!(AsRef::<str>::as_ref(v), "( ;");
     }
 
     #[test]
-    fn test_ascii_as_bytes() {
+    fn ascii_str_as_bytes() {
         let b = &[40_u8, 32, 59];
         let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
+        assert_eq!(AsRef::<[u8]>::as_ref(v), b"( ;");
     }
 
     #[test]
-    fn test_ascii_into_string() {
+    fn ascii_string_into_string() {
         let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
         assert_eq!(Into::<String>::into(v), "( ;".to_string());
     }
 
     #[test]
-    fn test_ascii_to_bytes() {
+    fn ascii_string_into_bytes() {
         let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
         assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59])
     }
 
     #[test]
-    fn test_opt() {
+    fn opt() {
         assert_eq!(65_u8.to_ascii(), Ok(Ascii { chr: 65_u8 }));
         assert_eq!(255_u8.to_ascii(), Err(()));
 
@@ -713,5 +715,41 @@ mod tests {
         let ascii_str = AsciiStr::from_bytes(v).unwrap();
         assert!(ascii_string == ascii_str);
         assert!(ascii_str == ascii_string);
+    }
+
+    #[test]
+    fn compare_ascii_string_string() {
+        let v = b"abc";
+        let string = String::from_utf8(v.to_vec()).unwrap();
+        let ascii_string = AsciiString::from_bytes(&v[..]).unwrap();
+        assert!(string == ascii_string);
+        assert!(ascii_string == string);
+    }
+
+    #[test]
+    fn compare_ascii_str_string() {
+        let v = b"abc";
+        let string = String::from_utf8(v.to_vec()).unwrap();
+        let ascii_str = AsciiStr::from_bytes(&v[..]).unwrap();
+        assert!(string == ascii_str);
+        assert!(ascii_str == string);
+    }
+
+    #[test]
+    fn compare_ascii_string_str() {
+        let v = b"abc";
+        let sstr = ::std::str::from_utf8(v).unwrap();
+        let ascii_string = AsciiString::from_bytes(&v[..]).unwrap();
+        assert!(sstr == ascii_string);
+        assert!(ascii_string == sstr);
+    }
+
+    #[test]
+    fn compare_ascii_str_str() {
+        let v = b"abc";
+        let sstr = ::std::str::from_utf8(v).unwrap();
+        let ascii_str = AsciiStr::from_bytes(v).unwrap();
+        assert!(sstr == ascii_str);
+        assert!(ascii_str == sstr);
     }
 }
