@@ -39,18 +39,6 @@ impl Ascii {
         self.chr as char
     }
 
-    /// Convert to lowercase.
-    #[inline]
-    pub fn to_lowercase(&self) -> Ascii {
-        Ascii{chr: self.chr.to_ascii_lowercase()}
-    }
-
-    /// Convert to uppercase.
-    #[inline]
-    pub fn to_uppercase(&self) -> Ascii {
-        Ascii{chr: self.chr.to_ascii_uppercase()}
-    }
-
     // the following methods are like ctype, and the implementation is inspired by musl
 
     /// Check if the character is a letter (a-z, A-Z)
@@ -412,11 +400,11 @@ impl AsciiExt for Ascii {
     }
 
     fn to_ascii_uppercase(&self) -> Ascii {
-        self.to_uppercase()
+        Ascii{chr: self.chr.to_ascii_uppercase()}
     }
 
     fn to_ascii_lowercase(&self) -> Ascii {
-        self.to_lowercase()
+        Ascii{chr: self.chr.to_ascii_lowercase()}
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
