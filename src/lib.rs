@@ -475,12 +475,12 @@ impl OwnedAsciiExt for AsciiString {
 }
 
 /// Trait for converting into an ascii type.
-pub trait AsciiCast : AsciiExt {
+pub trait AsciiCast<'a>: AsciiExt {
     type Target;
 
     /// Convert to an ascii type, return Err(()) on non-ASCII input.
     #[inline]
-    fn to_ascii(&self) -> Result<Self::Target, ()> {
+    fn to_ascii(&'a self) -> Result<Self::Target, ()> {
         if self.is_ascii() {
             Ok(unsafe { self.to_ascii_nocheck() })
         } else {
@@ -489,28 +489,28 @@ pub trait AsciiCast : AsciiExt {
     }
 
     /// Convert to an ascii type, not doing any range asserts
-    unsafe fn to_ascii_nocheck(&self) -> Self::Target;
+    unsafe fn to_ascii_nocheck(&'a self) -> Self::Target;
 }
 
-impl<'a> AsciiCast for [u8] {
+impl<'a> AsciiCast<'a> for [u8] {
     type Target = &'a AsciiStr;
 
     #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> &'a AsciiStr {
+    unsafe fn to_ascii_nocheck(&'a self) -> &'a AsciiStr {
         mem::transmute(self)
     }
 }
 
-impl<'a> AsciiCast for str {
+impl<'a> AsciiCast<'a> for str {
     type Target = &'a AsciiStr;
 
     #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> &'a AsciiStr {
+    unsafe fn to_ascii_nocheck(&'a self) -> &'a AsciiStr {
         mem::transmute(self)
     }
 }
 
-impl AsciiCast for u8 {
+impl<'a> AsciiCast<'a> for u8 {
     type Target = Ascii;
 
     #[inline]
@@ -519,7 +519,7 @@ impl AsciiCast for u8 {
     }
 }
 
-impl AsciiCast for char {
+impl<'a> AsciiCast<'a> for char {
     type Target = Ascii;
 
     #[inline]
