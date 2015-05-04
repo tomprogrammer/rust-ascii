@@ -7,3 +7,6 @@ authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "`Ascii` type and related functionality, previously in `std::ascii`."
 license = "Apache-2.0 / MIT"
 repository = "https://github.com/SimonSapin/rust-ascii"
+
+[features]
+unstable = []

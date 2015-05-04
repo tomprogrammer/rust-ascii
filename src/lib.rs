@@ -12,7 +12,7 @@
 
 //! Operations on ASCII strings and characters
 
-#![feature(ascii,std_misc)]
+#![cfg_attr(feature = "unstable", feature(ascii,std_misc))]
 
 use std::fmt;
 use std::mem;
@@ -20,7 +20,9 @@ use std::borrow::{Borrow, ToOwned};
 use std::ops::{Deref, DerefMut};
 use std::cmp::{Ord, Ordering};
 use std::str::FromStr;
-use std::ascii::{AsciiExt, OwnedAsciiExt};
+use std::ascii::AsciiExt;
+#[cfg(feature = "unstable")]
+use std::ascii::OwnedAsciiExt;
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
@@ -391,6 +393,7 @@ impl PartialEq<AsciiStr> for str {
     }
 }
 
+#[cfg(feature = "unstable")]
 impl AsciiExt for Ascii {
     type Owned = Ascii;
 
@@ -422,6 +425,7 @@ impl AsciiExt for Ascii {
     }
 }
 
+#[cfg(feature = "unstable")]
 impl AsciiExt for AsciiStr {
     type Owned = AsciiString;
 
@@ -460,6 +464,7 @@ impl AsciiExt for AsciiStr {
     }
 }
 
+#[cfg(feature = "unstable")]
 impl OwnedAsciiExt for AsciiString {
     #[inline]
     fn into_ascii_uppercase(mut self) -> AsciiString {
