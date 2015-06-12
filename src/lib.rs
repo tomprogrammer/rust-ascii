@@ -14,13 +14,13 @@
 
 #![cfg_attr(feature = "unstable", feature(ascii,std_misc))]
 
-use std::fmt;
-use std::mem;
+use std::{fmt, mem, ops};
 use std::borrow::{Borrow, ToOwned};
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Add, Index, Range, RangeTo, RangeFrom, RangeFull};
 use std::cmp::{Ord, Ordering};
 use std::str::FromStr;
 use std::ascii::AsciiExt;
+use std::iter::FromIterator;
 #[cfg(feature = "unstable")]
 use std::ascii::OwnedAsciiExt;
 
@@ -29,6 +29,25 @@ use std::ascii::OwnedAsciiExt;
 pub struct Ascii { chr: u8 }
 
 impl Ascii {
+    /// Constructs an Ascii character from a `char`.
+    ///
+    /// # Failure
+    ///
+    /// Returns `Err(())` if the character can't be ascii encoded.
+    ///
+    /// # Example
+    /// ```
+    /// # use ascii::Ascii;
+    /// let a = Ascii::from('g').unwrap();
+    /// assert_eq!(a.as_char(), 'g');
+    /// ```
+    #[inline]
+    pub fn from(ch: char) -> Result<Ascii, ()> {
+        if ch as u32 <= 0x7F {
+            return Ok( Ascii { chr: ch as u8 });
+        }
+        Err(())
+    }
     /// Converts an ascii character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
@@ -122,16 +141,286 @@ impl fmt::Debug for Ascii {
      }
 }
 
+/// A growable string stored as an ascii encoded buffer.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiString {
     vec: Vec<Ascii>,
 }
 
 impl AsciiString {
+    /// Creates a new ascii string buffer initialized with the empty ascii string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::new();
+    /// ```
+    #[inline]
     pub fn new() -> AsciiString {
         AsciiString { vec: Vec::new() }
     }
 
+    /// Creates a new ascii string buffer with the given capacity. The string will be able to hold
+    /// exactly `capacity` bytes without reallocating. If `capacity` is 0, the ascii string will not
+    /// allocate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::with_capacity(10);
+    /// ```
+    #[inline]
+    pub fn with_capacity(capacity: usize) -> AsciiString {
+        AsciiString {
+            vec: Vec::with_capacity(capacity),
+        }
+    }
+
+    /// Pushes the given ascii string onto this ascii string buffer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::{AsciiString, AsciiStr};
+    /// use std::str::FromStr;
+    /// let mut s = AsciiString::from_str("foo").unwrap();
+    /// s.push_str(AsciiStr::from_str("bar").unwrap());
+    /// assert_eq!(s, AsciiStr::from_str("foobar").unwrap());
+    /// ```
+    #[inline]
+    pub fn push_str(&mut self, string: &AsciiStr) {
+        self.vec.extend(string.as_slice().iter().cloned())
+    }
+
+    /// Returns the number of bytes that this ascii string buffer can hold without reallocating.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let s = String::with_capacity(10);
+    /// assert!(s.capacity() >= 10);
+    /// ```
+    #[inline]
+    pub fn capacity(&self) -> usize {
+        self.vec.capacity()
+    }
+
+    /// Reserves capacity for at least `additional` more bytes to be inserted in the given
+    /// `AsciiString`. The collection may reserve more space to avoid frequent reallocations.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::new();
+    /// s.reserve(10);
+    /// assert!(s.capacity() >= 10);
+    /// ```
+    #[inline]
+    pub fn reserve(&mut self, additional: usize) {
+        self.vec.reserve(additional)
+    }
+
+    /// Reserves the minimum capacity for exactly `additional` more bytes to be inserted in the
+    /// given `AsciiString`. Does nothing if the capacity is already sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it requests. Therefore
+    /// capacity can not be relied upon to be precisely minimal. Prefer `reserve` if future
+    /// insertions are expected.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::new();
+    /// s.reserve_exact(10);
+    /// assert!(s.capacity() >= 10);
+    /// ```
+    #[inline]
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.vec.reserve_exact(additional)
+    }
+
+    /// Shrinks the capacity of this ascii string buffer to match it's length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// use std::str::FromStr;
+    /// let mut s = AsciiString::from_str("foo").unwrap();
+    /// s.reserve(100);
+    /// assert!(s.capacity() >= 100);
+    /// s.shrink_to_fit();
+    /// assert_eq!(s.capacity(), 3);
+    /// ```
+    #[inline]
+    pub fn shrink_to_fit(&mut self) {
+        self.vec.shrink_to_fit()
+    }
+
+    /// Adds the given ascii character to the end of the ascii string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::{ Ascii, AsciiString};
+    /// let mut s = AsciiString::from_bytes("abc").unwrap();
+    /// s.push(Ascii::from('1').unwrap());
+    /// s.push(Ascii::from('2').unwrap());
+    /// s.push(Ascii::from('3').unwrap());
+    /// assert_eq!(s, "abc123");
+    /// ```
+    #[inline]
+    pub fn push(&mut self, ch: Ascii) {
+        self.vec.push(ch)
+    }
+
+    /// Shortens a ascii string to the specified length.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `new_len` > current length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::from_bytes("hello").unwrap();
+    /// s.truncate(2);
+    /// assert_eq!(s, "he");
+    /// ```
+    #[inline]
+    pub fn truncate(&mut self, new_len: usize) {
+        self.vec.truncate(new_len)
+    }
+
+    /// Removes the last character from the ascii string buffer and returns it. Returns `None` if
+    /// this string buffer is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// assert_eq!(s.pop().map(|c| c.as_char()), Some('o'));
+    /// assert_eq!(s.pop().map(|c| c.as_char()), Some('o'));
+    /// assert_eq!(s.pop().map(|c| c.as_char()), Some('f'));
+    /// assert_eq!(s.pop(), None);
+    /// ```
+    #[inline]
+    pub fn pop(&mut self) -> Option<Ascii> {
+        self.vec.pop()
+    }
+
+    /// Removed the ascii character from the string buffer at bytes position `idx` and returns it.
+    ///
+    /// # Warning
+    ///
+    /// This is an O(n) operation as it requires copying every element in the buffer.
+    ///
+    /// # Panics
+    ///
+    /// If `idx` is out of bounds this function will panic.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// assert_eq!(s.remove(0).as_char(), 'f');
+    /// assert_eq!(s.remove(1).as_char(), 'o');
+    /// assert_eq!(s.remove(0).as_char(), 'o');
+    /// ```
+    #[inline]
+    pub fn remove(&mut self, idx: usize) -> Ascii {
+        self.vec.remove(idx)
+    }
+
+    /// Inserts a character into the ascii string buffer at byte position `idx`.
+    ///
+    /// # Warning
+    ///
+    /// This is an O(n) operation as it requires copying every element in the buffer.
+    ///
+    /// # Panics
+    ///
+    /// If `idx` is out of bounds this function will panic.
+    #[inline]
+    pub fn insert(&mut self, idx: usize, ch: Ascii) {
+        self.vec.insert(idx, ch)
+    }
+
+    /// Returns the number of bytes in this ascii string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let s = AsciiString::from_bytes("foo").unwrap();
+    /// assert_eq!(s.len(), 3);
+    /// ```
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.vec.len()
+    }
+
+    /// Returns true if the ascii string contains no bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::{Ascii, AsciiString};
+    /// let mut s = AsciiString::new();
+    /// assert!(s.is_empty());
+    /// s.push(Ascii::from('a').unwrap());
+    /// assert!(!s.is_empty());
+    /// ```
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Truncates the ascii string, returning it to 0 length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// s.clear();
+    /// assert!(s.is_empty());
+    /// ```
+    #[inline]
+    pub fn clear(&mut self) {
+        self.vec.clear()
+    }
+
+    /// Converts anything that can represent a byte buffer into an `AsciiString`.
+    ///
+    /// # Failure
+    /// Returns the byte buffer if it can not be ascii encoded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let foo = AsciiString::from_bytes("foo").unwrap();
+    /// let err = AsciiString::from_bytes("Ŋ");
+    /// assert_eq!(foo.as_str(), "foo");
+    /// assert_eq!(err, Err("Ŋ"));
+    /// ```
     pub fn from_bytes<B>(bytes: B) -> Result<AsciiString, B> where B: Into<Vec<u8>> + AsRef<[u8]> {
         if bytes.as_ref().is_ascii() {
             unsafe { Ok( AsciiString::from_vec(bytes.into()) ) }
@@ -223,28 +512,144 @@ impl fmt::Debug for AsciiString {
     }
 }
 
+impl Default for AsciiString {
+    #[inline]
+    fn default() -> AsciiString {
+        AsciiString::new()
+    }
+}
+
+impl FromIterator<Ascii> for AsciiString {
+    fn from_iter<I: IntoIterator<Item=Ascii>>(iter: I) -> AsciiString {
+        let mut buf = AsciiString::new();
+        buf.extend(iter);
+        buf
+    }
+}
+
+impl<'a> FromIterator<&'a AsciiStr> for AsciiString {
+    fn from_iter<I: IntoIterator<Item=&'a AsciiStr>>(iter: I) -> AsciiString {
+        let mut buf = AsciiString::new();
+        buf.extend(iter);
+        buf
+    }
+}
+
+impl Extend<Ascii> for AsciiString {
+    fn extend<I: IntoIterator<Item=Ascii>>(&mut self, iterable: I) {
+        let iterator = iterable.into_iter();
+        let (lower_bound, _) = iterator.size_hint();
+        self.reserve(lower_bound);
+        for ch in iterator {
+            self.push(ch)
+        }
+    }
+}
+
+impl<'a> Extend<&'a Ascii> for AsciiString {
+    fn extend<I: IntoIterator<Item=&'a Ascii>>(&mut self, iter: I) {
+        self.extend(iter.into_iter().cloned())
+    }
+}
+
+impl<'a> Extend<&'a AsciiStr> for AsciiString {
+    fn extend<I: IntoIterator<Item=&'a AsciiStr>>(&mut self, iterable: I) {
+        let iterator = iterable.into_iter();
+        let (lower_bound, _) = iterator.size_hint();
+        self.reserve(lower_bound);
+        for s in iterator {
+            self.push_str(s)
+        }
+    }
+}
+
+impl<'a> Add<&'a AsciiStr> for AsciiString {
+    type Output = AsciiString;
+
+    #[inline]
+    fn add(mut self, other: &AsciiStr) -> AsciiString {
+        self.push_str(other);
+        self
+    }
+}
+
+impl ops::Index<ops::Range<usize>> for AsciiString {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: ops::Range<usize>) -> &AsciiStr {
+        &self[..][index]
+    }
+}
+
+impl ops::Index<ops::RangeTo<usize>> for AsciiString {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: ops::RangeTo<usize>) -> &AsciiStr {
+        &self[..][index]
+    }
+}
+
+impl ops::Index<ops::RangeFrom<usize>> for AsciiString {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: ops::RangeFrom<usize>) -> &AsciiStr {
+        &self[..][index]
+    }
+}
+
+impl ops::Index<ops::RangeFull> for AsciiString {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, _index: ops::RangeFull) -> &AsciiStr {
+        unsafe { mem::transmute(&self.vec[..]) }
+    }
+}
+
+/// A borrowed ascii string, like a slice into an `AsciiString`.
 #[derive(Hash)]
 pub struct AsciiStr {
     slice: [Ascii],
 }
 
 impl AsciiStr {
+    /// Coerces into an `AsciiStr` slice.
     pub fn new<S: AsRef<AsciiStr> + ?Sized>(s: &S) -> &AsciiStr {
         s.as_ref()
     }
 
+    /// Converts `&self` to a `&str` slice.
     pub fn as_str(&self) -> &str {
         unsafe { mem::transmute(&self.slice) }
     }
 
+    /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
     pub fn to_ascii_string(&self) -> AsciiString {
         AsciiString { vec: self.slice.to_vec() }
     }
 
+    /// Converts `&self` into a byte slice.
     pub fn as_bytes(&self) -> &[u8] {
         unsafe { mem::transmute(&self.slice) }
     }
 
+    /// Converts anything that can represent a byte slice into an `AsciiStr`.
+    ///
+    /// # Failure
+    /// Returns `None` if the byte slice can not be ascii encoded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let foo = AsciiStr::from_bytes("foo").unwrap();
+    /// let err = AsciiStr::from_bytes("Ŋ");
+    /// assert_eq!(foo.as_str(), "foo");
+    /// assert_eq!(err, None);
+    /// ```
     pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Option<&'a AsciiStr> where B: AsRef<[u8]> {
         if bytes.as_ref().is_ascii() {
             unsafe { Some( mem::transmute(bytes.as_ref()) ) }
@@ -253,12 +658,44 @@ impl AsciiStr {
         }
     }
 
+    /// Converts a borrowed string to a borrows ascii string.
+    ///
+    /// # Failure
+    /// Returns `None` if the byte slice can not be ascii encoded.
     pub fn from_str<'a>(s: &'a str) -> Option<&'a AsciiStr> {
         AsciiStr::from_bytes(s.as_bytes())
     }
 
+    /// Returns the number of bytes in this ascii string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let s = AsciiStr::from_bytes("foo").unwrap();
+    /// assert_eq!(s.len(), 3);
+    /// ```
     pub fn len(&self) -> usize {
         self.slice.len()
+    }
+
+    /// Returns true if the ascii string contains no bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::{AsciiStr};
+    /// let mut empty = AsciiStr::from_bytes("").unwrap();
+    /// let mut full = AsciiStr::from_bytes("foo").unwrap();
+    /// assert!(empty.is_empty());
+    /// assert!(!full.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    fn as_slice(&self) -> &[Ascii] {
+        &self.slice
     }
 }
 
@@ -390,6 +827,42 @@ impl PartialEq<str> for AsciiStr {
 impl PartialEq<AsciiStr> for str {
     fn eq(&self, other: &AsciiStr) -> bool {
         other.as_str() == self
+    }
+}
+
+impl Index<Range<usize>> for AsciiStr {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: Range<usize>) -> &AsciiStr {
+        unsafe { mem::transmute(&self.slice[index]) }
+    }
+}
+
+impl Index<RangeTo<usize>> for AsciiStr {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: RangeTo<usize>) -> &AsciiStr {
+        unsafe { mem::transmute (&self.slice[index]) }
+    }
+}
+
+impl Index<RangeFrom<usize>> for AsciiStr {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, index: RangeFrom<usize>) -> &AsciiStr {
+        unsafe { mem::transmute(&self.slice[index]) }
+    }
+}
+
+impl Index<RangeFull> for AsciiStr {
+    type Output = AsciiStr;
+
+    #[inline]
+    fn index(&self, _index: RangeFull) -> &AsciiStr {
+        self
     }
 }
 
