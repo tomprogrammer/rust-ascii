@@ -16,7 +16,7 @@
 
 use std::{fmt, mem, ops};
 use std::borrow::{Borrow, ToOwned};
-use std::ops::{Deref, DerefMut, Add, Index, Range, RangeTo, RangeFrom, RangeFull};
+use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
 use std::cmp::{Ord, Ordering};
 use std::str::FromStr;
 use std::ascii::AsciiExt;
@@ -456,12 +456,14 @@ impl FromStr for AsciiString {
 impl Deref for AsciiString {
     type Target = AsciiStr;
 
+    #[inline]
     fn deref<'a>(&'a self) -> &'a AsciiStr {
         unsafe { mem::transmute(&self.vec[..]) }
     }
 }
 
 impl DerefMut for AsciiString {
+    #[inline]
     fn deref_mut<'a>(&'a mut self) -> &'a mut AsciiStr {
         unsafe { mem::transmute(&mut self.vec[..]) }
     }
@@ -573,39 +575,19 @@ impl<'a> Add<&'a AsciiStr> for AsciiString {
     }
 }
 
-impl ops::Index<ops::Range<usize>> for AsciiString {
-    type Output = AsciiStr;
+impl<T> ops::Index<T> for AsciiString where AsciiStr: ops::Index<T> {
+    type Output = <AsciiStr as ops::Index<T>>::Output;
 
     #[inline]
-    fn index(&self, index: ops::Range<usize>) -> &AsciiStr {
-        &self[..][index]
+    fn index(&self, index: T) -> &<AsciiStr as ops::Index<T>>::Output {
+        &(**self)[index]
     }
 }
 
-impl ops::Index<ops::RangeTo<usize>> for AsciiString {
-    type Output = AsciiStr;
-
+impl<T> ops::IndexMut<T> for AsciiString where AsciiStr: ops::IndexMut<T> {
     #[inline]
-    fn index(&self, index: ops::RangeTo<usize>) -> &AsciiStr {
-        &self[..][index]
-    }
-}
-
-impl ops::Index<ops::RangeFrom<usize>> for AsciiString {
-    type Output = AsciiStr;
-
-    #[inline]
-    fn index(&self, index: ops::RangeFrom<usize>) -> &AsciiStr {
-        &self[..][index]
-    }
-}
-
-impl ops::Index<ops::RangeFull> for AsciiString {
-    type Output = AsciiStr;
-
-    #[inline]
-    fn index(&self, _index: ops::RangeFull) -> &AsciiStr {
-        unsafe { mem::transmute(&self.vec[..]) }
+    fn index_mut(&mut self, index: T) -> &mut <AsciiStr as ops::Index<T>>::Output {
+        &mut (**self)[index]
     }
 }
 
@@ -830,41 +812,31 @@ impl PartialEq<AsciiStr> for str {
     }
 }
 
-impl Index<Range<usize>> for AsciiStr {
-    type Output = AsciiStr;
+macro_rules! impl_index {
+    ($lhs:ty, $idx:ty, $rhs:ty) => {
+        impl Index<$idx> for $lhs {
+            type Output = $rhs;
 
-    #[inline]
-    fn index(&self, index: Range<usize>) -> &AsciiStr {
-        unsafe { mem::transmute(&self.slice[index]) }
+            #[inline]
+            fn index(&self, index: $idx) -> &$rhs {
+                unsafe { mem::transmute(&self.slice[index]) }
+            }
+        }
+
+        impl IndexMut<$idx> for $lhs {
+            #[inline]
+            fn index_mut(&mut self, index: $idx) -> &mut $rhs {
+                unsafe { mem::transmute(&mut self.slice[index]) }
+            }
+        }
     }
 }
 
-impl Index<RangeTo<usize>> for AsciiStr {
-    type Output = AsciiStr;
-
-    #[inline]
-    fn index(&self, index: RangeTo<usize>) -> &AsciiStr {
-        unsafe { mem::transmute (&self.slice[index]) }
-    }
-}
-
-impl Index<RangeFrom<usize>> for AsciiStr {
-    type Output = AsciiStr;
-
-    #[inline]
-    fn index(&self, index: RangeFrom<usize>) -> &AsciiStr {
-        unsafe { mem::transmute(&self.slice[index]) }
-    }
-}
-
-impl Index<RangeFull> for AsciiStr {
-    type Output = AsciiStr;
-
-    #[inline]
-    fn index(&self, _index: RangeFull) -> &AsciiStr {
-        self
-    }
-}
+impl_index! { AsciiStr, usize, Ascii }
+impl_index! { AsciiStr, ops::Range<usize>, AsciiStr }
+impl_index! { AsciiStr, ops::RangeTo<usize>, AsciiStr }
+impl_index! { AsciiStr, ops::RangeFrom<usize>, AsciiStr }
+impl_index! { AsciiStr, ops::RangeFull, AsciiStr }
 
 #[cfg(feature = "unstable")]
 impl AsciiExt for Ascii {
@@ -1217,5 +1189,12 @@ mod tests {
         let ascii_str = AsciiStr::from_bytes(v).unwrap();
         assert!(sstr == ascii_str);
         assert!(ascii_str == sstr);
+    }
+
+    #[test]
+    fn compare_ascii_slice() {
+        let b = b"abc".to_ascii().unwrap();
+        let c = b"ab".to_ascii().unwrap();
+        assert_eq!(&b[..2], c);
     }
 }
