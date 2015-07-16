@@ -1192,9 +1192,18 @@ mod tests {
     }
 
     #[test]
-    fn compare_ascii_slice() {
+    fn compare_ascii_str_slice() {
         let b = b"abc".to_ascii().unwrap();
         let c = b"ab".to_ascii().unwrap();
-        assert_eq!(&b[..2], c);
+        assert_eq!(&b[..2], &c[..]);
+        assert_eq!(c[1].as_char(), 'b');
+    }
+
+    #[test]
+    fn compare_ascii_string_slice() {
+        let b = AsciiString::from_bytes("abc").unwrap();
+        let c = AsciiString::from_bytes("ab").unwrap();
+        assert_eq!(&b[..2], &c[..]);
+        assert_eq!(c[1].as_char(), 'b');
     }
 }
