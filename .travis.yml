@@ -1,8 +1,17 @@
 sudo: false
 language: rust
-
+matrix:
+  include:
+    - rust: stable
+      env: SCRIPT="test"
+    - rust: beta
+      env: SCRIPT="test"
+    - rust: nightly
+      env: SCRIPT="test"
+    - rust: nightly
+      env: SCRIPT="test --features unstable"
 script:
-  - cargo test
+  - cargo $SCRIPT
   - cargo doc
 after_success: |
   [ $TRAVIS_RUST_VERSION = nightly ] &&
