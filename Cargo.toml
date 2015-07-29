@@ -1,12 +1,13 @@
 [package]
 
 name = "ascii"
-version = "0.5.2"
-authors = ["Simon Sapin <simon.sapin@exyr.org>"]
+version = "0.5.3"
+authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
+           "Simon Sapin <simon.sapin@exyr.org>"]
 
 description = "`Ascii` type and related functionality, previously in `std::ascii`."
 license = "Apache-2.0 / MIT"
-repository = "https://github.com/SimonSapin/rust-ascii"
+repository = "https://github.com/tomprogrammer/rust-ascii"
 
 [features]
 unstable = []
