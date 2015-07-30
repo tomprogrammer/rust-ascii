@@ -12,7 +12,7 @@
 
 //! Operations on ASCII strings and characters
 
-#![cfg_attr(feature = "unstable", feature(ascii,std_misc))]
+#![cfg_attr(feature = "unstable", feature(ascii, owned_ascii_ext))]
 
 use std::{fmt, mem, ops};
 use std::borrow::{Borrow, ToOwned};
