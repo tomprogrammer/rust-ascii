@@ -688,7 +688,7 @@ impl AsciiStr {
     /// # Examples
     ///
     /// ```
-    /// # use ascii::{AsciiStr};
+    /// # use ascii::AsciiStr;
     /// let mut empty = AsciiStr::from_bytes("").unwrap();
     /// let mut full = AsciiStr::from_bytes("foo").unwrap();
     /// assert!(empty.is_empty());
@@ -696,6 +696,45 @@ impl AsciiStr {
     /// ```
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Returns an ascii string slice with leading and trailing whitespace removed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// assert_eq!("white \tspace", example.trim());
+    /// ```
+    pub fn trim(&self) -> &Self {
+        unsafe { mem::transmute(self.as_str().trim()) }
+    }
+
+    /// Returns a string slice with leading whitespace removed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// assert_eq!("white \tspace  \t", example.trim_left());
+    /// ```
+    pub fn trim_left(&self) -> &Self {
+        unsafe { mem::transmute(self.as_str().trim_left()) }
+    }
+
+    /// Returns a string slice with trainling whitespace removed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// assert_eq!("  \twhite \tspace", example.trim_right());
+    /// ```
+    pub fn trim_right(&self) -> &Self {
+        unsafe { mem::transmute(self.as_str().trim_right()) }
     }
 
     fn as_slice(&self) -> &[Ascii] {
