@@ -48,6 +48,28 @@ impl Ascii {
         }
         Err(())
     }
+
+    /// Constructs an Ascii character from a `u8`.
+    ///
+    /// # Failure
+    ///
+    /// Returns `Err(())` if the character can't be ascii encoded.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ascii::Ascii;
+    /// let a = Ascii::from_byte(65).unwrap();
+    /// assert_eq!(a.as_char(), 'A');
+    /// ```
+    #[inline]
+    pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
+        if ch <= 0x7F {
+            return Ok( Ascii { chr: ch });
+        }
+        Err(())
+    }
+
     /// Converts an ascii character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
