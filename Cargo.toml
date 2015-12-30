@@ -6,6 +6,7 @@ authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
            "Simon Sapin <simon.sapin@exyr.org>"]
 
 description = "`Ascii` type and related functionality, previously in `std::ascii`."
+documentation = "https://tomprogrammer.github.io/rust-ascii/ascii/index.html"
 license = "Apache-2.0 / MIT"
 repository = "https://github.com/tomprogrammer/rust-ascii"
 
