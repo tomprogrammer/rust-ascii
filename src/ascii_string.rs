@@ -382,6 +382,12 @@ impl Borrow<AsciiStr> for AsciiString {
     }
 }
 
+impl From<Vec<Ascii>> for AsciiString {
+    fn from(vec: Vec<Ascii>) -> Self {
+        AsciiString { vec: vec }
+    }
+}
+
 impl Into<Vec<u8>> for AsciiString {
     fn into(self) -> Vec<u8> {
         unsafe {
@@ -508,7 +514,8 @@ impl<T> IndexMut<T> for AsciiString where AsciiStr: IndexMut<T> {
 
 #[cfg(test)]
 mod tests {
-    use OwnedAsciiCast;
+    use std::str::FromStr;
+    use {Ascii, OwnedAsciiCast};
     use super::AsciiString;
 
     #[test]
@@ -521,6 +528,12 @@ mod tests {
     fn into_bytes() {
         let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
         assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59])
+    }
+
+    #[test]
+    fn from_ascii_vec() {
+        let vec = vec![Ascii::from('A').unwrap(), Ascii::from('B').unwrap()];
+        assert_eq!(AsciiString::from(vec), AsciiString::from_str("AB").unwrap());
     }
 
     #[test]
