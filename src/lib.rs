@@ -12,7 +12,7 @@
 
 //! Operations on ASCII strings and characters
 
-#![cfg_attr(feature = "unstable", feature(ascii, owned_ascii_ext))]
+#![cfg_attr(feature = "unstable", feature(ascii))]
 
 use std::{fmt, mem, ops};
 use std::borrow::{Borrow, ToOwned};
@@ -21,8 +21,6 @@ use std::cmp::{Ord, Ordering};
 use std::str::FromStr;
 use std::ascii::AsciiExt;
 use std::iter::FromIterator;
-#[cfg(feature = "unstable")]
-use std::ascii::OwnedAsciiExt;
 
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
