@@ -413,11 +413,7 @@ impl FromStr for AsciiString {
     type Err = ();
 
     fn from_str(s: &str) -> Result<AsciiString, ()> {
-        if s.is_ascii() {
-            unsafe { Ok(AsciiString::from_vec(s.as_bytes().to_vec())) }
-        } else {
-            Err(())
-        }
+        AsciiStr::from_str(s).map(AsciiStr::to_ascii_string)
     }
 }
 
