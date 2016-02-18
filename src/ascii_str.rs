@@ -1,14 +1,13 @@
 use std::{fmt, mem};
 use std::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 use std::ascii::AsciiExt;
-use std::cmp::Ordering;
 
 use AsciiCast;
 use ascii::Ascii;
 use ascii_string::AsciiString;
 
 /// A borrowed ascii string, like a slice into an `AsciiString`.
-#[derive(Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [Ascii],
 }
@@ -134,41 +133,6 @@ impl AsciiStr {
     }
 }
 
-impl PartialEq for AsciiStr {
-    fn eq(&self, other: &AsciiStr) -> bool {
-        self.as_bytes().eq(other.as_bytes())
-    }
-}
-
-impl Eq for AsciiStr {}
-
-impl PartialOrd for AsciiStr {
-    #[inline]
-    fn partial_cmp(&self, other: &AsciiStr) -> Option<Ordering> {
-        self.as_bytes().partial_cmp(other.as_bytes())
-    }
-
-    #[inline]
-    fn lt(&self, other: &AsciiStr) -> bool {
-        self.as_bytes().lt(other.as_bytes())
-    }
-
-    #[inline]
-    fn le(&self, other: &AsciiStr) -> bool {
-        self.as_bytes().le(other.as_bytes())
-    }
-
-    #[inline]
-    fn gt(&self, other: &AsciiStr) -> bool {
-        self.as_bytes().gt(other.as_bytes())
-    }
-
-    #[inline]
-    fn ge(&self, other: &AsciiStr) -> bool {
-        self.as_bytes().ge(other.as_bytes())
-    }
-}
-
 impl PartialEq<str> for AsciiStr {
     fn eq(&self, other: &str) -> bool {
         self.as_str() == other
@@ -190,13 +154,6 @@ impl PartialOrd<AsciiString> for AsciiStr {
 }
 */
 
-impl Ord for AsciiStr {
-    #[inline]
-    fn cmp(&self, other: &AsciiStr) -> Ordering {
-        self.as_bytes().cmp(other.as_bytes())
-    }
-}
-
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
@@ -207,13 +164,13 @@ impl ToOwned for AsciiStr {
 
 impl AsRef<[u8]> for AsciiStr {
     fn as_ref(&self) -> &[u8] {
-        unsafe { mem::transmute(&self.slice) }
+        self.as_bytes()
     }
 }
 
 impl AsRef<str> for AsciiStr {
     fn as_ref(&self) -> &str {
-        unsafe { mem::transmute(&self.slice) }
+        self.as_str()
     }
 }
 

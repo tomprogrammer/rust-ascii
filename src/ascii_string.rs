@@ -9,7 +9,7 @@ use ascii::Ascii;
 use ascii_str::AsciiStr;
 
 /// A growable string stored as an ascii encoded buffer.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiString {
     vec: Vec<Ascii>,
 }
@@ -432,13 +432,6 @@ impl fmt::Display for AsciiString {
 impl fmt::Debug for AsciiString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(&**self, f)
-    }
-}
-
-impl Default for AsciiString {
-    #[inline]
-    fn default() -> AsciiString {
-        AsciiString::new()
     }
 }
 
