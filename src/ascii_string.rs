@@ -455,6 +455,12 @@ impl AsRef<AsciiStr> for AsciiString {
     }
 }
 
+impl AsMut<AsciiStr> for AsciiString {
+    fn as_mut(&mut self) -> &mut AsciiStr {
+        &mut *self
+    }
+}
+
 impl FromStr for AsciiString {
     type Err = ();
 
