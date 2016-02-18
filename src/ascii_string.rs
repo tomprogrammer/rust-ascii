@@ -45,6 +45,46 @@ impl AsciiString {
         }
     }
 
+    /// Creates a new `AsciiString` from a length, capacity and pointer.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't checked:
+    ///
+    /// * The memory at `ptr` need to have been previously allocated by the same allocator this
+    ///   library uses.
+    /// * `length` needs to be less than or equal to `capacity`.
+    /// * `capacity` needs to be the correct value.
+    ///
+    /// Violating these may cause problems like corrupting the allocator's internal datastructures.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// use std::mem;
+    ///
+    /// unsafe {
+    ///    let s = AsciiString::from_bytes("hello").unwrap();
+    ///    let ptr = s.as_ptr();
+    ///    let len = s.len();
+    ///    let capacity = s.capacity();
+    ///
+    ///    mem::forget(s);
+    ///
+    ///    let s = AsciiString::from_raw_parts(ptr as *mut _, len, capacity);
+    ///
+    ///    assert_eq!(AsciiString::from_bytes("hello").unwrap(), s);
+    /// }
+    /// ```
+    pub unsafe fn from_raw_parts(buf: *mut Ascii, length: usize, capacity: usize) -> Self {
+        AsciiString {
+            vec: Vec::from_raw_parts(buf, length, capacity),
+        }
+    }
+
     /// Converts a vector of bytes to an `AsciiString` without checking that the vector contains
     /// valid ascii characters.
     ///
