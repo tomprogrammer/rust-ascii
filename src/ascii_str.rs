@@ -28,8 +28,32 @@ impl AsciiStr {
         unsafe { mem::transmute(&self.slice) }
     }
 
+    /// Returns the entire string as slice of `Ascii` characters.
     pub fn as_slice(&self) -> &[Ascii] {
         &self.slice
+    }
+
+    /// Returns the entire string as mutable slice of `Ascii` characters.
+    pub fn as_mut_slice(&mut self) -> &mut [Ascii] {
+        &mut self.slice
+    }
+
+    /// Returns a raw pointer to the `AsciiStr`'s buffer.
+    ///
+    /// The caller must ensure that the slice outlives the pointer this function returns, or else it
+    /// will end up pointing to garbage. Modifying the `AsciiStr` may cause it's buffer to be
+    /// reallocated, which would also make any pointers to it invalid.
+    pub fn as_ptr(&self) -> *const Ascii {
+        self.as_slice().as_ptr()
+    }
+
+    /// Returns an unsafe mutable pointer to the `AsciiStr`'s buffer.
+    ///
+    /// The caller must ensure that the slice outlives the pointer this function returns, or else it
+    /// will end up pointing to garbage. Modifying the `AsciiStr` may cause it's buffer to be
+    /// reallocated, which would also make any pointers to it invalid.
+    pub fn as_mut_ptr(&mut self) -> *mut Ascii {
+        self.as_mut_slice().as_mut_ptr()
     }
 
     /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
