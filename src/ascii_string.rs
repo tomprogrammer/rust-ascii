@@ -45,6 +45,55 @@ impl AsciiString {
         }
     }
 
+    /// Converts a vector of bytes to an `AsciiString` without checking that the vector contains
+    /// valid ascii characters.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it does not check that the bytes passed to it are valid
+    /// ascii characters. If this constraint is violated, it may cause memory unsafety issues with
+    /// future of the `AsciiString`, as the rest of this library assumes that `AsciiString`s are
+    /// ascii encoded.
+    pub unsafe fn from_bytes_unchecked<B>(bytes: B) -> Self
+        where B: Into<Vec<u8>>
+    {
+        let bytes: Vec<u8> = bytes.into();
+        let vec = Vec::from_raw_parts(bytes.as_ptr() as *mut Ascii,
+                                      bytes.len(),
+                                      bytes.capacity());
+
+        // We forget `src` to avoid freeing it at the end of the scope.
+        // Otherwise, the returned `AsciiString` would point to freed memory.
+        mem::forget(bytes);
+        AsciiString { vec: vec }
+    }
+
+    /// Converts anything that can represent a byte buffer into an `AsciiString`.
+    ///
+    /// # Failure
+    /// Returns the byte buffer if it can not be ascii encoded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiString;
+    /// let foo = AsciiString::from_bytes("foo").unwrap();
+    /// let err = AsciiString::from_bytes("Ŋ");
+    /// assert_eq!(foo.as_str(), "foo");
+    /// assert_eq!(err, Err("Ŋ"));
+    /// ```
+    pub fn from_bytes<B>(bytes: B) -> Result<AsciiString, B>
+        where B: Into<Vec<u8>> + AsRef<[u8]>
+    {
+        unsafe {
+            if bytes.as_ref().is_ascii() {
+                Ok( AsciiString::from_bytes_unchecked(bytes) )
+            } else {
+                Err(bytes)
+            }
+        }
+    }
+
     /// Pushes the given ascii string onto this ascii string buffer.
     ///
     /// # Examples
@@ -272,39 +321,6 @@ impl AsciiString {
     #[inline]
     pub fn clear(&mut self) {
         self.vec.clear()
-    }
-
-    /// Converts anything that can represent a byte buffer into an `AsciiString`.
-    ///
-    /// # Failure
-    /// Returns the byte buffer if it can not be ascii encoded.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ascii::AsciiString;
-    /// let foo = AsciiString::from_bytes("foo").unwrap();
-    /// let err = AsciiString::from_bytes("Ŋ");
-    /// assert_eq!(foo.as_str(), "foo");
-    /// assert_eq!(err, Err("Ŋ"));
-    /// ```
-    pub fn from_bytes<B>(bytes: B) -> Result<AsciiString, B> where B: Into<Vec<u8>> + AsRef<[u8]> {
-        if bytes.as_ref().is_ascii() {
-            unsafe { Ok( AsciiString::from_vec(bytes.into()) ) }
-        } else {
-            Err(bytes)
-        }
-    }
-
-    unsafe fn from_vec(src: Vec<u8>) -> AsciiString {
-        let vec = Vec::from_raw_parts(src.as_ptr() as *mut Ascii,
-                                      src.len(),
-                                      src.capacity());
-
-        // We forget `src` to avoid freeing it at the end of the scope.
-        // Otherwise, the returned `AsciiString` would point to freed memory.
-        mem::forget(src);
-        AsciiString { vec: vec }
     }
 }
 
