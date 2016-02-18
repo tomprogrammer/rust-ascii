@@ -36,31 +36,29 @@ impl AsciiStr {
 
     /// Converts anything that can represent a byte slice into an `AsciiStr`.
     ///
-    /// # Failure
-    /// Returns `None` if the byte slice can not be ascii encoded.
-    ///
     /// # Examples
     ///
     /// ```
     /// # use ascii::AsciiStr;
-    /// let foo = AsciiStr::from_bytes("foo").unwrap();
+    /// let foo = AsciiStr::from_bytes("foo");
     /// let err = AsciiStr::from_bytes("Ŋ");
-    /// assert_eq!(foo.as_str(), "foo");
-    /// assert_eq!(err, None);
+    /// assert_eq!(foo.unwrap().as_str(), "foo");
+    /// assert_eq!(err, Err(()));
     /// ```
-    pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Option<&'a AsciiStr> where B: AsRef<[u8]> {
-        if bytes.as_ref().is_ascii() {
-            unsafe { Some( mem::transmute(bytes.as_ref()) ) }
-        } else {
-            None
+    pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Result<&'a AsciiStr, ()>
+        where B: AsRef<[u8]>
+    {
+        unsafe {
+            if bytes.as_ref().is_ascii() {
+                Ok( mem::transmute(bytes.as_ref()) )
+            } else {
+                Err(())
+            }
         }
     }
 
     /// Converts a borrowed string to a borrows ascii string.
-    ///
-    /// # Failure
-    /// Returns `None` if the byte slice can not be ascii encoded.
-    pub fn from_str<'a>(s: &'a str) -> Option<&'a AsciiStr> {
+    pub fn from_str<'a>(s: &'a str) -> Result<&'a AsciiStr, ()> {
         AsciiStr::from_bytes(s.as_bytes())
     }
 
