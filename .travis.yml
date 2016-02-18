@@ -1,23 +1,26 @@
 sudo: false
 language: rust
-matrix:
-  include:
-    - rust: stable
-      env: SCRIPT="test"
-    - rust: beta
-      env: SCRIPT="test"
-    - rust: nightly
-      env: SCRIPT="test"
-    - rust: nightly
-      env: SCRIPT="test --features unstable"
+
+rust:
+  - nightly
+  - beta
+  - stable
+  - 1.1.0
+
+before_script:
+  - |
+    pip install 'travis-cargo<0.2' --user &&
+    export PATH=$HOME/.local/bin:$PATH
+
 script:
-  - cargo $SCRIPT
-  - cargo doc
-after_success: |
-  [ $TRAVIS_RUST_VERSION = nightly ] &&
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  echo '<meta http-equiv=refresh content=0;url=ascii/index.html>' > target/doc/index.html &&
-  pip install --user ghp-import &&
-  ~/.local/bin/ghp-import -n target/doc &&
-  git push -qf https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+  - |
+    travis-cargo build &&
+    travis-cargo test &&
+    travis-cargo --only stable doc
+
+after_success:
+  - travis-cargo --only stable doc-upload
+
+env:
+  global:
+    secure: ddcWXicVcCooC+Dy8guGruZY2bAU3oyGjrxdC3YNfBYdatEKzW1toAiQyN8SRyZyfoHsbb7lh4YeBfv1rpmTPM6nvHMz9CHMlvED8Y+/QuYoKN2qrNiQ7eQ9xSVhOVlha/GMPSZXxmEIuJVj0Dn1D/S4RWyNMKCJdj2YvybPzOU=
