@@ -24,14 +24,18 @@ impl AsciiStr {
         unsafe { mem::transmute(&self.slice) }
     }
 
-    /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
-    pub fn to_ascii_string(&self) -> AsciiString {
-        AsciiString { vec: self.slice.to_vec() }
-    }
-
     /// Converts `&self` into a byte slice.
     pub fn as_bytes(&self) -> &[u8] {
         unsafe { mem::transmute(&self.slice) }
+    }
+
+    pub fn as_slice(&self) -> &[Ascii] {
+        &self.slice
+    }
+
+    /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
+    pub fn to_ascii_string(&self) -> AsciiString {
+        AsciiString::from(self.slice.to_vec())
     }
 
     /// Converts anything that can represent a byte slice into an `AsciiStr`.
@@ -127,10 +131,6 @@ impl AsciiStr {
     /// ```
     pub fn trim_right(&self) -> &Self {
         unsafe { mem::transmute(self.as_str().trim_right()) }
-    }
-
-    fn as_slice(&self) -> &[Ascii] {
-        &self.slice
     }
 }
 
