@@ -18,7 +18,6 @@ mod ascii;
 mod ascii_string;
 mod ascii_str;
 
-use std::mem;
 use std::borrow::Borrow;
 use std::ascii::AsciiExt;
 
