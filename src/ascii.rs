@@ -96,25 +96,25 @@ impl Ascii {
     /// Checks if the character is printable (except space)
     #[inline]
     pub fn is_graph(&self) -> bool {
-        (self.chr - 0x21) < 0x5E
+        self.chr.wrapping_sub(0x21) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
     #[inline]
     pub fn is_print(&self) -> bool {
-        (self.chr - 0x20) < 0x5F
+        self.chr.wrapping_sub(0x20) < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
     #[inline]
     pub fn is_lowercase(&self) -> bool {
-        (self.chr - b'a') < 26
+        self.chr.wrapping_sub(b'a') < 26
     }
 
     /// Checks if the character is alphabetic and uppercase
     #[inline]
     pub fn is_uppercase(&self) -> bool {
-        (self.chr - b'A') < 26
+        self.chr.wrapping_sub(b'A') < 26
     }
 
     /// Checks if the character is punctuation
@@ -126,7 +126,7 @@ impl Ascii {
     /// Checks if the character is a valid hex digit
     #[inline]
     pub fn is_hex(&self) -> bool {
-        self.is_digit() || ((self.chr | 32u8) - b'a') < 6
+        self.is_digit() || (self.chr | 32u8).wrapping_sub(b'a') < 6
     }
 }
 
