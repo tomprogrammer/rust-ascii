@@ -88,42 +88,108 @@ impl Ascii {
     }
 
     /// Check if the character is a control character
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('\0'.to_ascii().unwrap().is_control(), true);
+    /// assert_eq!('n'.to_ascii().unwrap().is_control(), false);
+    /// assert_eq!(' '.to_ascii().unwrap().is_control(), false);
+    /// assert_eq!('\n'.to_ascii().unwrap().is_control(), true);
+    /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
         self.chr < 0x20 || self.chr == 0x7F
     }
 
     /// Checks if the character is printable (except space)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('n'.to_ascii().unwrap().is_graph(), true);
+    /// assert_eq!(' '.to_ascii().unwrap().is_graph(), false);
+    /// assert_eq!('\n'.to_ascii().unwrap().is_graph(), false);
+    /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
         self.chr.wrapping_sub(0x21) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('n'.to_ascii().unwrap().is_print(), true);
+    /// assert_eq!(' '.to_ascii().unwrap().is_print(), true);
+    /// assert_eq!('\n'.to_ascii().unwrap().is_print(), false);
+    /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
         self.chr.wrapping_sub(0x20) < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('a'.to_ascii().unwrap().is_lowercase(), true);
+    /// assert_eq!('A'.to_ascii().unwrap().is_lowercase(), false);
+    /// assert_eq!('@'.to_ascii().unwrap().is_lowercase(), false);
+    /// ```
     #[inline]
     pub fn is_lowercase(&self) -> bool {
         self.chr.wrapping_sub(b'a') < 26
     }
 
     /// Checks if the character is alphabetic and uppercase
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('A'.to_ascii().unwrap().is_uppercase(), true);
+    /// assert_eq!('a'.to_ascii().unwrap().is_uppercase(), false);
+    /// assert_eq!('@'.to_ascii().unwrap().is_uppercase(), false);
+    /// ```
     #[inline]
     pub fn is_uppercase(&self) -> bool {
         self.chr.wrapping_sub(b'A') < 26
     }
 
     /// Checks if the character is punctuation
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('n'.to_ascii().unwrap().is_punctuation(), false);
+    /// assert_eq!(' '.to_ascii().unwrap().is_punctuation(), false);
+    /// assert_eq!('_'.to_ascii().unwrap().is_punctuation(), true);
+    /// assert_eq!('~'.to_ascii().unwrap().is_punctuation(), true);
+    /// ```
     #[inline]
     pub fn is_punctuation(&self) -> bool {
         self.is_graph() && !self.is_alphanumeric()
     }
 
     /// Checks if the character is a valid hex digit
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ascii::AsciiCast;
+    /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);
+    /// assert_eq!('a'.to_ascii().unwrap().is_hex(), true);
+    /// assert_eq!('F'.to_ascii().unwrap().is_hex(), true);
+    /// assert_eq!(32u8.to_ascii().unwrap().is_hex(), false);
+    /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
         self.is_digit() || (self.chr | 32u8).wrapping_sub(b'a') < 6
