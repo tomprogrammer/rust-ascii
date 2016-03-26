@@ -238,8 +238,8 @@ impl Ascii {
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
     pub fn is_alphabetic(&self) -> bool {
-        (self >= &Ascii::a && self <= &Ascii::z) ||
-        (self >= &Ascii::A && self <= &Ascii::Z)
+        let c = self.as_byte() | 0b010_0000;// Turns uppercase into lowercase.
+        c >= b'a' && c <= b'z'
     }
 
     /// Check if the character is a number (0-9)
