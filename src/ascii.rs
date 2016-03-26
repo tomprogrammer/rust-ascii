@@ -1,4 +1,5 @@
 use std::fmt;
+#[cfg(feature="unstable")]
 use std::ascii::AsciiExt;
 
 use AsciiCast;
