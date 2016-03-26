@@ -1,6 +1,6 @@
 extern crate ascii;
 
-use ascii::{Ascii, AsciiStr, AsciiString, AsciiCast, OwnedAsciiCast};
+use ascii::{AsciiStr, AsciiString, AsciiCast, OwnedAsciiCast};
 
 #[test]
 fn ascii_vec() {
