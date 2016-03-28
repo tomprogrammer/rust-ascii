@@ -10,173 +10,272 @@ use AsciiCast;
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
 pub enum Ascii {
-	/**`'\0'`*/Null            =   0,
-	/** [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
-	 */        SOH             =   1,
-	/** [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
-	 */        SOX             =   2,
-	/** [End Of teXt](http://en.wikipedia.org/wiki/End-of-Text_character)
-	 */        ETX             =   3,
-	/** [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
-	 */        EOT             =   4,
-	/** [Enquiry](http://en.wikipedia.org/wiki/Enquiry_character)
-	 */        ENQ             =   5,
-	/** [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
-	 */        ACK             =   6,
-	/** [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
-
-	   '\a' is not supported by Rust.
-	 */        Bell            =   7,
-	/** [Backspace character](http://en.wikipedia.org/wiki/Backspace)
-
-	   '\b' is not supported by Rust.
-	 */        BackSpace       =   8,
-	/**`'\t'`*/Tab             =   9,
-	/**`'\n'`*/LineFeed        =  10,
-	/** [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
-
-	   '\v' is not supported by Rust.
-	 */        VerticalTab     =  11,
-	/** [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
-
-	   '\f' is not supported by Rust.
-	 */        FormFeed        =  12,
-	/**`'\r'`*/CarriageReturn  =  13,
-	/** [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
-	 */        SI              =  14,
-	/** [Shift Out](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
-	 */        SO              =  15,
-	/** [Data Link Escape](http://en.wikipedia.org/wiki/Data_Link_Escape)
-	 */        DLE             =  16,
-	/** [Device control 1, often XON](http://en.wikipedia.org/wiki/Device_Control_1)
-	 */        DC1             =  17,
-	/** Device control 2
-	 */        DC2             =  18,
-	/** Device control 3, Often XOFF
-	 */        DC3             =  19,
-	/** Device control 4
-	 */        DC4             =  20,
-	/** [Negative Acknowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
-	 */        NAK             =  21,
-	/** [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
-	 */        SYN             =  22,
-	/** [End of Transmission Block](http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
-	 */        ETB             =  23,
-	/** [Cancel](http://en.wikipedia.org/wiki/Cancel_character)
-	 */        CAN             =  24,
-	/** [End of Medium](http://en.wikipedia.org/wiki/End_of_Medium)
-	 */        EM              =  25,
-	/** [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
-	 */        SUB             =  26,
-	/** [Escape](http://en.wikipedia.org/wiki/Escape_character)
-
-	   '\e' is not supported in Rust.
-	 */        Escape          =  27,
-	/** [File Separator](http://en.wikipedia.org/wiki/File_separator)
-	 */        FS              =  28,
-	/** [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
-	 */        GS              =  29,
-	/** [Record Separator](http://en.wikipedia.org/wiki/Record_separator)
-	 */        RS              =  30,
-	/** [Unit Separator](http://en.wikipedia.org/wiki/Unit_separator)
-	 */        US              =  31,
-	/**`' '`*/ Space           =  32,
-	/**`'!'`*/ Exclamation     =  33,
-	/**`'"'`*/ Quotation       =  34,
-	/**`'''`*/ Hash            =  35,
-	/**`'$'`*/ Dollar          =  36,
-	/**`'%'`*/ Percent         =  37,
-	/**`'&'`*/ Ampersand       =  38,
-	/**`'''`*/ Apostrophe      =  39,
-	/**`'('`*/ ParenOpen       =  40,
-	/**`')'`*/ ParenClose      =  41,
-	/**`'*'`*/ Asterisk        =  42,
-	/**`'+'`*/ Plus            =  43,
-	/**`','`*/ Comma           =  44,
-	/**`'-'`*/ Minus           =  45,
-	/**`'.'`*/ Dot             =  46,
-	/**`'/'`*/ Slash           =  47,
-	/**`'0'`*/ _0              =  48,
-	/**`'1'`*/ _1              =  49,
-	/**`'2'`*/ _2              =  50,
-	/**`'3'`*/ _3              =  51,
-	/**`'4'`*/ _4              =  52,
-	/**`'5'`*/ _5              =  53,
-	/**`'6'`*/ _6              =  54,
-	/**`'7'`*/ _7              =  55,
-	/**`'8'`*/ _8              =  56,
-	/**`'9'`*/ _9              =  57,
-	/**`':'`*/ Colon           =  58,
-	/**`';'`*/ SemiColon       =  59,
-	/**`'<'`*/ LessThan        =  60,
-	/**`'='`*/ Equal           =  61,
-	/**`'>'`*/ GreaterThan     =  62,
-	/**`'?'`*/ Question        =  63,
-	/**`'@'`*/ At              =  64,
-	/**`'A'`*/ A               =  65,
-	/**`'B'`*/ B               =  66,
-	/**`'C'`*/ C               =  67,
-	/**`'D'`*/ D               =  68,
-	/**`'E'`*/ E               =  69,
-	/**`'F'`*/ F               =  70,
-	/**`'G'`*/ G               =  71,
-	/**`'H'`*/ H               =  72,
-	/**`'I'`*/ I               =  73,
-	/**`'J'`*/ J               =  74,
-	/**`'K'`*/ K               =  75,
-	/**`'L'`*/ L               =  76,
-	/**`'M'`*/ M               =  77,
-	/**`'N'`*/ N               =  78,
-	/**`'O'`*/ O               =  79,
-	/**`'P'`*/ P               =  80,
-	/**`'Q'`*/ Q               =  81,
-	/**`'R'`*/ R               =  82,
-	/**`'S'`*/ S               =  83,
-	/**`'T'`*/ T               =  84,
-	/**`'U'`*/ U               =  85,
-	/**`'V'`*/ V               =  86,
-	/**`'W'`*/ W               =  87,
-	/**`'X'`*/ X               =  88,
-	/**`'Y'`*/ Y               =  89,
-	/**`'Z'`*/ Z               =  90,
-	/**`'['`*/ BracketOpen     =  91,
-	/**`'\'`*/ BackSlash       =  92,
-	/**`']'`*/ BracketClose    =  93,
-	/**`'_'`*/ Caret           =  94,
-	/**`'_'`*/ UnderScore      =  95,
-	/**`'`'`*/ Grave           =  96,
-	/**`'a'`*/ a               =  97,
-	/**`'b'`*/ b               =  98,
-	/**`'c'`*/ c               =  99,
-	/**`'d'`*/ d               = 100,
-	/**`'e'`*/ e               = 101,
-	/**`'f'`*/ f               = 102,
-	/**`'g'`*/ g               = 103,
-	/**`'h'`*/ h               = 104,
-	/**`'i'`*/ i               = 105,
-	/**`'j'`*/ j               = 106,
-	/**`'k'`*/ k               = 107,
-	/**`'l'`*/ l               = 108,
-	/**`'m'`*/ m               = 109,
-	/**`'n'`*/ n               = 110,
-	/**`'o'`*/ o               = 111,
-	/**`'p'`*/ p               = 112,
-	/**`'q'`*/ q               = 113,
-	/**`'r'`*/ r               = 114,
-	/**`'s'`*/ s               = 115,
-	/**`'t'`*/ t               = 116,
-	/**`'u'`*/ u               = 117,
-	/**`'v'`*/ v               = 118,
-	/**`'w'`*/ w               = 119,
-	/**`'x'`*/ x               = 120,
-	/**`'y'`*/ y               = 121,
-	/**`'z'`*/ z               = 122,
-	/**`'{'`*/ CurlyBraceOpen  = 123,
-	/**`'|'`*/ VerticalBar     = 124,
-	/**`'}'`*/ CurlyBraceClose = 125,
-	/**`'~'`*/ Tilde           = 126,
-	/** [Delete](http://en.wikipedia.org/wiki/Delete_character)
-	 */        DEL             = 127,
+    /// `'\0'`
+    Null            =   0,
+    /// [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
+    SOH             =   1,
+    /// [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
+    SOX             =   2,
+    /// [End Of teXt](http://en.wikipedia.org/wiki/End-of-Text_character)
+    ETX             =   3,
+    /// [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
+    EOT             =   4,
+    /// [Enquiry](http://en.wikipedia.org/wiki/Enquiry_character)
+    ENQ             =   5,
+    /// [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
+    ACK             =   6,
+    /// `'\a'`: [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
+    ///
+    /// The escape code is not supported by Rust.
+    Bell            =   7,
+    /// `'\b'`: [Backspace character](http://en.wikipedia.org/wiki/Backspace)
+    ///
+    /// The escape code is not supported by Rust.
+    BackSpace       =   8,
+    /// `'\t'`
+    Tab             =   9,
+    /// `'\n'`
+    LineFeed        =  10,
+    /// `'\v'`: [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
+    ///
+    /// The escape code is not supported by Rust.
+    VerticalTab     =  11,
+    /// `'\f'`: [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
+    ///
+    /// The escape code is not supported by Rust.
+    FormFeed        =  12,
+    /// `'\r'`
+    CarriageReturn  =  13,
+    /// [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
+    SI              =  14,
+    /// [Shift Out](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
+    SO              =  15,
+    /// [Data Link Escape](http://en.wikipedia.org/wiki/Data_Link_Escape)
+    DLE             =  16,
+    /// [Device control 1, often XON](http://en.wikipedia.org/wiki/Device_Control_1)
+    DC1             =  17,
+    /// Device control 2
+    DC2             =  18,
+    /// Device control 3, Often XOFF
+    DC3             =  19,
+    /// Device control 4
+    DC4             =  20,
+    /// [Negative Acknowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
+    NAK             =  21,
+    /// [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
+    SYN             =  22,
+    /// [End of Transmission Block](http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
+    ETB             =  23,
+    /// [Cancel](http://en.wikipedia.org/wiki/Cancel_character)
+    CAN             =  24,
+    /// [End of Medium](http://en.wikipedia.org/wiki/End_of_Medium)
+    EM              =  25,
+    /// [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
+    SUB             =  26,
+    /// `'\e': `[Escape](http://en.wikipedia.org/wiki/Escape_character)
+    ///
+    /// The escape code is not supported in Rust.
+    Escape          =  27,
+    /// [File Separator](http://en.wikipedia.org/wiki/File_separator)
+    FS              =  28,
+    /// [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
+    GS              =  29,
+    /// [Record Separator](http://en.wikipedia.org/wiki/Record_separator)
+    RS              =  30,
+    /// [Unit Separator](http://en.wikipedia.org/wiki/Unit_separator)
+    US              =  31,
+    /// `' '`
+    Space           =  32,
+    /// `'!'`
+    Exclamation     =  33,
+    /// `'"'`
+    Quotation       =  34,
+    /// `'''`
+    Hash            =  35,
+    /// `'$'`
+    Dollar          =  36,
+    /// `'%'`
+    Percent         =  37,
+    /// `'&'`
+    Ampersand       =  38,
+    /// `'''`
+    Apostrophe      =  39,
+    /// `'('`
+    ParenOpen       =  40,
+    /// `')'`
+    ParenClose      =  41,
+    /// `'*'`
+    Asterisk        =  42,
+    /// `'+'`
+    Plus            =  43,
+    /// `','`
+    Comma           =  44,
+    /// `'-'`
+    Minus           =  45,
+    /// `'.'`
+    Dot             =  46,
+    /// `'/'`
+    Slash           =  47,
+    /// `'0'`
+    _0              =  48,
+    /// `'1'`
+    _1              =  49,
+    /// `'2'`
+    _2              =  50,
+    /// `'3'`
+    _3              =  51,
+    /// `'4'`
+    _4              =  52,
+    /// `'5'`
+    _5              =  53,
+    /// `'6'`
+    _6              =  54,
+    /// `'7'`
+    _7              =  55,
+    /// `'8'`
+    _8              =  56,
+    /// `'9'`
+    _9              =  57,
+    /// `':'`
+    Colon           =  58,
+    /// `';'`
+    SemiColon       =  59,
+    /// `'<'`
+    LessThan        =  60,
+    /// `'='`
+    Equal           =  61,
+    /// `'>'`
+    GreaterThan     =  62,
+    /// `'?'`
+    Question        =  63,
+    /// `'@'`
+    At              =  64,
+    /// `'A'`
+    A               =  65,
+    /// `'B'`
+    B               =  66,
+    /// `'C'`
+    C               =  67,
+    /// `'D'`
+    D               =  68,
+    /// `'E'`
+    E               =  69,
+    /// `'F'`
+    F               =  70,
+    /// `'G'`
+    G               =  71,
+    /// `'H'`
+    H               =  72,
+    /// `'I'`
+    I               =  73,
+    /// `'J'`
+    J               =  74,
+    /// `'K'`
+    K               =  75,
+    /// `'L'`
+    L               =  76,
+    /// `'M'`
+    M               =  77,
+    /// `'N'`
+    N               =  78,
+    /// `'O'`
+    O               =  79,
+    /// `'P'`
+    P               =  80,
+    /// `'Q'`
+    Q               =  81,
+    /// `'R'`
+    R               =  82,
+    /// `'S'`
+    S               =  83,
+    /// `'T'`
+    T               =  84,
+    /// `'U'`
+    U               =  85,
+    /// `'V'`
+    V               =  86,
+    /// `'W'`
+    W               =  87,
+    /// `'X'`
+    X               =  88,
+    /// `'Y'`
+    Y               =  89,
+    /// `'Z'`
+    Z               =  90,
+    /// `'['`
+    BracketOpen     =  91,
+    /// `'\'`
+    BackSlash       =  92,
+    /// `']'`
+    BracketClose    =  93,
+    /// `'_'`
+    Caret           =  94,
+    /// `'_'`
+    UnderScore      =  95,
+    /// `'`'`
+    Grave           =  96,
+    /// `'a'`
+    a               =  97,
+    /// `'b'`
+    b               =  98,
+    /// `'c'`
+    c               =  99,
+    /// `'d'`
+    d               = 100,
+    /// `'e'`
+    e               = 101,
+    /// `'f'`
+    f               = 102,
+    /// `'g'`
+    g               = 103,
+    /// `'h'`
+    h               = 104,
+    /// `'i'`
+    i               = 105,
+    /// `'j'`
+    j               = 106,
+    /// `'k'`
+    k               = 107,
+    /// `'l'`
+    l               = 108,
+    /// `'m'`
+    m               = 109,
+    /// `'n'`
+    n               = 110,
+    /// `'o'`
+    o               = 111,
+    /// `'p'`
+    p               = 112,
+    /// `'q'`
+    q               = 113,
+    /// `'r'`
+    r               = 114,
+    /// `'s'`
+    s               = 115,
+    /// `'t'`
+    t               = 116,
+    /// `'u'`
+    u               = 117,
+    /// `'v'`
+    v               = 118,
+    /// `'w'`
+    w               = 119,
+    /// `'x'`
+    x               = 120,
+    /// `'y'`
+    y               = 121,
+    /// `'z'`
+    z               = 122,
+    /// `'{'`
+    CurlyBraceOpen  = 123,
+    /// `'|'`
+    VerticalBar     = 124,
+    /// `'}'`
+    CurlyBraceClose = 125,
+    /// `'~'`
+    Tilde           = 126,
+    /// [Delete](http://en.wikipedia.org/wiki/Delete_character)
+    DEL             = 127,
 }
 
 impl Ascii {
