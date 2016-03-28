@@ -1,12 +1,183 @@
+use std::mem::transmute;
 use std::fmt;
 #[cfg(feature="unstable")]
 use std::ascii::AsciiExt;
 
 use AsciiCast;
 
+#[allow(non_camel_case_types)]
 /// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
-pub struct Ascii { chr: u8 }
+#[repr(u8)]
+pub enum Ascii {
+	/**`'\0'`*/Null            =   0,
+	/** [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
+	 */        SOH             =   1,
+	/** [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
+	 */        SOX             =   2,
+	/** [End Of teXt](http://en.wikipedia.org/wiki/End-of-Text_character)
+	 */        ETX             =   3,
+	/** [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
+	 */        EOT             =   4,
+	/** [Enquiry](http://en.wikipedia.org/wiki/Enquiry_character)
+	 */        ENQ             =   5,
+	/** [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
+	 */        ACK             =   6,
+	/** [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
+
+	   '\a' is not supported by Rust.
+	 */        Bell            =   7,
+	/** [Backspace character](http://en.wikipedia.org/wiki/Backspace)
+
+	   '\b' is not supported by Rust.
+	 */        BackSpace       =   8,
+	/**`'\t'`*/Tab             =   9,
+	/**`'\n'`*/LineFeed        =  10,
+	/** [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
+
+	   '\v' is not supported by Rust.
+	 */        VerticalTab     =  11,
+	/** [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
+
+	   '\f' is not supported by Rust.
+	 */        FormFeed        =  12,
+	/**`'\r'`*/CarriageReturn  =  13,
+	/** [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
+	 */        SI              =  14,
+	/** [Shift Out](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
+	 */        SO              =  15,
+	/** [Data Link Escape](http://en.wikipedia.org/wiki/Data_Link_Escape)
+	 */        DLE             =  16,
+	/** [Device control 1, often XON](http://en.wikipedia.org/wiki/Device_Control_1)
+	 */        DC1             =  17,
+	/** Device control 2
+	 */        DC2             =  18,
+	/** Device control 3, Often XOFF
+	 */        DC3             =  19,
+	/** Device control 4
+	 */        DC4             =  20,
+	/** [Negative Acknowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
+	 */        NAK             =  21,
+	/** [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
+	 */        SYN             =  22,
+	/** [End of Transmission Block](http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
+	 */        ETB             =  23,
+	/** [Cancel](http://en.wikipedia.org/wiki/Cancel_character)
+	 */        CAN             =  24,
+	/** [End of Medium](http://en.wikipedia.org/wiki/End_of_Medium)
+	 */        EM              =  25,
+	/** [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
+	 */        SUB             =  26,
+	/** [Escape](http://en.wikipedia.org/wiki/Escape_character)
+
+	   '\e' is not supported in Rust.
+	 */        Escape          =  27,
+	/** [File Separator](http://en.wikipedia.org/wiki/File_separator)
+	 */        FS              =  28,
+	/** [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
+	 */        GS              =  29,
+	/** [Record Separator](http://en.wikipedia.org/wiki/Record_separator)
+	 */        RS              =  30,
+	/** [Unit Separator](http://en.wikipedia.org/wiki/Unit_separator)
+	 */        US              =  31,
+	/**`' '`*/ Space           =  32,
+	/**`'!'`*/ Exclamation     =  33,
+	/**`'"'`*/ Quotation       =  34,
+	/**`'''`*/ Hash            =  35,
+	/**`'$'`*/ Dollar          =  36,
+	/**`'%'`*/ Percent         =  37,
+	/**`'&'`*/ Ampersand       =  38,
+	/**`'''`*/ Apostrophe      =  39,
+	/**`'('`*/ ParenOpen       =  40,
+	/**`')'`*/ ParenClose      =  41,
+	/**`'*'`*/ Asterisk        =  42,
+	/**`'+'`*/ Plus            =  43,
+	/**`','`*/ Comma           =  44,
+	/**`'-'`*/ Minus           =  45,
+	/**`'.'`*/ Dot             =  46,
+	/**`'/'`*/ Slash           =  47,
+	/**`'0'`*/ _0              =  48,
+	/**`'1'`*/ _1              =  49,
+	/**`'2'`*/ _2              =  50,
+	/**`'3'`*/ _3              =  51,
+	/**`'4'`*/ _4              =  52,
+	/**`'5'`*/ _5              =  53,
+	/**`'6'`*/ _6              =  54,
+	/**`'7'`*/ _7              =  55,
+	/**`'8'`*/ _8              =  56,
+	/**`'9'`*/ _9              =  57,
+	/**`':'`*/ Colon           =  58,
+	/**`';'`*/ SemiColon       =  59,
+	/**`'<'`*/ LessThan        =  60,
+	/**`'='`*/ Equal           =  61,
+	/**`'>'`*/ GreaterThan     =  62,
+	/**`'?'`*/ Question        =  63,
+	/**`'@'`*/ At              =  64,
+	/**`'A'`*/ A               =  65,
+	/**`'B'`*/ B               =  66,
+	/**`'C'`*/ C               =  67,
+	/**`'D'`*/ D               =  68,
+	/**`'E'`*/ E               =  69,
+	/**`'F'`*/ F               =  70,
+	/**`'G'`*/ G               =  71,
+	/**`'H'`*/ H               =  72,
+	/**`'I'`*/ I               =  73,
+	/**`'J'`*/ J               =  74,
+	/**`'K'`*/ K               =  75,
+	/**`'L'`*/ L               =  76,
+	/**`'M'`*/ M               =  77,
+	/**`'N'`*/ N               =  78,
+	/**`'O'`*/ O               =  79,
+	/**`'P'`*/ P               =  80,
+	/**`'Q'`*/ Q               =  81,
+	/**`'R'`*/ R               =  82,
+	/**`'S'`*/ S               =  83,
+	/**`'T'`*/ T               =  84,
+	/**`'U'`*/ U               =  85,
+	/**`'V'`*/ V               =  86,
+	/**`'W'`*/ W               =  87,
+	/**`'X'`*/ X               =  88,
+	/**`'Y'`*/ Y               =  89,
+	/**`'Z'`*/ Z               =  90,
+	/**`'['`*/ BracketOpen     =  91,
+	/**`'\'`*/ BackSlash       =  92,
+	/**`']'`*/ BracketClose    =  93,
+	/**`'_'`*/ Caret           =  94,
+	/**`'_'`*/ UnderScore      =  95,
+	/**`'`'`*/ Grave           =  96,
+	/**`'a'`*/ a               =  97,
+	/**`'b'`*/ b               =  98,
+	/**`'c'`*/ c               =  99,
+	/**`'d'`*/ d               = 100,
+	/**`'e'`*/ e               = 101,
+	/**`'f'`*/ f               = 102,
+	/**`'g'`*/ g               = 103,
+	/**`'h'`*/ h               = 104,
+	/**`'i'`*/ i               = 105,
+	/**`'j'`*/ j               = 106,
+	/**`'k'`*/ k               = 107,
+	/**`'l'`*/ l               = 108,
+	/**`'m'`*/ m               = 109,
+	/**`'n'`*/ n               = 110,
+	/**`'o'`*/ o               = 111,
+	/**`'p'`*/ p               = 112,
+	/**`'q'`*/ q               = 113,
+	/**`'r'`*/ r               = 114,
+	/**`'s'`*/ s               = 115,
+	/**`'t'`*/ t               = 116,
+	/**`'u'`*/ u               = 117,
+	/**`'v'`*/ v               = 118,
+	/**`'w'`*/ w               = 119,
+	/**`'x'`*/ x               = 120,
+	/**`'y'`*/ y               = 121,
+	/**`'z'`*/ z               = 122,
+	/**`'{'`*/ CurlyBraceOpen  = 123,
+	/**`'|'`*/ VerticalBar     = 124,
+	/**`'}'`*/ CurlyBraceClose = 125,
+	/**`'~'`*/ Tilde           = 126,
+	/** [Delete](http://en.wikipedia.org/wiki/Delete_character)
+	 */        DEL             = 127,
+}
 
 impl Ascii {
     /// Constructs an Ascii character from a `char`.
@@ -23,9 +194,9 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn from(ch: char) -> Result<Ascii, ()> {
-        if ch as u32 <= 0x7F {
-            return Ok( Ascii { chr: ch as u8 });
-        }
+        unsafe{if ch as u32 <= 0x7F {
+            return Ok(ch.to_ascii_nocheck());
+        }}
         Err(())
     }
 
@@ -44,22 +215,22 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
-        if ch <= 0x7F {
-            return Ok( Ascii { chr: ch });
-        }
+        unsafe{if ch <= 0x7F {
+            return Ok(ch.to_ascii_nocheck());
+        }}
         Err(())
     }
 
     /// Converts an ascii character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
-        self.chr
+        *self as u8
     }
 
     /// Converts an ascii character into a `char`.
     #[inline]
     pub fn as_char(&self) -> char {
-        self.chr as char
+        self.as_byte() as char
     }
 
     // the following methods are like ctype, and the implementation is inspired by musl
@@ -67,13 +238,14 @@ impl Ascii {
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
     pub fn is_alphabetic(&self) -> bool {
-        (self.chr >= 0x41 && self.chr <= 0x5A) || (self.chr >= 0x61 && self.chr <= 0x7A)
+        let c = self.as_byte() | 0b010_0000;// Turns uppercase into lowercase.
+        c >= b'a' && c <= b'z'
     }
 
     /// Check if the character is a number (0-9)
     #[inline]
     pub fn is_digit(&self) -> bool {
-        self.chr >= 0x30 && self.chr <= 0x39
+        self >= &Ascii::_0 && self <= &Ascii::_9
     }
 
     /// Check if the character is a letter or number
@@ -85,7 +257,7 @@ impl Ascii {
     /// Check if the character is a space or horizontal tab
     #[inline]
     pub fn is_blank(&self) -> bool {
-        self.chr == b' ' || self.chr == b'\t'
+        *self == Ascii::Space || *self == Ascii::Tab
     }
 
     /// Check if the character is a control character
@@ -101,7 +273,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
-        self.chr < 0x20 || self.chr == 0x7F
+        self.as_byte() < 0x20 || *self == Ascii::DEL
     }
 
     /// Checks if the character is printable (except space)
@@ -116,7 +288,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
-        self.chr.wrapping_sub(0x21) < 0x5E
+        self.as_byte().wrapping_sub(0x21) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
@@ -131,7 +303,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
-        self.chr.wrapping_sub(0x20) < 0x5F
+        self.as_byte().wrapping_sub(0x20) < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
@@ -146,7 +318,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_lowercase(&self) -> bool {
-        self.chr.wrapping_sub(b'a') < 26
+        self.as_byte().wrapping_sub(b'a') < 26
     }
 
     /// Checks if the character is alphabetic and uppercase
@@ -161,7 +333,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_uppercase(&self) -> bool {
-        self.chr.wrapping_sub(b'A') < 26
+        self.as_byte().wrapping_sub(b'A') < 26
     }
 
     /// Checks if the character is punctuation
@@ -193,7 +365,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
-        self.is_digit() || (self.chr | 32u8).wrapping_sub(b'a') < 6
+        self.is_digit() || (self.as_byte() | 32u8).wrapping_sub(b'a') < 6
     }
 }
 
@@ -219,25 +391,25 @@ impl AsciiExt for Ascii {
     }
 
     fn to_ascii_uppercase(&self) -> Ascii {
-        Ascii{chr: self.chr.to_ascii_uppercase()}
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
     }
 
     fn to_ascii_lowercase(&self) -> Ascii {
-        Ascii{chr: self.chr.to_ascii_lowercase()}
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.chr.eq_ignore_ascii_case(&other.chr)
+        self.as_byte().eq_ignore_ascii_case(&other.as_byte())
     }
 
     #[inline]
     fn make_ascii_uppercase(&mut self) {
-        self.chr.make_ascii_uppercase()
+        *self = self.to_ascii_uppercase();
     }
 
     #[inline]
     fn make_ascii_lowercase(&mut self) {
-        self.chr.make_ascii_lowercase()
+        *self = self.to_ascii_lowercase();
     }
 }
 
@@ -246,7 +418,7 @@ impl<'a> AsciiCast<'a> for u8 {
 
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        Ascii{ chr: *self }
+        transmute(*self)
     }
 }
 
@@ -255,7 +427,7 @@ impl<'a> AsciiCast<'a> for char {
 
     #[inline]
     unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        Ascii{ chr: *self as u8 }
+        (*self as u8).to_ascii_nocheck()
     }
 }
 
@@ -266,10 +438,10 @@ mod tests {
 
     #[test]
     fn to_ascii() {
-        assert_eq!(65_u8.to_ascii(), Ok(Ascii { chr: 65_u8 }));
+        assert_eq!(65_u8.to_ascii(), Ok(Ascii::A));
         assert_eq!(255_u8.to_ascii(), Err(()));
 
-        assert_eq!('A'.to_ascii(), Ok(Ascii { chr: 65_u8 }));
+        assert_eq!('A'.to_ascii(), Ok(Ascii::A));
         assert_eq!('λ'.to_ascii(), Err(()));
     }
 
@@ -302,13 +474,11 @@ mod tests {
 
     #[test]
     fn fmt_display_ascii() {
-        let s = Ascii { chr: b't' };
-        assert_eq!(format!("{}", s), "t".to_string());
+        assert_eq!(format!("{}", Ascii::t), "t".to_string());
     }
 
     #[test]
     fn fmt_debug_ascii() {
-        let c = Ascii { chr: b't' };
-        assert_eq!(format!("{:?}", c), "'t'".to_string());
+        assert_eq!(format!("{:?}", Ascii::t), "'t'".to_string());
     }
 }
