@@ -10,7 +10,7 @@ use AsciiCast;
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
 pub enum Ascii {
-	/**`'\0'`*/NUL             =   0,
+	/**`'\0'`*/Null            =   0,
 	/** [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
 	 */        SOH             =   1,
 	/** [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
@@ -36,11 +36,11 @@ pub enum Ascii {
 	/** [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
 
 	   '\v' is not supported by Rust.
-	 */        VT              =  11,
+	 */        VerticalTab     =  11,
 	/** [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
 
 	   '\f' is not supported by Rust.
-	 */        FF              =  12,
+	 */        FormFeed        =  12,
 	/**`'\r'`*/CarriageReturn  =  13,
 	/** [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
 	 */        SI              =  14,
@@ -175,8 +175,8 @@ pub enum Ascii {
 	/**`'|'`*/ VerticalBar     = 124,
 	/**`'}'`*/ CurlyBraceClose = 125,
 	/**`'~'`*/ Tilde           = 126,
-	/**[Delete](http://en.wikipedia.org/wiki/Delete_character)
-	 */        Delete          = 127,
+	/** [Delete](http://en.wikipedia.org/wiki/Delete_character)
+	 */        DEL             = 127,
 }
 
 impl Ascii {
@@ -273,7 +273,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
-        self.as_byte() < 0x20 || *self == Ascii::Delete
+        self.as_byte() < 0x20 || *self == Ascii::DEL
     }
 
     /// Checks if the character is printable (except space)
