@@ -194,9 +194,9 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn from(ch: char) -> Result<Ascii, ()> {
-        if ch as u32 <= 0x7F {
-            return Ok(unsafe{ ch.to_ascii_nocheck() });
-        }
+        unsafe{if ch as u32 <= 0x7F {
+            return Ok(ch.to_ascii_nocheck());
+        }}
         Err(())
     }
 
@@ -215,16 +215,16 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
-        if ch <= 0x7F {
-            return Ok(unsafe{ ch.to_ascii_nocheck() });
-        }
+        unsafe{if ch <= 0x7F {
+            return Ok(ch.to_ascii_nocheck());
+        }}
         Err(())
     }
 
     /// Converts an ascii character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
-        unsafe{ transmute(*self) }
+        *self as u8
     }
 
     /// Converts an ascii character into a `char`.
