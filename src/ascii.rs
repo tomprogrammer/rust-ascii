@@ -90,7 +90,7 @@ pub enum Ascii {
     Exclamation     =  33,
     /// `'"'`
     Quotation       =  34,
-    /// `'''`
+    /// `'#'`
     Hash            =  35,
     /// `'$'`
     Dollar          =  36,
@@ -98,7 +98,7 @@ pub enum Ascii {
     Percent         =  37,
     /// `'&'`
     Ampersand       =  38,
-    /// `'''`
+    /// `'\''`
     Apostrophe      =  39,
     /// `'('`
     ParenOpen       =  40,
