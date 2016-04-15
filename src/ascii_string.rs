@@ -575,8 +575,8 @@ impl IntoAsciiString<str> for String {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use {Ascii, OwnedAsciiCast};
-    use super::AsciiString;
+    use Ascii;
+    use super::{AsciiString, IntoAsciiString};
 
     #[test]
     fn into_string() {
@@ -598,13 +598,13 @@ mod tests {
 
     #[test]
     fn fmt_display_ascii_string() {
-        let s = "abc".to_string().into_ascii().unwrap();
+        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
     }
 
     #[test]
     fn fmt_debug_ascii_string() {
-        let s = "abc".to_string().into_ascii().unwrap();
+        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
     }
 }

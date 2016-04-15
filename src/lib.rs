@@ -14,7 +14,6 @@ mod ascii;
 mod ascii_string;
 mod ascii_str;
 
-use std::borrow::Borrow;
 use std::ascii::AsciiExt;
 
 pub use ascii::{Ascii, IntoAscii, IntoAsciiError};
@@ -37,39 +36,4 @@ pub trait AsciiCast<'a>: AsciiExt {
 
     /// Convert to an ascii type, not doing any range asserts
     unsafe fn to_ascii_nocheck(&'a self) -> Self::Target;
-}
-
-/// Trait for copyless casting to an ascii vector.
-pub trait OwnedAsciiCast<T: ?Sized> : Sized
-    where Self: Borrow<T>,
-          T: AsciiExt<Owned=Self>
-{
-    /// Take ownership and cast to an ascii vector. On non-ASCII input return ownership of data
-    /// that was attempted to cast to ascii in `Err(Self)`.
-    #[inline]
-    fn into_ascii(self) -> Result<AsciiString, Self> {
-        if self.borrow().is_ascii() {
-            Ok(unsafe { self.into_ascii_nocheck() })
-        } else {
-            Err(self)
-        }
-    }
-
-    /// Take ownership and cast to an ascii vector.
-    /// Does not perform validation checks.
-    unsafe fn into_ascii_nocheck(self) -> AsciiString;
-}
-
-impl OwnedAsciiCast<str> for String {
-    #[inline]
-    unsafe fn into_ascii_nocheck(self) -> AsciiString {
-        self.into_bytes().into_ascii_nocheck()
-    }
-}
-
-impl OwnedAsciiCast<[u8]> for Vec<u8> {
-    #[inline]
-    unsafe fn into_ascii_nocheck(self) -> AsciiString {
-        AsciiString::from_bytes_unchecked(self)
-    }
 }

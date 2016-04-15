@@ -1,6 +1,6 @@
 extern crate ascii;
 
-use ascii::{AsciiStr, AsciiString, AsciiCast, OwnedAsciiCast};
+use ascii::{AsciiStr, AsciiString, AsciiCast, IntoAsciiString};
 
 #[test]
 fn ascii_vec() {
@@ -31,12 +31,12 @@ fn opt() {
     assert_eq!("zoä华".to_ascii(), Err(()));
 
     let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
-    assert_eq!(vec![40_u8, 32, 59].into_ascii(), Ok(v1));
-    assert_eq!(vec![127_u8, 128, 255].into_ascii(), Err(vec![127_u8, 128, 255]));
+    assert_eq!(vec![40_u8, 32, 59].into_ascii_string(), Ok(v1));
+    assert_eq!(vec![127_u8, 128, 255].into_ascii_string(), Err(vec![127_u8, 128, 255]));
 
     let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
-    assert_eq!("( ;".to_string().into_ascii(), Ok(v1));
-    assert_eq!("zoä华".to_string().into_ascii(), Err("zoä华".to_string()));
+    assert_eq!("( ;".to_string().into_ascii_string(), Ok(v1));
+    assert_eq!("zoä华".to_string().into_ascii_string(), Err("zoä华".to_string()));
 }
 
 #[test]
