@@ -198,6 +198,35 @@ impl AsRef<str> for AsciiStr {
     }
 }
 
+impl<'a> From<&'a[Ascii]> for &'a AsciiStr {
+    fn from(slice: &[Ascii]) -> &AsciiStr {
+        unsafe{ mem::transmute(slice) }
+    }
+}
+impl From<Box<[Ascii]>> for Box<AsciiStr> {
+    fn from(owned: Box<[Ascii]>) -> Box<AsciiStr> {
+        unsafe{ mem::transmute(owned) }
+    }
+}
+
+macro_rules! impl_into {
+    ($wider: ty) => {
+        impl<'a> From<&'a AsciiStr> for &'a$wider {
+            fn from(slice: &AsciiStr) -> &$wider {
+                unsafe{ mem::transmute(slice) }
+            }
+        }
+        impl From<Box<AsciiStr>> for Box<$wider> {
+            fn from(owned: Box<AsciiStr>) -> Box<$wider> {
+                unsafe{ mem::transmute(owned) }
+            }
+        }
+    }
+}
+impl_into! {[Ascii]}
+impl_into! {[u8]}
+impl_into! {str}
+
 impl fmt::Display for AsciiStr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(self.as_str(), f)
