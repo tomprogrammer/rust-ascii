@@ -191,15 +191,34 @@ impl AsRef<[u8]> for AsciiStr {
         self.as_bytes()
     }
 }
-
 impl AsRef<str> for AsciiStr {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
+impl AsRef<[Ascii]> for AsciiStr {
+    fn as_ref(&self) -> &[Ascii] {
+        &self.slice
+    }
+}
+impl AsMut<[Ascii]> for AsciiStr {
+    fn as_mut(&mut self) -> &mut[Ascii] {
+        &mut self.slice
+    }
+}
 
+impl Default for &'static AsciiStr {
+    fn default() -> &'static AsciiStr {
+        unsafe{ "".into_ascii_unchecked() }
+    }
+}
 impl<'a> From<&'a[Ascii]> for &'a AsciiStr {
     fn from(slice: &[Ascii]) -> &AsciiStr {
+        unsafe{ mem::transmute(slice) }
+    }
+}
+impl<'a> From<&'a mut [Ascii]> for &'a mut AsciiStr {
+    fn from(slice: &mut[Ascii]) -> &mut AsciiStr {
         unsafe{ mem::transmute(slice) }
     }
 }
