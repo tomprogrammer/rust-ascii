@@ -12,8 +12,6 @@
 
 //! Operations on ASCII strings and characters
 
-#![cfg_attr(feature = "unstable", feature(ascii))]
-
 mod ascii;
 mod ascii_string;
 mod ascii_str;
