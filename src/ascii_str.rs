@@ -178,6 +178,12 @@ impl PartialOrd<AsciiString> for AsciiStr {
 }
 */
 
+impl Default for &'static AsciiStr {
+    fn default() -> &'static AsciiStr {
+        unsafe { mem::transmute("") }
+    }
+}
+
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
@@ -207,11 +213,6 @@ impl AsMut<[Ascii]> for AsciiStr {
     }
 }
 
-impl Default for &'static AsciiStr {
-    fn default() -> &'static AsciiStr {
-        unsafe{ "".into_ascii_unchecked() }
-    }
-}
 impl<'a> From<&'a[Ascii]> for &'a AsciiStr {
     fn from(slice: &[Ascii]) -> &AsciiStr {
         unsafe{ mem::transmute(slice) }
@@ -345,6 +346,12 @@ impl<'a> AsciiCast<'a> for str {
 mod tests {
     use AsciiCast;
     use super::AsciiStr;
+
+    #[test]
+    fn default() {
+        let default: &'static AsciiStr = Default::default();
+        assert!(default.is_empty());
+    }
 
     #[test]
     fn as_str() {
