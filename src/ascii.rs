@@ -39,11 +39,11 @@ pub enum Ascii {
     /// [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
     ///
     /// `'\v'` is not recognized by Rust.
-    VerticalTab     =  11,
+    VT              =  11,
     /// [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
     ///
     /// `'\f'` is not recognized by Rust.
-    FormFeed        =  12,
+    FF              =  12,
     /// `'\r'`
     CarriageReturn  =  13,
     /// [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
@@ -75,7 +75,7 @@ pub enum Ascii {
     /// [Escape](http://en.wikipedia.org/wiki/Escape_character)
     ///
     /// `'\e'` is not recognized by Rust.
-    Escape          =  27,
+    ESC             =  27,
     /// [File Separator](http://en.wikipedia.org/wiki/File_separator)
     FS              =  28,
     /// [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
