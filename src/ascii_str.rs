@@ -184,15 +184,6 @@ impl PartialEq<AsciiStr> for str {
     }
 }
 
-/*
-impl PartialOrd<AsciiString> for AsciiStr {
-    #[inline]
-    fn partial_cmp(&self, other: &AsciiString) -> Option<Ordering> {
-        self.as_bytes().partial_cmp(other.as_bytes())
-    }
-}
-*/
-
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
