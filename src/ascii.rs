@@ -16,7 +16,7 @@ pub enum Ascii {
     SOH             =   1,
     /// [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
     SOX             =   2,
-    /// [End Of teXt](http://en.wikipedia.org/wiki/End-of-Text_character)
+    /// [End of TeXt](http://en.wikipedia.org/wiki/End-of-Text_character)
     ETX             =   3,
     /// [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
     EOT             =   4,
@@ -24,25 +24,25 @@ pub enum Ascii {
     ENQ             =   5,
     /// [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
     ACK             =   6,
-    /// `'\a'`: [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
+    /// [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\a'` is not recognized by Rust.
     Bell            =   7,
-    /// `'\b'`: [Backspace character](http://en.wikipedia.org/wiki/Backspace)
+    /// [Backspace](http://en.wikipedia.org/wiki/Backspace)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\b'` is not recognized by Rust.
     BackSpace       =   8,
     /// `'\t'`
     Tab             =   9,
     /// `'\n'`
     LineFeed        =  10,
-    /// `'\v'`: [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
+    /// [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\v'` is not recognized by Rust.
     VerticalTab     =  11,
-    /// `'\f'`: [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
+    /// [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\f'` is not recognized by Rust.
     FormFeed        =  12,
     /// `'\r'`
     CarriageReturn  =  13,
@@ -60,7 +60,7 @@ pub enum Ascii {
     DC3             =  19,
     /// Device control 4
     DC4             =  20,
-    /// [Negative Acknowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
+    /// [Negative AcKnowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
     NAK             =  21,
     /// [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
     SYN             =  22,
@@ -72,9 +72,9 @@ pub enum Ascii {
     EM              =  25,
     /// [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
     SUB             =  26,
-    /// `'\e': `[Escape](http://en.wikipedia.org/wiki/Escape_character)
+    /// [Escape](http://en.wikipedia.org/wiki/Escape_character)
     ///
-    /// The escape code is not supported in Rust.
+    /// `'\e'` is not recognized by Rust.
     Escape          =  27,
     /// [File Separator](http://en.wikipedia.org/wiki/File_separator)
     FS              =  28,
