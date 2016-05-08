@@ -20,7 +20,7 @@ use std::borrow::Borrow;
 use std::ascii::AsciiExt;
 
 pub use ascii::{Ascii, IntoAscii, IntoAsciiError};
-pub use ascii_string::AsciiString;
+pub use ascii_string::{AsciiString, IntoAsciiString};
 pub use ascii_str::AsciiStr;
 
 /// Trait for converting into an ascii type.
