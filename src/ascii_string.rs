@@ -8,17 +8,16 @@ use std::iter::FromIterator;
 use ascii::Ascii;
 use ascii_str::AsciiStr;
 
-/// A growable string stored as an ascii encoded buffer.
+/// A growable string stored as an ASCII encoded buffer.
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiString {
     vec: Vec<Ascii>,
 }
 
 impl AsciiString {
-    /// Creates a new ascii string buffer initialized with the empty ascii string.
+    /// Creates a new, empty ASCII string buffer without allocating.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::new();
@@ -28,12 +27,11 @@ impl AsciiString {
         AsciiString { vec: Vec::new() }
     }
 
-    /// Creates a new ascii string buffer with the given capacity. The string will be able to hold
-    /// exactly `capacity` bytes without reallocating. If `capacity` is 0, the ascii string will not
-    /// allocate.
+    /// Creates a new ASCII string buffer with the given capacity.
+    /// The string will be able to hold exactly `capacity` bytes without reallocating.
+    /// If `capacity` is 0, the ASCII string will not allocate.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::with_capacity(10);
@@ -85,15 +83,13 @@ impl AsciiString {
         }
     }
 
-    /// Converts a vector of bytes to an `AsciiString` without checking that the vector contains
-    /// valid ascii characters.
+    /// Converts a vector of bytes to an `AsciiString` without checking for non-ASCII characters.
     ///
     /// # Safety
-    ///
     /// This function is unsafe because it does not check that the bytes passed to it are valid
-    /// ascii characters. If this constraint is violated, it may cause memory unsafety issues with
+    /// ASCII characters. If this constraint is violated, it may cause memory unsafety issues with
     /// future of the `AsciiString`, as the rest of this library assumes that `AsciiString`s are
-    /// ascii encoded.
+    /// ASCII encoded.
     pub unsafe fn from_bytes_unchecked<B>(bytes: B) -> Self
         where B: Into<Vec<u8>>
     {
@@ -111,10 +107,9 @@ impl AsciiString {
     /// Converts anything that can represent a byte buffer into an `AsciiString`.
     ///
     /// # Failure
-    /// Returns the byte buffer if it can not be ascii encoded.
+    /// Returns the byte buffer if not all of the bytes are ASCII characters.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let foo = AsciiString::from_bytes("foo").unwrap();
@@ -134,10 +129,9 @@ impl AsciiString {
         }
     }
 
-    /// Pushes the given ascii string onto this ascii string buffer.
+    /// Pushes the given ASCII string onto this ASCII string buffer.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::{AsciiString, AsciiStr};
     /// use std::str::FromStr;
@@ -150,10 +144,9 @@ impl AsciiString {
         self.vec.extend(string.as_slice().iter().cloned())
     }
 
-    /// Returns the number of bytes that this ascii string buffer can hold without reallocating.
+    /// Returns the number of bytes that this ASCII string buffer can hold without reallocating.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let s = String::with_capacity(10);
@@ -168,11 +161,9 @@ impl AsciiString {
     /// `AsciiString`. The collection may reserve more space to avoid frequent reallocations.
     ///
     /// # Panics
-    ///
     /// Panics if the new capacity overflows `usize`.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::new();
@@ -192,11 +183,9 @@ impl AsciiString {
     /// insertions are expected.
     ///
     /// # Panics
-    ///
     /// Panics if the new capacity overflows `usize`.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::new();
@@ -208,10 +197,9 @@ impl AsciiString {
         self.vec.reserve_exact(additional)
     }
 
-    /// Shrinks the capacity of this ascii string buffer to match it's length.
+    /// Shrinks the capacity of this ASCII string buffer to match it's length.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// use std::str::FromStr;
@@ -226,10 +214,9 @@ impl AsciiString {
         self.vec.shrink_to_fit()
     }
 
-    /// Adds the given ascii character to the end of the ascii string.
+    /// Adds the given ASCII character to the end of the ASCII string.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::{ Ascii, AsciiString};
     /// let mut s = AsciiString::from_bytes("abc").unwrap();
@@ -243,14 +230,12 @@ impl AsciiString {
         self.vec.push(ch)
     }
 
-    /// Shortens a ascii string to the specified length.
+    /// Shortens a ASCII string to the specified length.
     ///
     /// # Panics
-    ///
     /// Panics if `new_len` > current length.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::from_bytes("hello").unwrap();
@@ -262,11 +247,10 @@ impl AsciiString {
         self.vec.truncate(new_len)
     }
 
-    /// Removes the last character from the ascii string buffer and returns it. Returns `None` if
-    /// this string buffer is empty.
+    /// Removes the last character from the ASCII string buffer and returns it.
+    /// Returns `None` if this string buffer is empty.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::from_bytes("foo").unwrap();
@@ -280,18 +264,15 @@ impl AsciiString {
         self.vec.pop()
     }
 
-    /// Removed the ascii character from the string buffer at bytes position `idx` and returns it.
+    /// Removes the ASCII character at position `idx` from the buffer and returns it.
     ///
     /// # Warning
-    ///
     /// This is an O(n) operation as it requires copying every element in the buffer.
     ///
     /// # Panics
-    ///
     /// If `idx` is out of bounds this function will panic.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::from_bytes("foo").unwrap();
@@ -304,24 +285,29 @@ impl AsciiString {
         self.vec.remove(idx)
     }
 
-    /// Inserts a character into the ascii string buffer at byte position `idx`.
+    /// Inserts an ASCII character into the buffer at position `idx`.
     ///
     /// # Warning
-    ///
     /// This is an O(n) operation as it requires copying every element in the buffer.
     ///
     /// # Panics
-    ///
     /// If `idx` is out of bounds this function will panic.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::{AsciiString,Ascii};
+    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// s.insert(2, Ascii::b);
+    /// assert_eq!(s, "fobo");
+    /// ```
     #[inline]
     pub fn insert(&mut self, idx: usize, ch: Ascii) {
         self.vec.insert(idx, ch)
     }
 
-    /// Returns the number of bytes in this ascii string.
+    /// Returns the number of bytes in this ASCII string.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let s = AsciiString::from_bytes("foo").unwrap();
@@ -332,10 +318,9 @@ impl AsciiString {
         self.vec.len()
     }
 
-    /// Returns true if the ascii string contains no bytes.
+    /// Returns true if the ASCII string contains zero bytes.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::{Ascii, AsciiString};
     /// let mut s = AsciiString::new();
@@ -348,10 +333,9 @@ impl AsciiString {
         self.len() == 0
     }
 
-    /// Truncates the ascii string, returning it to 0 length.
+    /// Truncates the ASCII string, setting length (but not capacity) to zero.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::from_bytes("foo").unwrap();

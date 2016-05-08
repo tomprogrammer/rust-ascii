@@ -6,7 +6,7 @@ use std::ascii::AsciiExt;
 use AsciiCast;
 
 #[allow(non_camel_case_types)]
-/// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
+/// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
 pub enum Ascii {
@@ -282,8 +282,7 @@ impl Ascii {
     /// Constructs an ASCII character from a `u8`, `char` or other character type.
     ///
     /// # Failure
-    ///
-    /// Returns `Err(())` if the character can't be ascii encoded.
+    /// Returns `Err(())` if the character can't be ASCII encoded.
     ///
     /// # Example
     /// ```
@@ -301,14 +300,12 @@ impl Ascii {
         ch.into_ascii_unchecked()
     }
 
-    /// Constructs an Ascii character from a `u8`.
+    /// Constructs an ASCII character from a `u8`.
     ///
     /// # Failure
-    ///
-    /// Returns `Err(())` if the character can't be ascii encoded.
+    /// Returns `Err(())` if the character can't be ASCII encoded.
     ///
     /// # Example
-    ///
     /// ```
     /// # use ascii::Ascii;
     /// let a = Ascii::from_byte(65).unwrap();
@@ -322,13 +319,13 @@ impl Ascii {
         Err(())
     }
 
-    /// Converts an ascii character into a `u8`.
+    /// Converts an ASCII character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
         *self as u8
     }
 
-    /// Converts an ascii character into a `char`.
+    /// Converts an ASCII character into a `char`.
     #[inline]
     pub fn as_char(&self) -> char {
         self.as_byte() as char
@@ -364,7 +361,6 @@ impl Ascii {
     /// Check if the character is a control character
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('\0'.to_ascii().unwrap().is_control(), true);
@@ -380,7 +376,6 @@ impl Ascii {
     /// Checks if the character is printable (except space)
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_graph(), true);
@@ -395,7 +390,6 @@ impl Ascii {
     /// Checks if the character is printable (including space)
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_print(), true);
@@ -410,7 +404,6 @@ impl Ascii {
     /// Checks if the character is alphabetic and lowercase
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('a'.to_ascii().unwrap().is_lowercase(), true);
@@ -425,7 +418,6 @@ impl Ascii {
     /// Checks if the character is alphabetic and uppercase
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('A'.to_ascii().unwrap().is_uppercase(), true);
@@ -440,7 +432,6 @@ impl Ascii {
     /// Checks if the character is punctuation
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_punctuation(), false);
@@ -456,7 +447,6 @@ impl Ascii {
     /// Checks if the character is a valid hex digit
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);

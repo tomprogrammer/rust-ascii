@@ -7,7 +7,9 @@ use AsciiCast;
 use ascii::Ascii;
 use ascii_string::AsciiString;
 
-/// A borrowed ascii string, like a slice into an `AsciiString`.
+/// An `[Ascii]` wrapper that implements  str with only ASCII characters. It wraps an , with
+///
+/// Can be borrowed from an `AsciiString`, or a checked `str` or `[u8]`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [Ascii],
@@ -65,7 +67,6 @@ impl AsciiStr {
     /// Converts anything that can represent a byte slice into an `AsciiStr`.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let foo = AsciiStr::from_bytes("foo");
@@ -99,15 +100,14 @@ impl AsciiStr {
         mem::transmute(bytes.as_ref())
     }
 
-    /// Converts a borrowed string to a borrows ascii string.
+    /// Converts a borrowed string to a borrowed ASCII string.
     pub fn from_str<'a>(s: &'a str) -> Result<&'a AsciiStr, ()> {
         AsciiStr::from_bytes(s.as_bytes())
     }
 
-    /// Returns the number of bytes in this ascii string.
+    /// Returns the number of characters / bytes in this ASCII sequence.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let s = AsciiStr::from_bytes("foo").unwrap();
@@ -117,10 +117,9 @@ impl AsciiStr {
         self.slice.len()
     }
 
-    /// Returns true if the ascii string contains no bytes.
+    /// Returns true if the ASCII slice contains zero bytes.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let mut empty = AsciiStr::from_bytes("").unwrap();
@@ -132,10 +131,9 @@ impl AsciiStr {
         self.len() == 0
     }
 
-    /// Returns an ascii string slice with leading and trailing whitespace removed.
+    /// Returns an ASCII string slice with leading and trailing whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
@@ -145,10 +143,9 @@ impl AsciiStr {
         unsafe { mem::transmute(self.as_str().trim()) }
     }
 
-    /// Returns a string slice with leading whitespace removed.
+    /// Returns an ASCII string slice with leading whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
@@ -158,10 +155,9 @@ impl AsciiStr {
         unsafe { mem::transmute(self.as_str().trim_left()) }
     }
 
-    /// Returns a string slice with trainling whitespace removed.
+    /// Returns an ASCII string slice with trainling whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
