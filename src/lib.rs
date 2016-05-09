@@ -12,8 +12,6 @@
 
 //! Operations on ASCII strings and characters
 
-#![cfg_attr(feature = "unstable", feature(ascii))]
-
 mod ascii;
 mod ascii_string;
 mod ascii_str;
@@ -21,9 +19,9 @@ mod ascii_str;
 use std::borrow::Borrow;
 use std::ascii::AsciiExt;
 
-pub use ascii::Ascii;
-pub use ascii_string::AsciiString;
-pub use ascii_str::AsciiStr;
+pub use ascii::{Ascii, IntoAscii, IntoAsciiError};
+pub use ascii_string::{AsciiString, IntoAsciiString};
+pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
 
 /// Trait for converting into an ascii type.
 pub trait AsciiCast<'a>: AsciiExt {
