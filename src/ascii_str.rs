@@ -237,6 +237,11 @@ macro_rules! impl_into {
                 unsafe{ mem::transmute(slice) }
             }
         }
+        impl<'a> From<&'a mut AsciiStr> for &'a mut $wider {
+            fn from(slice: &mut AsciiStr) -> &mut $wider {
+                unsafe{ mem::transmute(slice) }
+            }
+        }
         impl From<Box<AsciiStr>> for Box<$wider> {
             fn from(owned: Box<AsciiStr>) -> Box<$wider> {
                 unsafe{ mem::transmute(owned) }
