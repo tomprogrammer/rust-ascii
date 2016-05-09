@@ -294,7 +294,6 @@ impl_index! { AsciiStr, RangeTo<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFrom<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFull, AsciiStr }
 
-#[cfg(feature = "unstable")]
 impl AsciiExt for AsciiStr {
     type Owned = AsciiString;
 
@@ -437,7 +436,6 @@ pub trait AsMutAsciiStr : AsciiExt {
     fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
 }
 
-#[cfg(feature = "unstable")]
 impl AsAsciiStr for AsciiStr {
     fn as_ascii(&self) -> Result<&AsciiStr,AsAsciiStrError> {
         Ok(self)
@@ -446,7 +444,6 @@ impl AsAsciiStr for AsciiStr {
         self
     }
 }
-#[cfg(feature = "unstable")]
 impl AsMutAsciiStr for AsciiStr {
     fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
         Ok(self)

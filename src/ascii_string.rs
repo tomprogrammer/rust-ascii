@@ -550,7 +550,6 @@ pub trait IntoAsciiString<T: ?Sized+AsciiExt<Owned=Self>> : Sized+Borrow<T> {
     }
 }
 
-#[cfg(feature = "unstable")]
 impl IntoAsciiString<AsciiStr> for AsciiString {
     fn into_ascii(self) -> Result<AsciiString,AsciiString> {
         Ok(self)

@@ -480,7 +480,6 @@ impl fmt::Debug for Ascii {
      }
 }
 
-#[cfg(feature = "unstable")]
 impl AsciiExt for Ascii {
     type Owned = Ascii;
 
@@ -564,7 +563,6 @@ pub trait IntoAscii : AsciiExt {
     fn into_ascii(self) -> Result<Ascii,IntoAsciiError>;
 }
 
-#[cfg(feature = "unstable")]
 impl IntoAscii for Ascii {
     fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
         Ok(self)
