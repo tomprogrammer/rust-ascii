@@ -352,14 +352,14 @@ impl Deref for AsciiString {
     type Target = AsciiStr;
 
     #[inline]
-    fn deref<'a>(&'a self) -> &'a AsciiStr {
+    fn deref(&self) -> &AsciiStr {
         unsafe { mem::transmute(&self.vec[..]) }
     }
 }
 
 impl DerefMut for AsciiString {
     #[inline]
-    fn deref_mut<'a>(&'a mut self) -> &'a mut AsciiStr {
+    fn deref_mut(&mut self) -> &mut AsciiStr {
         unsafe { mem::transmute(&mut self.vec[..]) }
     }
 }

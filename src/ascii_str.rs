@@ -74,7 +74,7 @@ impl AsciiStr {
     /// assert_eq!(foo.unwrap().as_str(), "foo");
     /// assert_eq!(err, Err(()));
     /// ```
-    pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Result<&'a AsciiStr, ()>
+    pub fn from_bytes<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, ()>
         where B: AsRef<[u8]>
     {
         unsafe {
@@ -94,14 +94,14 @@ impl AsciiStr {
     /// let foo = unsafe{ AsciiStr::from_bytes_unchecked("foo") };
     /// assert_eq!(foo.as_str(), "foo");
     /// ```
-    pub unsafe fn from_bytes_unchecked<'a, B: ?Sized>(bytes: &'a B) -> &'a AsciiStr
+    pub unsafe fn from_bytes_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
         where B: AsRef<[u8]>
     {
         mem::transmute(bytes.as_ref())
     }
 
     /// Converts a borrowed string to a borrowed ASCII string.
-    pub fn from_str<'a>(s: &'a str) -> Result<&'a AsciiStr, ()> {
+    pub fn from_str(s: &str) -> Result<&AsciiStr, ()> {
         AsciiStr::from_bytes(s.as_bytes())
     }
 
