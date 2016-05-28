@@ -358,6 +358,13 @@ impl Ascii {
         *self == Ascii::Space || *self == Ascii::Tab
     }
 
+    /// Check if the character is a ' ', '\t', '\n' or '\r' 
+    #[inline]
+    pub fn is_whitespace(&self) -> bool {
+        self.is_blank() || *self == Ascii::LineFeed
+                        || *self == Ascii::CarriageReturn
+    }
+
     /// Check if the character is a control character
     ///
     /// # Examples
@@ -384,7 +391,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
-        self.as_byte().wrapping_sub(0x21) < 0x5E
+        self.as_byte().wrapping_sub(b' '+1) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
@@ -398,7 +405,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
-        self.as_byte().wrapping_sub(0x20) < 0x5F
+        self.as_byte().wrapping_sub(b' ') < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
@@ -452,11 +459,12 @@ impl Ascii {
     /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);
     /// assert_eq!('a'.to_ascii().unwrap().is_hex(), true);
     /// assert_eq!('F'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!(32u8.to_ascii().unwrap().is_hex(), false);
+    /// assert_eq!('G'.to_ascii().unwrap().is_hex(), false);
+    /// assert_eq!(' '.to_ascii().unwrap().is_hex(), false);
     /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
-        self.is_digit() || (self.as_byte() | 32u8).wrapping_sub(b'a') < 6
+        self.is_digit() || (self.as_byte() | 0x20u8).wrapping_sub(b'a') < 6
     }
 }
 
@@ -616,13 +624,13 @@ mod tests {
 
     #[test]
     fn as_byte() {
-        assert_eq!(65u8.to_ascii().unwrap().as_byte(), 65u8);
-        assert_eq!('A'.to_ascii().unwrap().as_byte(), 65u8);
+        assert_eq!(b'A'.to_ascii().unwrap().as_byte(), b'A');
+        assert_eq!('A'.to_ascii().unwrap().as_byte(), b'A');
     }
 
     #[test]
     fn as_char() {
-        assert_eq!(65u8.to_ascii().unwrap().as_char(), 'A');
+        assert_eq!(b'A'.to_ascii().unwrap().as_char(), 'A');
         assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
     }
 
