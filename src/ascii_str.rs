@@ -7,9 +7,12 @@ use AsciiCast;
 use ascii::Ascii;
 use ascii_string::AsciiString;
 
-/// An `[Ascii]` wrapper that implements  str with only ASCII characters. It wraps an , with
+/// AsciiStr represents a byte or string slice that only contains ASCII characters.
 ///
-/// Can be borrowed from an `AsciiString`, or a checked `str` or `[u8]`.
+/// It wraps an `[Ascii]` and implements many of `str`s methods and traits.
+///
+/// Can be created by a checked conversion from a `str` or `[u8]`,
+/// or borrowed from an `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [Ascii],
