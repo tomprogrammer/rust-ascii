@@ -214,7 +214,7 @@ impl AsMut<[Ascii]> for AsciiStr {
 
 impl Default for &'static AsciiStr {
     fn default() -> &'static AsciiStr {
-        unsafe{ "".as_ascii_unchecked() }
+        unsafe{ "".as_ascii_str_unchecked() }
     }
 }
 impl<'a> From<&'a[Ascii]> for &'a AsciiStr {
@@ -424,31 +424,31 @@ impl Error for AsAsciiStrError {
 /// Connvert mutable slices of bytes to `AsciiStr`.
 pub trait AsAsciiStr : AsciiExt {
     /// Convert to an ASCII slice without checking for non-ASCII characters.
-    unsafe fn as_ascii_unchecked(&self) -> &AsciiStr;
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
     /// Convert to an ASCII slice.
-    fn as_ascii(&self) -> Result<&AsciiStr,AsAsciiStrError>;
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError>;
 }
 /// Connvert mutable slices of bytes to `AsciiStr`.
 pub trait AsMutAsciiStr : AsciiExt {
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
-    unsafe fn as_mut_ascii_unchecked(&mut self) -> &mut AsciiStr;
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
     /// Convert to a mutable ASCII slice.
-    fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
 }
 
 impl AsAsciiStr for AsciiStr {
-    fn as_ascii(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
         Ok(self)
     }
-    unsafe fn as_ascii_unchecked(&self) -> &AsciiStr {
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         self
     }
 }
 impl AsMutAsciiStr for AsciiStr {
-    fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
         Ok(self)
     }
-    unsafe fn as_mut_ascii_unchecked(&mut self) -> &mut AsciiStr {
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         self
     }
 }
@@ -456,56 +456,56 @@ impl AsMutAsciiStr for AsciiStr {
 // Cannot implement for [Ascii] since AsciiExt isn't implementet for it.
 
 impl AsAsciiStr for [u8] {
-    fn as_ascii(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
         match self.iter().enumerate().find(|&(_,b)| *b > 127 ) {
             Some((index, &byte)) => Err(AsAsciiStrError{
                                             index: index,
                                             not_ascii: (byte - 128) as char,
                                         }),
-            None => unsafe{ Ok(self.as_ascii_unchecked()) },
+            None => unsafe{ Ok(self.as_ascii_str_unchecked()) },
         }
     }
-    unsafe fn as_ascii_unchecked(&self) -> &AsciiStr {
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         AsciiStr::from_bytes_unchecked(self)
     }
 }
 impl AsMutAsciiStr for [u8] {
-    fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
         match self.iter().enumerate().find(|&(_,b)| *b > 127 ) {
             Some((index, &byte)) => Err(AsAsciiStrError{
                                             index: index,
                                             not_ascii: (byte - 128) as char,
                                         }),
-            None => unsafe{ Ok(self.as_mut_ascii_unchecked()) },
+            None => unsafe{ Ok(self.as_mut_ascii_str_unchecked()) },
         }
     }
-    unsafe fn as_mut_ascii_unchecked(&mut self) -> &mut AsciiStr {
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         mem::transmute(self)
     }
 }
 
 impl AsAsciiStr for str {
-    fn as_ascii(&self) -> Result<&AsciiStr,AsAsciiStrError> {
-        self.as_bytes().as_ascii().map_err(|err| AsAsciiStrError{
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+        self.as_bytes().as_ascii_str().map_err(|err| AsAsciiStrError{
             not_ascii: self[err.index..].chars().next().unwrap(),
             index: err.index,
         })
     }
-    unsafe fn as_ascii_unchecked(&self) -> &AsciiStr {
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         mem::transmute(self)
     }
 }
 impl AsMutAsciiStr for str {
-    fn as_mut_ascii(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
         match self.bytes().position(|b| b > 127 ) {
             Some(index) => Err(AsAsciiStrError{
                                    index: index,
                                    not_ascii: self[index..].chars().next().unwrap(),
                                }),
-            None => unsafe{ Ok(self.as_mut_ascii_unchecked()) },
+            None => unsafe{ Ok(self.as_mut_ascii_str_unchecked()) },
         }
     }
-    unsafe fn as_mut_ascii_unchecked(&mut self) -> &mut AsciiStr {
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         mem::transmute(self)
     }
 }
@@ -522,9 +522,9 @@ mod tests {
     }
 
     #[test]
-    fn generic_as_ascii() {
+    fn generic_as_ascii_str() {
         fn generic<C:AsAsciiStr+?Sized>(c: &C) -> Result<&AsciiStr,AsAsciiStrError> {
-            c.as_ascii()
+            c.as_ascii_str()
         }
         let arr = [Ascii::A];
         let ascii_str = arr.as_ref().into();
@@ -534,26 +534,26 @@ mod tests {
     }
 
     #[test]
-    fn as_ascii() {
+    fn as_ascii_str() {
         let mut s: String = "abčd".to_string();
         let mut b: Vec<u8> = s.clone().into();
-        assert_eq!(tuplify(s.as_str().as_ascii()), Err((2,'č')));
-        assert_eq!(tuplify(s.as_mut_str().as_mut_ascii()), Err((2,'č')));
+        assert_eq!(tuplify(s.as_str().as_ascii_str()), Err((2,'č')));
+        assert_eq!(tuplify(s.as_mut_str().as_mut_ascii_str()), Err((2,'č')));
         let c = (b[2]-128) as char;
-        assert_eq!(tuplify(b.as_slice().as_ascii()), Err((2,c)));
-        assert_eq!(tuplify(b.as_mut_slice().as_mut_ascii()), Err((2,c)));
+        assert_eq!(tuplify(b.as_slice().as_ascii_str()), Err((2,c)));
+        assert_eq!(tuplify(b.as_mut_slice().as_mut_ascii_str()), Err((2,c)));
         let mut a = [Ascii::a, Ascii::b];
-        assert_eq!(tuplify((&s[..2]).as_ascii()), Ok((&a[..]).into()));
-        assert_eq!(tuplify((&b[..2]).as_ascii()), Ok((&a[..]).into()));
+        assert_eq!(tuplify((&s[..2]).as_ascii_str()), Ok((&a[..]).into()));
+        assert_eq!(tuplify((&b[..2]).as_ascii_str()), Ok((&a[..]).into()));
         let a = Ok((&mut a[..]).into());
-        assert_eq!(tuplify((&mut s[..2]).as_mut_ascii()), a);
-        assert_eq!(tuplify((&mut b[..2]).as_mut_ascii()), a);
+        assert_eq!(tuplify((&mut s[..2]).as_mut_ascii_str()), a);
+        assert_eq!(tuplify((&mut b[..2]).as_mut_ascii_str()), a);
     }
 
     #[test]
     fn as_ascii_error() {
-        let s = "abčd".as_ascii().unwrap_err();
-        let b = "abčd".as_bytes().as_ascii().unwrap_err();
+        let s = "abčd".as_ascii_str().unwrap_err();
+        let b = "abčd".as_bytes().as_ascii_str().unwrap_err();
         assert_eq!(s.char(), Some('č'));
         assert_eq!(b.char(), None);
         assert_eq!(s.byte(), b.byte());
