@@ -291,13 +291,13 @@ impl Ascii {
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
-    pub fn from<C:IntoAscii>(ch: C) -> Result<Self, ()> {
-        ch.into_ascii().map_err(|_| () )
+    pub fn from<C:ToAsciiChar>(ch: C) -> Result<Self, ()> {
+        ch.to_ascii_char().map_err(|_| () )
     }
 
     /// Constructs an ASCII character from a `char` or `u8` without any checks.
-    pub unsafe fn from_unchecked<C:IntoAscii>(ch: C) -> Self {
-        ch.into_ascii_unchecked()
+    pub unsafe fn from_unchecked<C:ToAsciiChar>(ch: C) -> Self {
+        ch.to_ascii_char_unchecked()
     }
 
     /// Constructs an ASCII character from a `u8`.
@@ -530,25 +530,25 @@ impl<'a> AsciiCast<'a> for char {
 }
 
 
-/// Error returned by `IntoAscii`.
+/// Error returned by `ToAsciiChar`.
 #[derive(PartialEq)]
-pub struct IntoAsciiError(());
+pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 
-impl fmt::Debug for IntoAsciiError {
+impl fmt::Debug for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
 
-impl fmt::Display for IntoAsciiError {
+impl fmt::Display for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
 
-impl Error for IntoAsciiError {
+impl Error for ToAsciiCharError {
     fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
@@ -556,43 +556,43 @@ impl Error for IntoAsciiError {
 
 
 /// Convert `char`, `u8` and other character types to `Ascii`.
-pub trait IntoAscii : AsciiExt {
+pub trait ToAsciiChar : AsciiExt {
     /// Convert to `Ascii` without checking that it is an ASCII character.
-    unsafe fn into_ascii_unchecked(self) -> Ascii;
+    unsafe fn to_ascii_char_unchecked(self) -> Ascii;
     /// Convert to `Ascii`.
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError>;
+    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError>;
 }
 
-impl IntoAscii for Ascii {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
+impl ToAsciiChar for Ascii {
+    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
         Ok(self)
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
         self
     }
 }
 
-impl IntoAscii for u8 {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
-        unsafe{if self <= 0x7F {
-            return Ok(self.into_ascii_unchecked());
+impl ToAsciiChar for u8 {
+    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
+        unsafe{ if self <= 0x7F {
+            return Ok(self.to_ascii_char_unchecked());
         }}
-        Err(IntoAsciiError(()))
+        Err(ToAsciiCharError(()))
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
         transmute(self)
     }
 }
 
-impl IntoAscii for char {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
-        unsafe{if self as u32 <= 0x7F {
-            return Ok(self.into_ascii_unchecked());
+impl ToAsciiChar for char {
+    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
+        unsafe{ if self as u32 <= 0x7F {
+            return Ok(self.to_ascii_char_unchecked());
         }}
-        Err(IntoAsciiError(()))
+        Err(ToAsciiCharError(()))
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
-        (self as u8).into_ascii_unchecked()
+    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
+        (self as u8).to_ascii_char_unchecked()
     }
 }
 
@@ -600,24 +600,18 @@ impl IntoAscii for char {
 #[cfg(test)]
 mod tests {
     use AsciiCast;
-    use super::{Ascii,IntoAscii,IntoAsciiError};
+    use super::{Ascii, ToAsciiChar, ToAsciiCharError};
 
     #[test]
-    fn to_ascii() {
-        assert_eq!(65_u8.to_ascii(), Ok(Ascii::A));
-        assert_eq!(255_u8.to_ascii(), Err(()));
-
-        assert_eq!('A'.to_ascii(), Ok(Ascii::A));
-        assert_eq!('λ'.to_ascii(), Err(()));
-    }
-
-    #[test]
-    fn into_ascii() {
-        fn generic<C:IntoAscii>(c: C) -> Result<Ascii,IntoAsciiError> {
-            c.into_ascii()
+    fn to_ascii_char() {
+        fn generic<C:ToAsciiChar>(c: C) -> Result<Ascii, ToAsciiCharError> {
+            c.to_ascii_char()
         }
-        assert_eq!(generic('A'), Ok(Ascii::A));
+        assert_eq!(generic(Ascii::A), Ok(Ascii::A));
         assert_eq!(generic(b'A'), Ok(Ascii::A));
+        assert_eq!(generic('A'), Ok(Ascii::A));
+        assert!(generic(200).is_err());
+        assert!(generic('λ').is_err());
     }
 
     #[test]

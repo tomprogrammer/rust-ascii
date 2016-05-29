@@ -16,7 +16,7 @@ mod ascii_str;
 
 use std::ascii::AsciiExt;
 
-pub use ascii::{Ascii, IntoAscii, IntoAsciiError};
+pub use ascii::{Ascii, ToAsciiChar, ToAsciiCharError};
 pub use ascii_string::{AsciiString, IntoAsciiString};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
 
