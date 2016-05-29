@@ -6,7 +6,7 @@ use std::ascii::AsciiExt;
 use AsciiCast;
 
 #[allow(non_camel_case_types)]
-/// Datatype to hold one ascii character. It wraps a `u8`, with the highest bit always zero.
+/// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
 pub enum Ascii {
@@ -16,7 +16,7 @@ pub enum Ascii {
     SOH             =   1,
     /// [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
     SOX             =   2,
-    /// [End Of teXt](http://en.wikipedia.org/wiki/End-of-Text_character)
+    /// [End of TeXt](http://en.wikipedia.org/wiki/End-of-Text_character)
     ETX             =   3,
     /// [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
     EOT             =   4,
@@ -24,26 +24,26 @@ pub enum Ascii {
     ENQ             =   5,
     /// [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
     ACK             =   6,
-    /// `'\a'`: [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
+    /// [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\a'` is not recognized by Rust.
     Bell            =   7,
-    /// `'\b'`: [Backspace character](http://en.wikipedia.org/wiki/Backspace)
+    /// [Backspace](http://en.wikipedia.org/wiki/Backspace)
     ///
-    /// The escape code is not supported by Rust.
+    /// `'\b'` is not recognized by Rust.
     BackSpace       =   8,
     /// `'\t'`
     Tab             =   9,
     /// `'\n'`
     LineFeed        =  10,
-    /// `'\v'`: [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
+    /// [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
     ///
-    /// The escape code is not supported by Rust.
-    VerticalTab     =  11,
-    /// `'\f'`: [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
+    /// `'\v'` is not recognized by Rust.
+    VT              =  11,
+    /// [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
     ///
-    /// The escape code is not supported by Rust.
-    FormFeed        =  12,
+    /// `'\f'` is not recognized by Rust.
+    FF              =  12,
     /// `'\r'`
     CarriageReturn  =  13,
     /// [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
@@ -60,7 +60,7 @@ pub enum Ascii {
     DC3             =  19,
     /// Device control 4
     DC4             =  20,
-    /// [Negative Acknowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
+    /// [Negative AcKnowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
     NAK             =  21,
     /// [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
     SYN             =  22,
@@ -72,10 +72,10 @@ pub enum Ascii {
     EM              =  25,
     /// [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
     SUB             =  26,
-    /// `'\e': `[Escape](http://en.wikipedia.org/wiki/Escape_character)
+    /// [Escape](http://en.wikipedia.org/wiki/Escape_character)
     ///
-    /// The escape code is not supported in Rust.
-    Escape          =  27,
+    /// `'\e'` is not recognized by Rust.
+    ESC             =  27,
     /// [File Separator](http://en.wikipedia.org/wiki/File_separator)
     FS              =  28,
     /// [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
@@ -282,8 +282,7 @@ impl Ascii {
     /// Constructs an ASCII character from a `u8`, `char` or other character type.
     ///
     /// # Failure
-    ///
-    /// Returns `Err(())` if the character can't be ascii encoded.
+    /// Returns `Err(())` if the character can't be ASCII encoded.
     ///
     /// # Example
     /// ```
@@ -301,14 +300,12 @@ impl Ascii {
         ch.into_ascii_unchecked()
     }
 
-    /// Constructs an Ascii character from a `u8`.
+    /// Constructs an ASCII character from a `u8`.
     ///
     /// # Failure
-    ///
-    /// Returns `Err(())` if the character can't be ascii encoded.
+    /// Returns `Err(())` if the character can't be ASCII encoded.
     ///
     /// # Example
-    ///
     /// ```
     /// # use ascii::Ascii;
     /// let a = Ascii::from_byte(65).unwrap();
@@ -322,13 +319,13 @@ impl Ascii {
         Err(())
     }
 
-    /// Converts an ascii character into a `u8`.
+    /// Converts an ASCII character into a `u8`.
     #[inline]
     pub fn as_byte(&self) -> u8 {
         *self as u8
     }
 
-    /// Converts an ascii character into a `char`.
+    /// Converts an ASCII character into a `char`.
     #[inline]
     pub fn as_char(&self) -> char {
         self.as_byte() as char
@@ -361,10 +358,16 @@ impl Ascii {
         *self == Ascii::Space || *self == Ascii::Tab
     }
 
+    /// Check if the character is a ' ', '\t', '\n' or '\r' 
+    #[inline]
+    pub fn is_whitespace(&self) -> bool {
+        self.is_blank() || *self == Ascii::LineFeed
+                        || *self == Ascii::CarriageReturn
+    }
+
     /// Check if the character is a control character
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('\0'.to_ascii().unwrap().is_control(), true);
@@ -380,7 +383,6 @@ impl Ascii {
     /// Checks if the character is printable (except space)
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_graph(), true);
@@ -389,13 +391,12 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
-        self.as_byte().wrapping_sub(0x21) < 0x5E
+        self.as_byte().wrapping_sub(b' '+1) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_print(), true);
@@ -404,13 +405,12 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
-        self.as_byte().wrapping_sub(0x20) < 0x5F
+        self.as_byte().wrapping_sub(b' ') < 0x5F
     }
 
     /// Checks if the character is alphabetic and lowercase
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('a'.to_ascii().unwrap().is_lowercase(), true);
@@ -425,7 +425,6 @@ impl Ascii {
     /// Checks if the character is alphabetic and uppercase
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('A'.to_ascii().unwrap().is_uppercase(), true);
@@ -440,7 +439,6 @@ impl Ascii {
     /// Checks if the character is punctuation
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('n'.to_ascii().unwrap().is_punctuation(), false);
@@ -456,17 +454,17 @@ impl Ascii {
     /// Checks if the character is a valid hex digit
     ///
     /// # Examples
-    ///
     /// ```
     /// use ascii::AsciiCast;
     /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);
     /// assert_eq!('a'.to_ascii().unwrap().is_hex(), true);
     /// assert_eq!('F'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!(32u8.to_ascii().unwrap().is_hex(), false);
+    /// assert_eq!('G'.to_ascii().unwrap().is_hex(), false);
+    /// assert_eq!(' '.to_ascii().unwrap().is_hex(), false);
     /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
-        self.is_digit() || (self.as_byte() | 32u8).wrapping_sub(b'a') < 6
+        self.is_digit() || (self.as_byte() | 0x20u8).wrapping_sub(b'a') < 6
     }
 }
 
@@ -626,13 +624,13 @@ mod tests {
 
     #[test]
     fn as_byte() {
-        assert_eq!(65u8.to_ascii().unwrap().as_byte(), 65u8);
-        assert_eq!('A'.to_ascii().unwrap().as_byte(), 65u8);
+        assert_eq!(b'A'.to_ascii().unwrap().as_byte(), b'A');
+        assert_eq!('A'.to_ascii().unwrap().as_byte(), b'A');
     }
 
     #[test]
     fn as_char() {
-        assert_eq!(65u8.to_ascii().unwrap().as_char(), 'A');
+        assert_eq!(b'A'.to_ascii().unwrap().as_char(), 'A');
         assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
     }
 

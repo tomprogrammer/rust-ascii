@@ -7,7 +7,12 @@ use AsciiCast;
 use ascii::Ascii;
 use ascii_string::AsciiString;
 
-/// A borrowed ascii string, like a slice into an `AsciiString`.
+/// AsciiStr represents a byte or string slice that only contains ASCII characters.
+///
+/// It wraps an `[Ascii]` and implements many of `str`s methods and traits.
+///
+/// Can be created by a checked conversion from a `str` or `[u8]`,
+/// or borrowed from an `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [Ascii],
@@ -65,7 +70,6 @@ impl AsciiStr {
     /// Converts anything that can represent a byte slice into an `AsciiStr`.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let foo = AsciiStr::from_bytes("foo");
@@ -73,7 +77,7 @@ impl AsciiStr {
     /// assert_eq!(foo.unwrap().as_str(), "foo");
     /// assert_eq!(err, Err(()));
     /// ```
-    pub fn from_bytes<'a, B: ?Sized>(bytes: &'a B) -> Result<&'a AsciiStr, ()>
+    pub fn from_bytes<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, ()>
         where B: AsRef<[u8]>
     {
         unsafe {
@@ -93,21 +97,20 @@ impl AsciiStr {
     /// let foo = unsafe{ AsciiStr::from_bytes_unchecked("foo") };
     /// assert_eq!(foo.as_str(), "foo");
     /// ```
-    pub unsafe fn from_bytes_unchecked<'a, B: ?Sized>(bytes: &'a B) -> &'a AsciiStr
+    pub unsafe fn from_bytes_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
         where B: AsRef<[u8]>
     {
         mem::transmute(bytes.as_ref())
     }
 
-    /// Converts a borrowed string to a borrows ascii string.
-    pub fn from_str<'a>(s: &'a str) -> Result<&'a AsciiStr, ()> {
+    /// Converts a borrowed string to a borrowed ASCII string.
+    pub fn from_str(s: &str) -> Result<&AsciiStr, ()> {
         AsciiStr::from_bytes(s.as_bytes())
     }
 
-    /// Returns the number of bytes in this ascii string.
+    /// Returns the number of characters / bytes in this ASCII sequence.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let s = AsciiStr::from_bytes("foo").unwrap();
@@ -117,10 +120,9 @@ impl AsciiStr {
         self.slice.len()
     }
 
-    /// Returns true if the ascii string contains no bytes.
+    /// Returns true if the ASCII slice contains zero bytes.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let mut empty = AsciiStr::from_bytes("").unwrap();
@@ -132,10 +134,9 @@ impl AsciiStr {
         self.len() == 0
     }
 
-    /// Returns an ascii string slice with leading and trailing whitespace removed.
+    /// Returns an ASCII string slice with leading and trailing whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
@@ -145,10 +146,9 @@ impl AsciiStr {
         unsafe { mem::transmute(self.as_str().trim()) }
     }
 
-    /// Returns a string slice with leading whitespace removed.
+    /// Returns an ASCII string slice with leading whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
@@ -158,10 +158,9 @@ impl AsciiStr {
         unsafe { mem::transmute(self.as_str().trim_left()) }
     }
 
-    /// Returns a string slice with trainling whitespace removed.
+    /// Returns an ASCII string slice with trainling whitespace removed.
     ///
     /// # Examples
-    ///
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
@@ -183,15 +182,6 @@ impl PartialEq<AsciiStr> for str {
         other.as_str() == self
     }
 }
-
-/*
-impl PartialOrd<AsciiString> for AsciiStr {
-    #[inline]
-    fn partial_cmp(&self, other: &AsciiString) -> Option<Ordering> {
-        self.as_bytes().partial_cmp(other.as_bytes())
-    }
-}
-*/
 
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
@@ -247,6 +237,11 @@ macro_rules! impl_into {
     ($wider: ty) => {
         impl<'a> From<&'a AsciiStr> for &'a$wider {
             fn from(slice: &AsciiStr) -> &$wider {
+                unsafe{ mem::transmute(slice) }
+            }
+        }
+        impl<'a> From<&'a mut AsciiStr> for &'a mut $wider {
+            fn from(slice: &mut AsciiStr) -> &mut $wider {
                 unsafe{ mem::transmute(slice) }
             }
         }
