@@ -139,7 +139,7 @@ pub enum Ascii {
     /// `':'`
     Colon           =  58,
     /// `';'`
-    SemiColon       =  59,
+    Semicolon       =  59,
     /// `'<'`
     LessThan        =  60,
     /// `'='`
@@ -377,7 +377,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
-        self.as_byte() < 0x20 || *self == Ascii::DEL
+        *self < Ascii::Space || *self == Ascii::DEL
     }
 
     /// Checks if the character is printable (except space)
@@ -621,15 +621,9 @@ mod tests {
     }
 
     #[test]
-    fn as_byte() {
-        assert_eq!(b'A'.to_ascii().unwrap().as_byte(), b'A');
-        assert_eq!('A'.to_ascii().unwrap().as_byte(), b'A');
-    }
-
-    #[test]
-    fn as_char() {
-        assert_eq!(b'A'.to_ascii().unwrap().as_char(), 'A');
-        assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
+    fn as_byte_and_char() {
+        assert_eq!(Ascii::A.as_byte(), b'A');
+        assert_eq!(Ascii::A.as_char(),  'A');
     }
 
     #[test]
@@ -642,18 +636,14 @@ mod tests {
 
     #[test]
     fn is_control() {
-        assert!(0x1f_u8.to_ascii().unwrap().is_control());
-        assert!(0x7f_u8.to_ascii().unwrap().is_control());
-        assert!(!' '.to_ascii().unwrap().is_control());
+        assert_eq!(Ascii::US.is_control(), true);
+        assert_eq!(Ascii::DEL.is_control(), true);
+        assert_eq!(Ascii::Space.is_control(), false);
     }
 
     #[test]
-    fn fmt_display_ascii() {
+    fn fmt_ascii() {
         assert_eq!(format!("{}", Ascii::t), "t".to_string());
-    }
-
-    #[test]
-    fn fmt_debug_ascii() {
         assert_eq!(format!("{:?}", Ascii::t), "'t'".to_string());
     }
 }
