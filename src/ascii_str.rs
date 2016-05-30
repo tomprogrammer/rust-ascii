@@ -3,7 +3,6 @@ use std::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 use std::error::Error;
 use std::ascii::AsciiExt;
 
-use AsciiCast;
 use ascii::Ascii;
 use ascii_string::AsciiString;
 
@@ -332,24 +331,6 @@ impl AsciiExt for AsciiStr {
     }
 }
 
-impl<'a> AsciiCast<'a> for [u8] {
-    type Target = &'a AsciiStr;
-
-    #[inline]
-    unsafe fn to_ascii_nocheck(&'a self) -> &'a AsciiStr {
-        mem::transmute(self)
-    }
-}
-
-impl<'a> AsciiCast<'a> for str {
-    type Target = &'a AsciiStr;
-
-    #[inline]
-    unsafe fn to_ascii_nocheck(&'a self) -> &'a AsciiStr {
-        mem::transmute(self)
-    }
-}
-
 
 /// Error returned by `AsAsciiStr`
 #[derive(Clone,Copy)]
@@ -513,7 +494,7 @@ impl AsMutAsciiStr for str {
 
 #[cfg(test)]
 mod tests {
-    use {AsciiCast,Ascii};
+    use Ascii;
     use super::{AsciiStr,AsAsciiStr,AsMutAsciiStr,AsAsciiStrError};
 
     /// Make Result<_,AsAsciiError> comparable.
@@ -567,7 +548,7 @@ mod tests {
 
     #[test]
     fn as_str() {
-        let b = &[40_u8, 32, 59];
+        let b = b"( ;";
         let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_str(), "( ;");
         assert_eq!(AsRef::<str>::as_ref(v), "( ;");
@@ -575,21 +556,16 @@ mod tests {
 
     #[test]
     fn as_bytes() {
-        let b = &[40_u8, 32, 59];
+        let b = b"( ;";
         let v = AsciiStr::from_bytes(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
         assert_eq!(AsRef::<[u8]>::as_ref(v), b"( ;");
     }
 
     #[test]
-    fn fmt_display_ascii_str() {
-        let s = "abc".to_ascii().unwrap();
+    fn fmt_ascii_str() {
+        let s = "abc".as_ascii_str().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
-    }
-
-    #[test]
-    fn fmt_debug_ascii_str() {
-        let s = "abc".to_ascii().unwrap();
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
     }
 }

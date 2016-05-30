@@ -3,8 +3,6 @@ use std::fmt;
 use std::error::Error;
 use std::ascii::AsciiExt;
 
-use AsciiCast;
-
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
@@ -313,10 +311,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
-        unsafe{if ch <= 0x7F {
-            return Ok(ch.to_ascii_nocheck());
-        }}
-        Err(())
+        ch.to_ascii_char().map_err(|_| () )
     }
 
     /// Converts an ASCII character into a `u8`.
@@ -358,7 +353,7 @@ impl Ascii {
         *self == Ascii::Space || *self == Ascii::Tab
     }
 
-    /// Check if the character is a ' ', '\t', '\n' or '\r' 
+    /// Check if the character is a ' ', '\t', '\n' or '\r'
     #[inline]
     pub fn is_whitespace(&self) -> bool {
         self.is_blank() || *self == Ascii::LineFeed
@@ -369,11 +364,11 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('\0'.to_ascii().unwrap().is_control(), true);
-    /// assert_eq!('n'.to_ascii().unwrap().is_control(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_control(), false);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_control(), true);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('\0'.to_ascii_char().unwrap().is_control(), true);
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_control(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_control(), false);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_control(), true);
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
@@ -384,10 +379,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_graph(), true);
-    /// assert_eq!(' '.to_ascii().unwrap().is_graph(), false);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_graph(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_graph(), true);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_graph(), false);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_graph(), false);
     /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
@@ -398,10 +393,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_print(), true);
-    /// assert_eq!(' '.to_ascii().unwrap().is_print(), true);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_print(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_print(), true);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_print(), true);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_print(), false);
     /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
@@ -412,10 +407,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('a'.to_ascii().unwrap().is_lowercase(), true);
-    /// assert_eq!('A'.to_ascii().unwrap().is_lowercase(), false);
-    /// assert_eq!('@'.to_ascii().unwrap().is_lowercase(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_lowercase(), true);
+    /// assert_eq!('A'.to_ascii_char().unwrap().is_lowercase(), false);
+    /// assert_eq!('@'.to_ascii_char().unwrap().is_lowercase(), false);
     /// ```
     #[inline]
     pub fn is_lowercase(&self) -> bool {
@@ -426,10 +421,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('A'.to_ascii().unwrap().is_uppercase(), true);
-    /// assert_eq!('a'.to_ascii().unwrap().is_uppercase(), false);
-    /// assert_eq!('@'.to_ascii().unwrap().is_uppercase(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('A'.to_ascii_char().unwrap().is_uppercase(), true);
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_uppercase(), false);
+    /// assert_eq!('@'.to_ascii_char().unwrap().is_uppercase(), false);
     /// ```
     #[inline]
     pub fn is_uppercase(&self) -> bool {
@@ -440,11 +435,11 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_punctuation(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_punctuation(), false);
-    /// assert_eq!('_'.to_ascii().unwrap().is_punctuation(), true);
-    /// assert_eq!('~'.to_ascii().unwrap().is_punctuation(), true);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_punctuation(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_punctuation(), false);
+    /// assert_eq!('_'.to_ascii_char().unwrap().is_punctuation(), true);
+    /// assert_eq!('~'.to_ascii_char().unwrap().is_punctuation(), true);
     /// ```
     #[inline]
     pub fn is_punctuation(&self) -> bool {
@@ -455,12 +450,12 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('a'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('F'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('G'.to_ascii().unwrap().is_hex(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_hex(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('5'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('F'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('G'.to_ascii_char().unwrap().is_hex(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_hex(), false);
     /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
@@ -489,11 +484,11 @@ impl AsciiExt for Ascii {
     }
 
     fn to_ascii_uppercase(&self) -> Ascii {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
     fn to_ascii_lowercase(&self) -> Ascii {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
@@ -508,24 +503,6 @@ impl AsciiExt for Ascii {
     #[inline]
     fn make_ascii_lowercase(&mut self) {
         *self = self.to_ascii_lowercase();
-    }
-}
-
-impl<'a> AsciiCast<'a> for u8 {
-    type Target = Ascii;
-
-    #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        transmute(*self)
-    }
-}
-
-impl<'a> AsciiCast<'a> for char {
-    type Target = Ascii;
-
-    #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        (*self as u8).to_ascii_nocheck()
     }
 }
 
@@ -599,7 +576,6 @@ impl ToAsciiChar for char {
 
 #[cfg(test)]
 mod tests {
-    use AsciiCast;
     use super::{Ascii, ToAsciiChar, ToAsciiCharError};
 
     #[test]
@@ -622,10 +598,10 @@ mod tests {
 
     #[test]
     fn is_digit() {
-        assert!('0'.to_ascii().unwrap().is_digit());
-        assert!('9'.to_ascii().unwrap().is_digit());
-        assert!(!'/'.to_ascii().unwrap().is_digit());
-        assert!(!':'.to_ascii().unwrap().is_digit());
+        assert_eq!('0'.to_ascii_char().unwrap().is_digit(), true);
+        assert_eq!('9'.to_ascii_char().unwrap().is_digit(), true);
+        assert_eq!('/'.to_ascii_char().unwrap().is_digit(), false);
+        assert_eq!(':'.to_ascii_char().unwrap().is_digit(), false);
     }
 
     #[test]

@@ -1,42 +1,34 @@
 extern crate ascii;
 
-use ascii::{AsciiStr, AsciiString, AsciiCast, IntoAsciiString};
+use ascii::{Ascii, AsciiStr, AsciiString, AsAsciiStr, IntoAsciiString};
 
 #[test]
 fn ascii_vec() {
-    let test = &[40_u8, 32, 59];
-    let b = AsciiStr::from_bytes(test).unwrap();
-    assert_eq!(test.to_ascii().unwrap(), b);
-    assert_eq!("( ;".to_ascii().unwrap(), b);
-    let v = vec![40_u8, 32, 59];
-    assert_eq!(v.to_ascii().unwrap(), b);
-    assert_eq!("( ;".to_string().to_ascii().unwrap(), b);
+    let test = b"( ;";
+    let a = AsciiStr::from_bytes(test).unwrap();
+    assert_eq!(test.as_ascii_str(), Ok(a));
+    assert_eq!("( ;".as_ascii_str(), Ok(a));
+    let v = test.to_vec();
+    assert_eq!(v.as_ascii_str(), Ok(a));
+    assert_eq!("( ;".to_string().as_ascii_str(), Ok(a));
 }
 
 #[test]
-fn opt() {
-    assert_eq!("zoä华".to_ascii(), Err(()));
+fn to_ascii() {
+    assert!("zoä华".as_ascii_str().is_err());
+    assert!([127_u8, 128, 255].as_ascii_str().is_err());
 
-    let test1 = &[127_u8, 128, 255];
-    assert_eq!(test1.to_ascii(), Err(()));
+    let arr = [Ascii::ParenOpen, Ascii::Space, Ascii::Semicolon];
+    let a: &AsciiStr = (&arr[..]).into();
+    assert_eq!(b"( ;".as_ascii_str(), Ok(a));
+    assert_eq!("( ;".as_ascii_str(), Ok(a));
 
-    let v = [40_u8, 32, 59];
-    let v1 = AsciiStr::from_bytes(&v).unwrap();
-    assert_eq!(v.to_ascii(), Ok(v1));
-    let v = [127_u8, 128, 255];
-    assert_eq!(v.to_ascii(), Err(()));
-
-    let v = "( ;";
-    assert_eq!(v.to_ascii(), Ok(v1));
-    assert_eq!("zoä华".to_ascii(), Err(()));
-
-    let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
-    assert_eq!(vec![40_u8, 32, 59].into_ascii_string(), Ok(v1));
+    assert_eq!("zoä华".to_string().into_ascii_string(), Err("zoä华".to_string()));
     assert_eq!(vec![127_u8, 128, 255].into_ascii_string(), Err(vec![127_u8, 128, 255]));
 
-    let v1 = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
-    assert_eq!("( ;".to_string().into_ascii_string(), Ok(v1));
-    assert_eq!("zoä华".to_string().into_ascii_string(), Err("zoä华".to_string()));
+    let v = AsciiString::from(arr.to_vec());
+    assert_eq!(b"( ;".to_vec().into_ascii_string(), Ok(v.clone()));
+    assert_eq!("( ;".to_string().into_ascii_string(), Ok(v));
 }
 
 #[test]
@@ -86,8 +78,8 @@ fn compare_ascii_str_str() {
 
 #[test]
 fn compare_ascii_str_slice() {
-    let b = b"abc".to_ascii().unwrap();
-    let c = b"ab".to_ascii().unwrap();
+    let b = b"abc".as_ascii_str().unwrap();
+    let c = b"ab".as_ascii_str().unwrap();
     assert_eq!(&b[..2], &c[..]);
     assert_eq!(c[1].as_char(), 'b');
 }

@@ -14,26 +14,6 @@ mod ascii;
 mod ascii_string;
 mod ascii_str;
 
-use std::ascii::AsciiExt;
-
 pub use ascii::{Ascii, ToAsciiChar, ToAsciiCharError};
 pub use ascii_string::{AsciiString, IntoAsciiString};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
-
-/// Trait for converting into an ascii type.
-pub trait AsciiCast<'a>: AsciiExt {
-    type Target;
-
-    /// Convert to an ascii type, return Err(()) on non-ASCII input.
-    #[inline]
-    fn to_ascii(&'a self) -> Result<Self::Target, ()> {
-        if self.is_ascii() {
-            Ok(unsafe { self.to_ascii_nocheck() })
-        } else {
-            Err(())
-        }
-    }
-
-    /// Convert to an ascii type, not doing any range asserts
-    unsafe fn to_ascii_nocheck(&'a self) -> Self::Target;
-}
