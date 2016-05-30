@@ -131,7 +131,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace", example.trim());
     /// ```
     pub fn trim(&self) -> &Self {
-        unsafe { mem::transmute(self.as_str().trim()) }
+        self.trim_right().trim_left()
     }
 
     /// Returns an ASCII string slice with leading whitespace removed.
@@ -143,10 +143,10 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_left());
     /// ```
     pub fn trim_left(&self) -> &Self {
-        unsafe { mem::transmute(self.as_str().trim_left()) }
+        &self[self.slice.iter().take_while(|a| a.is_whitespace() ).count()..]
     }
 
-    /// Returns an ASCII string slice with trainling whitespace removed.
+    /// Returns an ASCII string slice with trailing whitespace removed.
     ///
     /// # Examples
     /// ```
@@ -155,7 +155,9 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_right());
     /// ```
     pub fn trim_right(&self) -> &Self {
-        unsafe { mem::transmute(self.as_str().trim_right()) }
+        let trimmed = self.slice.into_iter()
+                          .rev().take_while(|a| a.is_whitespace() ).count();
+        &self[..self.len()-trimmed]
     }
 }
 
