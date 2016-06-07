@@ -289,29 +289,13 @@ impl Ascii {
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
-    pub fn from<C:ToAsciiChar>(ch: C) -> Result<Self, ()> {
-        ch.to_ascii_char().map_err(|_| () )
+    pub fn from<C:ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
+        ch.to_ascii_char()
     }
 
     /// Constructs an ASCII character from a `char` or `u8` without any checks.
     pub unsafe fn from_unchecked<C:ToAsciiChar>(ch: C) -> Self {
         ch.to_ascii_char_unchecked()
-    }
-
-    /// Constructs an ASCII character from a `u8`.
-    ///
-    /// # Failure
-    /// Returns `Err(())` if the character can't be ASCII encoded.
-    ///
-    /// # Example
-    /// ```
-    /// # use ascii::Ascii;
-    /// let a = Ascii::from_byte(65).unwrap();
-    /// assert_eq!(a.as_char(), 'A');
-    /// ```
-    #[inline]
-    pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
-        ch.to_ascii_char().map_err(|_| () )
     }
 
     /// Converts an ASCII character into a `u8`.
