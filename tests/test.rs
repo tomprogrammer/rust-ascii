@@ -5,7 +5,7 @@ use ascii::{Ascii, AsciiStr, AsciiString, AsAsciiStr, IntoAsciiString};
 #[test]
 fn ascii_vec() {
     let test = b"( ;";
-    let a = AsciiStr::from_bytes(test).unwrap();
+    let a = AsciiStr::from_ascii(test).unwrap();
     assert_eq!(test.as_ascii_str(), Ok(a));
     assert_eq!("( ;".as_ascii_str(), Ok(a));
     let v = test.to_vec();
@@ -35,7 +35,7 @@ fn to_ascii() {
 fn compare_ascii_string_ascii_str() {
     let v = b"abc";
     let ascii_string = AsciiString::from_ascii(&v[..]).unwrap();
-    let ascii_str = AsciiStr::from_bytes(v).unwrap();
+    let ascii_str = AsciiStr::from_ascii(v).unwrap();
     assert!(ascii_string == ascii_str);
     assert!(ascii_str == ascii_string);
 }
@@ -53,7 +53,7 @@ fn compare_ascii_string_string() {
 fn compare_ascii_str_string() {
     let v = b"abc";
     let string = String::from_utf8(v.to_vec()).unwrap();
-    let ascii_str = AsciiStr::from_bytes(&v[..]).unwrap();
+    let ascii_str = AsciiStr::from_ascii(&v[..]).unwrap();
     assert!(string == ascii_str);
     assert!(ascii_str == string);
 }
@@ -71,7 +71,7 @@ fn compare_ascii_string_str() {
 fn compare_ascii_str_str() {
     let v = b"abc";
     let sstr = ::std::str::from_utf8(v).unwrap();
-    let ascii_str = AsciiStr::from_bytes(v).unwrap();
+    let ascii_str = AsciiStr::from_ascii(v).unwrap();
     assert!(sstr == ascii_str);
     assert!(ascii_str == sstr);
 }

@@ -133,11 +133,11 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
-    /// # use ascii::{AsciiString, AsciiStr};
+    /// # use ascii::{AsciiString, AsAsciiStr};
     /// use std::str::FromStr;
     /// let mut s = AsciiString::from_str("foo").unwrap();
-    /// s.push_str(AsciiStr::from_str("bar").unwrap());
-    /// assert_eq!(s, AsciiStr::from_str("foobar").unwrap());
+    /// s.push_str("bar".as_ascii_str().unwrap());
+    /// assert_eq!(s, "foobar".as_ascii_str().unwrap());
     /// ```
     #[inline]
     pub fn push_str(&mut self, string: &AsciiStr) {

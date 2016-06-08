@@ -71,21 +71,15 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let foo = AsciiStr::from_bytes("foo");
-    /// let err = AsciiStr::from_bytes("Ŋ");
+    /// let foo = AsciiStr::from_ascii("foo");
+    /// let err = AsciiStr::from_ascii("Ŋ");
     /// assert_eq!(foo.unwrap().as_str(), "foo");
-    /// assert_eq!(err, Err(()));
+    /// assert_eq!(err.unwrap_err().valid_up_to(), 0);
     /// ```
-    pub fn from_bytes<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, ()>
+    pub fn from_ascii<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, AsAsciiStrError>
         where B: AsRef<[u8]>
     {
-        unsafe {
-            if bytes.as_ref().is_ascii() {
-                Ok( Self::from_bytes_unchecked(bytes) )
-            } else {
-                Err(())
-            }
-        }
+        bytes.as_ref().as_ascii_str()
     }
 
     /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking for non-ASCII characters..
@@ -93,18 +87,13 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let foo = unsafe{ AsciiStr::from_bytes_unchecked("foo") };
+    /// let foo = unsafe{ AsciiStr::from_ascii_unchecked("foo") };
     /// assert_eq!(foo.as_str(), "foo");
     /// ```
-    pub unsafe fn from_bytes_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
+    pub unsafe fn from_ascii_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
         where B: AsRef<[u8]>
     {
-        mem::transmute(bytes.as_ref())
-    }
-
-    /// Converts a borrowed string to a borrowed ASCII string.
-    pub fn from_str(s: &str) -> Result<&AsciiStr, ()> {
-        AsciiStr::from_bytes(s.as_bytes())
+        bytes.as_ref().as_ascii_str_unchecked()
     }
 
     /// Returns the number of characters / bytes in this ASCII sequence.
@@ -112,7 +101,7 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let s = AsciiStr::from_bytes("foo").unwrap();
+    /// let s = AsciiStr::from_ascii("foo").unwrap();
     /// assert_eq!(s.len(), 3);
     /// ```
     pub fn len(&self) -> usize {
@@ -124,8 +113,8 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let mut empty = AsciiStr::from_bytes("").unwrap();
-    /// let mut full = AsciiStr::from_bytes("foo").unwrap();
+    /// let mut empty = AsciiStr::from_ascii("").unwrap();
+    /// let mut full = AsciiStr::from_ascii("foo").unwrap();
     /// assert!(empty.is_empty());
     /// assert!(!full.is_empty());
     /// ```
@@ -138,7 +127,7 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// let example = AsciiStr::from_ascii("  \twhite \tspace  \t").unwrap();
     /// assert_eq!("white \tspace", example.trim());
     /// ```
     pub fn trim(&self) -> &Self {
@@ -150,7 +139,7 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// let example = AsciiStr::from_ascii("  \twhite \tspace  \t").unwrap();
     /// assert_eq!("white \tspace  \t", example.trim_left());
     /// ```
     pub fn trim_left(&self) -> &Self {
@@ -162,7 +151,7 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let example = AsciiStr::from_str("  \twhite \tspace  \t").unwrap();
+    /// let example = AsciiStr::from_ascii("  \twhite \tspace  \t").unwrap();
     /// assert_eq!("  \twhite \tspace", example.trim_right());
     /// ```
     pub fn trim_right(&self) -> &Self {
@@ -549,7 +538,7 @@ mod tests {
     #[test]
     fn as_str() {
         let b = b"( ;";
-        let v = AsciiStr::from_bytes(b).unwrap();
+        let v = AsciiStr::from_ascii(b).unwrap();
         assert_eq!(v.as_str(), "( ;");
         assert_eq!(AsRef::<str>::as_ref(v), "( ;");
     }
@@ -557,7 +546,7 @@ mod tests {
     #[test]
     fn as_bytes() {
         let b = b"( ;";
-        let v = AsciiStr::from_bytes(b).unwrap();
+        let v = AsciiStr::from_ascii(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
         assert_eq!(AsRef::<[u8]>::as_ref(v), b"( ;");
     }
