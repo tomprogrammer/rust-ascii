@@ -7,19 +7,19 @@ use std::error::Error;
 #[cfg(not(feature = "no_std"))]
 use std::ascii::AsciiExt;
 
-use ascii::Ascii;
+use ascii_char::AsciiChar;
 #[cfg(not(feature = "no_std"))]
 use ascii_string::AsciiString;
 
 /// AsciiStr represents a byte or string slice that only contains ASCII characters.
 ///
-/// It wraps an `[Ascii]` and implements many of `str`s methods and traits.
+/// It wraps an `[AsciiChar]` and implements many of `str`s methods and traits.
 ///
 /// Can be created by a checked conversion from a `str` or `[u8]`,
 /// or borrowed from an `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
-    slice: [Ascii],
+    slice: [AsciiChar],
 }
 
 impl AsciiStr {
@@ -38,13 +38,13 @@ impl AsciiStr {
         unsafe { mem::transmute(&self.slice) }
     }
 
-    /// Returns the entire string as slice of `Ascii` characters.
-    pub fn as_slice(&self) -> &[Ascii] {
+    /// Returns the entire string as slice of `AsciiChar`s.
+    pub fn as_slice(&self) -> &[AsciiChar] {
         &self.slice
     }
 
-    /// Returns the entire string as mutable slice of `Ascii` characters.
-    pub fn as_mut_slice(&mut self) -> &mut [Ascii] {
+    /// Returns the entire string as mutable slice of `AsciiChar`s.
+    pub fn as_mut_slice(&mut self) -> &mut [AsciiChar] {
         &mut self.slice
     }
 
@@ -53,7 +53,7 @@ impl AsciiStr {
     /// The caller must ensure that the slice outlives the pointer this function returns, or else it
     /// will end up pointing to garbage. Modifying the `AsciiStr` may cause it's buffer to be
     /// reallocated, which would also make any pointers to it invalid.
-    pub fn as_ptr(&self) -> *const Ascii {
+    pub fn as_ptr(&self) -> *const AsciiChar {
         self.as_slice().as_ptr()
     }
 
@@ -62,7 +62,7 @@ impl AsciiStr {
     /// The caller must ensure that the slice outlives the pointer this function returns, or else it
     /// will end up pointing to garbage. Modifying the `AsciiStr` may cause it's buffer to be
     /// reallocated, which would also make any pointers to it invalid.
-    pub fn as_mut_ptr(&mut self) -> *mut Ascii {
+    pub fn as_mut_ptr(&mut self) -> *mut AsciiChar {
         self.as_mut_slice().as_mut_ptr()
     }
 
@@ -198,13 +198,13 @@ impl AsRef<str> for AsciiStr {
         self.as_str()
     }
 }
-impl AsRef<[Ascii]> for AsciiStr {
-    fn as_ref(&self) -> &[Ascii] {
+impl AsRef<[AsciiChar]> for AsciiStr {
+    fn as_ref(&self) -> &[AsciiChar] {
         &self.slice
     }
 }
-impl AsMut<[Ascii]> for AsciiStr {
-    fn as_mut(&mut self) -> &mut[Ascii] {
+impl AsMut<[AsciiChar]> for AsciiStr {
+    fn as_mut(&mut self) -> &mut[AsciiChar] {
         &mut self.slice
     }
 }
@@ -214,19 +214,19 @@ impl Default for &'static AsciiStr {
         unsafe{ "".as_ascii_str_unchecked() }
     }
 }
-impl<'a> From<&'a[Ascii]> for &'a AsciiStr {
-    fn from(slice: &[Ascii]) -> &AsciiStr {
+impl<'a> From<&'a[AsciiChar]> for &'a AsciiStr {
+    fn from(slice: &[AsciiChar]) -> &AsciiStr {
         unsafe{ mem::transmute(slice) }
     }
 }
-impl<'a> From<&'a mut [Ascii]> for &'a mut AsciiStr {
-    fn from(slice: &mut[Ascii]) -> &mut AsciiStr {
+impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
+    fn from(slice: &mut[AsciiChar]) -> &mut AsciiStr {
         unsafe{ mem::transmute(slice) }
     }
 }
 #[cfg(not(feature = "no_std"))]
-impl From<Box<[Ascii]>> for Box<AsciiStr> {
-    fn from(owned: Box<[Ascii]>) -> Box<AsciiStr> {
+impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
+    fn from(owned: Box<[AsciiChar]>) -> Box<AsciiStr> {
         unsafe{ mem::transmute(owned) }
     }
 }
@@ -251,7 +251,7 @@ macro_rules! impl_into {
         }
     }
 }
-impl_into! {[Ascii]}
+impl_into! {[AsciiChar]}
 impl_into! {[u8]}
 impl_into! {str}
 
@@ -287,7 +287,7 @@ macro_rules! impl_index {
     }
 }
 
-impl_index! { AsciiStr, usize, Ascii }
+impl_index! { AsciiStr, usize, AsciiChar }
 impl_index! { AsciiStr, Range<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeTo<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFrom<usize>, AsciiStr }
@@ -411,7 +411,7 @@ impl AsMutAsciiStr for AsciiStr {
     }
 }
 
-// Cannot implement for [Ascii] since AsciiExt isn't implementet for it.
+// Cannot implement for [AsciiChar] since AsciiExt isn't implementet for it.
 
 impl AsAsciiStr for [u8] {
     fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
@@ -459,7 +459,7 @@ impl AsMutAsciiStr for str {
 
 #[cfg(test)]
 mod tests {
-    use Ascii;
+    use AsciiChar;
     use super::{AsciiStr, AsAsciiStr, AsAsciiStrError};
     #[cfg(not(feature = "no_std"))]
     use super::AsMutAsciiStr;
@@ -469,7 +469,7 @@ mod tests {
         fn generic<C:AsAsciiStr+?Sized>(c: &C) -> Result<&AsciiStr,AsAsciiStrError> {
             c.as_ascii_str()
         }
-        let arr = [Ascii::A];
+        let arr = [AsciiChar::A];
         let ascii_str: &AsciiStr = arr.as_ref().into();
         assert_eq!(generic("A"), Ok(ascii_str));
         assert_eq!(generic(&b"A"[..]), Ok(ascii_str));
@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(s.as_mut_str().as_mut_ascii_str(), err!(2));
         assert_eq!(b.as_slice().as_ascii_str(), err!(2));
         assert_eq!(b.as_mut_slice().as_mut_ascii_str(), err!(2));
-        let mut a = [Ascii::a, Ascii::b];
+        let mut a = [AsciiChar::a, AsciiChar::b];
         assert_eq!((&s[..2]).as_ascii_str(), Ok((&a[..]).into()));
         assert_eq!((&b[..2]).as_ascii_str(), Ok((&a[..]).into()));
         let a = Ok((&mut a[..]).into());

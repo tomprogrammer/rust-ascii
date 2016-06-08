@@ -1,6 +1,6 @@
 extern crate ascii;
 
-use ascii::{Ascii, AsciiStr, AsAsciiStr};
+use ascii::{AsciiChar, AsciiStr, AsAsciiStr};
 #[cfg(not(feature = "no_std"))]
 use ascii::{AsciiString, IntoAsciiString};
 
@@ -21,7 +21,7 @@ fn to_ascii() {
     assert!("zoä华".as_ascii_str().is_err());
     assert!([127_u8, 128, 255].as_ascii_str().is_err());
 
-    let arr = [Ascii::ParenOpen, Ascii::Space, Ascii::Semicolon];
+    let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
     let a: &AsciiStr = (&arr[..]).into();
     assert_eq!(b"( ;".as_ascii_str(), Ok(a));
     assert_eq!("( ;".as_ascii_str(), Ok(a));
@@ -33,7 +33,7 @@ fn into_ascii() {
     assert_eq!("zoä华".to_string().into_ascii_string(), Err("zoä华".to_string()));
     assert_eq!(vec![127_u8, 128, 255].into_ascii_string(), Err(vec![127_u8, 128, 255]));
 
-    let arr = [Ascii::ParenOpen, Ascii::Space, Ascii::Semicolon];
+    let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
     let v = AsciiString::from(arr.to_vec());
     assert_eq!(b"( ;".to_vec().into_ascii_string(), Ok(v.clone()));
     assert_eq!("( ;".to_string().into_ascii_string(), Ok(v));

@@ -5,7 +5,7 @@ version = "0.6.0"
 authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
            "Simon Sapin <simon.sapin@exyr.org>"]
 
-description = "`Ascii` type and related functionality, previously in `std::ascii`."
+description = "ASCII-only equivalents to `char`, `str` and `String`."
 documentation = "https://tomprogrammer.github.io/rust-ascii/ascii/index.html"
 license = "Apache-2.0 / MIT"
 repository = "https://github.com/tomprogrammer/rust-ascii"
