@@ -1,9 +1,14 @@
-use std::{fmt, mem};
-use std::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+extern crate core;
+
+use self::core::{fmt, mem};
+use self::core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+#[cfg(not(feature = "no_std"))]
 use std::error::Error;
+#[cfg(not(feature = "no_std"))]
 use std::ascii::AsciiExt;
 
 use ascii::Ascii;
+#[cfg(not(feature = "no_std"))]
 use ascii_string::AsciiString;
 
 /// AsciiStr represents a byte or string slice that only contains ASCII characters.
@@ -61,6 +66,7 @@ impl AsciiStr {
         self.as_mut_slice().as_mut_ptr()
     }
 
+    #[cfg(not(feature = "no_std"))]
     /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
     pub fn to_ascii_string(&self) -> AsciiString {
         AsciiString::from(self.slice.to_vec())
@@ -173,6 +179,7 @@ impl PartialEq<AsciiStr> for str {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
@@ -217,6 +224,7 @@ impl<'a> From<&'a mut [Ascii]> for &'a mut AsciiStr {
         unsafe{ mem::transmute(slice) }
     }
 }
+#[cfg(not(feature = "no_std"))]
 impl From<Box<[Ascii]>> for Box<AsciiStr> {
     fn from(owned: Box<[Ascii]>) -> Box<AsciiStr> {
         unsafe{ mem::transmute(owned) }
@@ -235,6 +243,7 @@ macro_rules! impl_into {
                 unsafe{ mem::transmute(slice) }
             }
         }
+        #[cfg(not(feature = "no_std"))]
         impl From<Box<AsciiStr>> for Box<$wider> {
             fn from(owned: Box<AsciiStr>) -> Box<$wider> {
                 unsafe{ mem::transmute(owned) }
@@ -284,6 +293,7 @@ impl_index! { AsciiStr, RangeTo<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFrom<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFull, AsciiStr }
 
+#[cfg(not(feature = "no_std"))]
 impl AsciiExt for AsciiStr {
     type Owned = AsciiString;
 
@@ -341,6 +351,7 @@ impl fmt::Display for AsAsciiStrError {
         write!(fmtr, "the byte at index {} is not ASCII", self.0)
     }
 }
+#[cfg(not(feature = "no_std"))]
 impl Error for AsAsciiStrError {
     /// Returns "one or more bytes are not ASCII"
     fn description(&self) -> &'static str {
@@ -349,15 +360,34 @@ impl Error for AsAsciiStrError {
 }
 
 
-/// Connvert mutable slices of bytes to `AsciiStr`.
+#[cfg(not(feature = "no_std"))]
+/// Connvert slices of bytes to `AsciiStr`.
 pub trait AsAsciiStr : AsciiExt {
     /// Convert to an ASCII slice without checking for non-ASCII characters.
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
     /// Convert to an ASCII slice.
     fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError>;
 }
+#[cfg(feature = "no_std")]
+/// Connvert slices of bytes to `AsciiStr`.
+pub trait AsAsciiStr {
+    /// Convert to an ASCII slice without checking for non-ASCII characters.
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
+    /// Convert to an ASCII slice.
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError>;
+}
+
+#[cfg(not(feature = "no_std"))]
 /// Connvert mutable slices of bytes to `AsciiStr`.
 pub trait AsMutAsciiStr : AsciiExt {
+    /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
+    /// Convert to a mutable ASCII slice.
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
+}
+#[cfg(feature = "no_std")]
+/// Connvert mutable slices of bytes to `AsciiStr`.
+pub trait AsMutAsciiStr {
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
     /// Convert to a mutable ASCII slice.
@@ -430,7 +460,9 @@ impl AsMutAsciiStr for str {
 #[cfg(test)]
 mod tests {
     use Ascii;
-    use super::{AsciiStr,AsAsciiStr,AsMutAsciiStr,AsAsciiStrError};
+    use super::{AsciiStr, AsAsciiStr, AsAsciiStrError};
+    #[cfg(not(feature = "no_std"))]
+    use super::AsMutAsciiStr;
 
     #[test]
     fn generic_as_ascii_str() {
@@ -445,6 +477,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_std"))]
     fn as_ascii_str() {
         macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
         let mut s: String = "abčd".to_string();
@@ -484,6 +517,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_std"))]
     fn fmt_ascii_str() {
         let s = "abc".as_ascii_str().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());

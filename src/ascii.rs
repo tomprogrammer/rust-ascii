@@ -1,13 +1,17 @@
-use std::mem::transmute;
-use std::fmt;
+extern crate core;
+
+use self::core::mem::transmute;
+use self::core::fmt;
+#[cfg(not(feature = "no_std"))]
 use std::error::Error;
+#[cfg(not(feature = "no_std"))]
 use std::ascii::AsciiExt;
 
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
-pub enum Ascii {
+pub enum AsciiChar {
     /// `'\0'`
     Null            =   0,
     /// [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
@@ -276,7 +280,7 @@ pub enum Ascii {
     DEL             = 127,
 }
 
-impl Ascii {
+impl AsciiChar {
     /// Constructs an ASCII character from a `u8`, `char` or other character type.
     ///
     /// # Failure
@@ -284,8 +288,8 @@ impl Ascii {
     ///
     /// # Example
     /// ```
-    /// # use ascii::Ascii;
-    /// let a = Ascii::from('g').unwrap();
+    /// # use ascii::AsciiChar;
+    /// let a = AsciiChar::from('g').unwrap();
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
@@ -322,7 +326,7 @@ impl Ascii {
     /// Check if the character is a number (0-9)
     #[inline]
     pub fn is_digit(&self) -> bool {
-        self >= &Ascii::_0 && self <= &Ascii::_9
+        self >= &AsciiChar::_0 && self <= &AsciiChar::_9
     }
 
     /// Check if the character is a letter or number
@@ -334,14 +338,14 @@ impl Ascii {
     /// Check if the character is a space or horizontal tab
     #[inline]
     pub fn is_blank(&self) -> bool {
-        *self == Ascii::Space || *self == Ascii::Tab
+        *self == AsciiChar::Space || *self == AsciiChar::Tab
     }
 
     /// Check if the character is a ' ', '\t', '\n' or '\r'
     #[inline]
     pub fn is_whitespace(&self) -> bool {
-        self.is_blank() || *self == Ascii::LineFeed
-                        || *self == Ascii::CarriageReturn
+        self.is_blank() || *self == AsciiChar::LineFeed
+                        || *self == AsciiChar::CarriageReturn
     }
 
     /// Check if the character is a control character
@@ -356,7 +360,7 @@ impl Ascii {
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
-        *self < Ascii::Space || *self == Ascii::DEL
+        *self < AsciiChar::Space || *self == AsciiChar::DEL
     }
 
     /// Checks if the character is printable (except space)
@@ -447,31 +451,32 @@ impl Ascii {
     }
 }
 
-impl fmt::Display for Ascii {
+impl fmt::Display for AsciiChar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
     }
 }
 
-impl fmt::Debug for Ascii {
+impl fmt::Debug for AsciiChar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
      }
 }
 
-impl AsciiExt for Ascii {
-    type Owned = Ascii;
+#[cfg(not(feature = "no_std"))]
+impl AsciiExt for AsciiChar {
+    type Owned = AsciiChar;
 
     #[inline]
     fn is_ascii(&self) -> bool {
         true
     }
 
-    fn to_ascii_uppercase(&self) -> Ascii {
+    fn to_ascii_uppercase(&self) -> AsciiChar {
         unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
-    fn to_ascii_lowercase(&self) -> Ascii {
+    fn to_ascii_lowercase(&self) -> AsciiChar {
         unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
@@ -509,6 +514,7 @@ impl fmt::Display for ToAsciiCharError {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl Error for ToAsciiCharError {
     fn description(&self) -> &'static str {
         ERRORMSG_CHAR
@@ -516,43 +522,52 @@ impl Error for ToAsciiCharError {
 }
 
 
-/// Convert `char`, `u8` and other character types to `Ascii`.
+#[cfg(not(feature = "no_std"))]
+/// Convert `char`, `u8` and other character types to `AsciiChar`.
 pub trait ToAsciiChar : AsciiExt {
-    /// Convert to `Ascii` without checking that it is an ASCII character.
-    unsafe fn to_ascii_char_unchecked(self) -> Ascii;
-    /// Convert to `Ascii`.
-    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError>;
+    /// Convert to `AsciiChar` without checking that it is an ASCII character.
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
+    /// Convert to `AsciiChar`.
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
+}
+#[cfg(feature = "no_std")]
+/// Convert `char`, `u8` and other character types to `AsciiChar`.
+pub trait ToAsciiChar {
+    /// Convert to `AsciiChar` without checking that it is an ASCII character.
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
+    /// Convert to `AsciiChar`.
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
 }
 
-impl ToAsciiChar for Ascii {
-    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
+impl ToAsciiChar for AsciiChar {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         Ok(self)
     }
-    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         self
     }
 }
 
 impl ToAsciiChar for u8 {
-    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         unsafe{ if self <= 0x7F {
             return Ok(self.to_ascii_char_unchecked());
         }}
         Err(ToAsciiCharError(()))
     }
-    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         transmute(self)
     }
 }
 
 impl ToAsciiChar for char {
-    fn to_ascii_char(self) -> Result<Ascii, ToAsciiCharError> {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         unsafe{ if self as u32 <= 0x7F {
             return Ok(self.to_ascii_char_unchecked());
         }}
         Err(ToAsciiCharError(()))
     }
-    unsafe fn to_ascii_char_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         (self as u8).to_ascii_char_unchecked()
     }
 }
@@ -560,24 +575,24 @@ impl ToAsciiChar for char {
 
 #[cfg(test)]
 mod tests {
-    use super::{Ascii, ToAsciiChar, ToAsciiCharError};
+    use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 
     #[test]
     fn to_ascii_char() {
-        fn generic<C:ToAsciiChar>(c: C) -> Result<Ascii, ToAsciiCharError> {
+        fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
             c.to_ascii_char()
         }
-        assert_eq!(generic(Ascii::A), Ok(Ascii::A));
-        assert_eq!(generic(b'A'), Ok(Ascii::A));
-        assert_eq!(generic('A'), Ok(Ascii::A));
+        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
+        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
+        assert_eq!(generic('A'), Ok(AsciiChar::A));
         assert!(generic(200).is_err());
         assert!(generic('λ').is_err());
     }
 
     #[test]
     fn as_byte_and_char() {
-        assert_eq!(Ascii::A.as_byte(), b'A');
-        assert_eq!(Ascii::A.as_char(),  'A');
+        assert_eq!(AsciiChar::A.as_byte(), b'A');
+        assert_eq!(AsciiChar::A.as_char(),  'A');
     }
 
     #[test]
@@ -590,14 +605,15 @@ mod tests {
 
     #[test]
     fn is_control() {
-        assert_eq!(Ascii::US.is_control(), true);
-        assert_eq!(Ascii::DEL.is_control(), true);
-        assert_eq!(Ascii::Space.is_control(), false);
+        assert_eq!(AsciiChar::US.is_control(), true);
+        assert_eq!(AsciiChar::DEL.is_control(), true);
+        assert_eq!(AsciiChar::Space.is_control(), false);
     }
 
     #[test]
+    #[cfg(not(feature = "no_std"))]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", Ascii::t), "t".to_string());
-        assert_eq!(format!("{:?}", Ascii::t), "'t'".to_string());
+        assert_eq!(format!("{}", AsciiChar::t), "t".to_string());
+        assert_eq!(format!("{:?}", AsciiChar::t), "'t'".to_string());
     }
 }

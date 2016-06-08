@@ -10,10 +10,14 @@
 
 //! Operations on ASCII strings and characters
 
+#![cfg_attr(feature = "no_std", no_std)]
+
 mod ascii;
-mod ascii_string;
 mod ascii_str;
+#[cfg(not(feature = "no_std"))]
+mod ascii_string;
 
 pub use ascii::{Ascii, ToAsciiChar, ToAsciiCharError};
-pub use ascii_string::{AsciiString, IntoAsciiString};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
+#[cfg(not(feature = "no_std"))]
+pub use ascii_string::{AsciiString, IntoAsciiString};
