@@ -1,5 +1,6 @@
-[package]
+test = [{name = "tests", path = "tests.rs"}]
 
+[package]
 name = "ascii"
 version = "0.6.0"
 authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
