@@ -1,3 +1,7 @@
+Unreleased
+==========
+* Return `FromAsciiError` instead of the input when `AsciiString::from_ascii()` or `into_ascii_string()` fails.
+
 Version 0.7.0 (2016-06-25)
 ==========
 * Rename `Ascii` to `AsciiChar` and convert it into an enum. (with a variant for every ASCII character)

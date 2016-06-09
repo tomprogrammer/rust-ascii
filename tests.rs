@@ -30,13 +30,17 @@ fn to_ascii() {
 #[test]
 #[cfg(not(feature = "no_std"))]
 fn into_ascii() {
-    assert_eq!("zoä华".to_string().into_ascii_string(), Err("zoä华".to_string()));
-    assert_eq!(vec![127_u8, 128, 255].into_ascii_string(), Err(vec![127_u8, 128, 255]));
-
     let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
     let v = AsciiString::from(arr.to_vec());
     assert_eq!(b"( ;".to_vec().into_ascii_string(), Ok(v.clone()));
     assert_eq!("( ;".to_string().into_ascii_string(), Ok(v));
+
+    let err = "zoä华".to_string().into_ascii_string().unwrap_err();
+    assert_eq!(Err(err.ascii_error()), "zoä华".as_ascii_str());
+    assert_eq!(err.into_source(), "zoä华");
+    let err = vec![127, 128, 255].into_ascii_string().unwrap_err();
+    assert_eq!(Err(err.ascii_error()), [127, 128, 255].as_ascii_str());
+    assert_eq!(err.into_source(), &[127, 128, 255]);
 }
 
 #[test]
