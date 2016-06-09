@@ -1,12 +1,17 @@
 Unreleased
 ==========
-* Convert `Ascii` into an enum with a variant for every ASCII character.
+* Convert `Ascii` into an enum with a variant for every ASCII character and rename it to `AsciiChar`.
+* Replace `OwnedAsciiCast` with `IntoAsciiString`.
+* Replace `AsciiCast` with `AsAsciiStr` and `IntoAsciiChar`.
+* Replace *\_nocheck* with *\_unchecked*, and *from_bytes* with *from_ascii* in method names.
+* Return `std::error::Error` implementing types on error.
+* Implement `AsciiExt` without the `unstable` Cargo feature flag, which is  removed.
+* Require Rust 1.9 or later.
+* Add `#[no_std]` support in a Cargo feature.
 * Implement `From<{&,&mut,Box<}AsciiStr>` for `[Ascii]`, `[u8]` and `str`
-* Implement `From<{&,&mut,Box<}[Ascii]>`, `As{Ref,Mut}<[Ascii]` and Default for `AsciiStr`
-* Add `IntoAsciiString` and `IntoAsciiChar` to replace `OwnedAsciiCast`.
-* Add `AsAsciiStr` to replace `AsciiCast`.
+* Implement `From<{&,&mut,Box<}[Ascii]>`, `As{Ref,Mut}<[Ascii]>` and Default for `AsciiStr`
+* Stop some `Ascii::is_xxx()` methods from panicing.
 * Add `Ascii::is_whitespace()`
-* Running the unit tests now require Rust 1.7.0.
 
 Version 0.6.0 (2015-12-30)
 ==========================
