@@ -3,6 +3,7 @@
 name = "ascii"
 version = "0.6.0"
 authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
+           "Torbjørn Birch Moltu <t.b.moltu@lyse.net>",
            "Simon Sapin <simon.sapin@exyr.org>"]
 
 description = "`Ascii` type and related functionality, previously in `std::ascii`."
