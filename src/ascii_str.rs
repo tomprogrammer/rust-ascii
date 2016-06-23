@@ -361,7 +361,7 @@ impl Error for AsAsciiStrError {
 
 
 #[cfg(not(feature = "no_std"))]
-/// Connvert slices of bytes to `AsciiStr`.
+/// Convert slices of bytes to `AsciiStr`.
 pub trait AsAsciiStr : AsciiExt {
     /// Convert to an ASCII slice without checking for non-ASCII characters.
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
@@ -369,7 +369,7 @@ pub trait AsAsciiStr : AsciiExt {
     fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError>;
 }
 #[cfg(feature = "no_std")]
-/// Connvert slices of bytes to `AsciiStr`.
+/// Convert slices of bytes to `AsciiStr`.
 pub trait AsAsciiStr {
     /// Convert to an ASCII slice without checking for non-ASCII characters.
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
@@ -378,7 +378,7 @@ pub trait AsAsciiStr {
 }
 
 #[cfg(not(feature = "no_std"))]
-/// Connvert mutable slices of bytes to `AsciiStr`.
+/// Convert mutable slices of bytes to `AsciiStr`.
 pub trait AsMutAsciiStr : AsciiExt {
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
@@ -386,7 +386,7 @@ pub trait AsMutAsciiStr : AsciiExt {
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
 }
 #[cfg(feature = "no_std")]
-/// Connvert mutable slices of bytes to `AsciiStr`.
+/// Convert mutable slices of bytes to `AsciiStr`.
 pub trait AsMutAsciiStr {
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
@@ -411,7 +411,7 @@ impl AsMutAsciiStr for AsciiStr {
     }
 }
 
-// Cannot implement for [AsciiChar] since AsciiExt isn't implementet for it.
+// Cannot implement for [AsciiChar] since AsciiExt isn't implemented for it.
 
 impl AsAsciiStr for [u8] {
     fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
