@@ -521,16 +521,6 @@ impl Error for ToAsciiCharError {
     }
 }
 
-
-#[cfg(not(feature = "no_std"))]
-/// Convert `char`, `u8` and other character types to `AsciiChar`.
-pub trait ToAsciiChar : AsciiExt {
-    /// Convert to `AsciiChar` without checking that it is an ASCII character.
-    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
-    /// Convert to `AsciiChar`.
-    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
-}
-#[cfg(feature = "no_std")]
 /// Convert `char`, `u8` and other character types to `AsciiChar`.
 pub trait ToAsciiChar {
     /// Convert to `AsciiChar` without checking that it is an ASCII character.
