@@ -393,7 +393,22 @@ impl AsMutAsciiStr for AsciiStr {
     }
 }
 
-// Cannot implement for [AsciiChar] since AsciiExt isn't implemented for it.
+impl AsAsciiStr for [AsciiChar] {
+    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+        Ok(self.into())
+    }
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
+        self.into()
+    }
+}
+impl AsMutAsciiStr for [AsciiChar] {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+        Ok(self.into())
+    }
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
+        self.into()
+    }
+}
 
 impl AsAsciiStr for [u8] {
     fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {

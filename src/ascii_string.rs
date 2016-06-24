@@ -553,6 +553,15 @@ impl IntoAsciiString for AsciiString {
     }
 }
 
+impl IntoAsciiString for Vec<AsciiChar> {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from(self)
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        Ok(AsciiString::from(self))
+    }
+}
+
 impl IntoAsciiString for Vec<u8> {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from_ascii_unchecked(self)
