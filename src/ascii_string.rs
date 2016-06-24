@@ -537,37 +537,37 @@ impl<T> IndexMut<T> for AsciiString where AsciiStr: IndexMut<T> {
 
 
 /// Convert vectors into `AsciiString`.
-pub trait IntoAsciiString<T: ?Sized+AsciiExt<Owned=Self>> : Sized+Borrow<T> {
+pub trait IntoAsciiString : Sized {
     /// Convert to `AsciiString` without checking for non-ASCII characters.
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString;
     /// Convert to `AsciiString`.
-    fn into_ascii_string(self) -> Result<AsciiString,Self> {
-        if self.borrow().is_ascii() {
-            Ok(unsafe { self.into_ascii_string_unchecked() })
-        } else {
-            Err(self)
-        }
-    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self>;
 }
 
-impl IntoAsciiString<AsciiStr> for AsciiString {
-    fn into_ascii_string(self) -> Result<AsciiString,AsciiString> {
-        Ok(self)
-    }
+impl IntoAsciiString for AsciiString {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self
     }
-}
-
-impl IntoAsciiString<[u8]> for Vec<u8> {
-    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self)
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        Ok(self)
     }
 }
 
-impl IntoAsciiString<str> for String {
+impl IntoAsciiString for Vec<u8> {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from_ascii_unchecked(self)
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        AsciiString::from_ascii(self)
+    }
+}
+
+impl IntoAsciiString for String {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self.into_bytes().into_ascii_string_unchecked()
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        AsciiString::from_ascii(self)
     }
 }
 
