@@ -1,15 +1,17 @@
-use std::mem::transmute;
-use std::fmt;
-use std::error::Error;
-use std::ascii::AsciiExt;
+extern crate core;
 
-use AsciiCast;
+use self::core::mem::transmute;
+use self::core::fmt;
+#[cfg(not(feature = "no_std"))]
+use std::error::Error;
+#[cfg(not(feature = "no_std"))]
+use std::ascii::AsciiExt;
 
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
 #[repr(u8)]
-pub enum Ascii {
+pub enum AsciiChar {
     /// `'\0'`
     Null            =   0,
     /// [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
@@ -139,7 +141,7 @@ pub enum Ascii {
     /// `':'`
     Colon           =  58,
     /// `';'`
-    SemiColon       =  59,
+    Semicolon       =  59,
     /// `'<'`
     LessThan        =  60,
     /// `'='`
@@ -278,7 +280,7 @@ pub enum Ascii {
     DEL             = 127,
 }
 
-impl Ascii {
+impl AsciiChar {
     /// Constructs an ASCII character from a `u8`, `char` or other character type.
     ///
     /// # Failure
@@ -286,37 +288,18 @@ impl Ascii {
     ///
     /// # Example
     /// ```
-    /// # use ascii::Ascii;
-    /// let a = Ascii::from('g').unwrap();
+    /// # use ascii::AsciiChar;
+    /// let a = AsciiChar::from('g').unwrap();
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
-    pub fn from<C:IntoAscii>(ch: C) -> Result<Self, ()> {
-        ch.into_ascii().map_err(|_| () )
+    pub fn from<C:ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
+        ch.to_ascii_char()
     }
 
     /// Constructs an ASCII character from a `char` or `u8` without any checks.
-    pub unsafe fn from_unchecked<C:IntoAscii>(ch: C) -> Self {
-        ch.into_ascii_unchecked()
-    }
-
-    /// Constructs an ASCII character from a `u8`.
-    ///
-    /// # Failure
-    /// Returns `Err(())` if the character can't be ASCII encoded.
-    ///
-    /// # Example
-    /// ```
-    /// # use ascii::Ascii;
-    /// let a = Ascii::from_byte(65).unwrap();
-    /// assert_eq!(a.as_char(), 'A');
-    /// ```
-    #[inline]
-    pub fn from_byte(ch: u8) -> Result<Ascii, ()> {
-        unsafe{if ch <= 0x7F {
-            return Ok(ch.to_ascii_nocheck());
-        }}
-        Err(())
+    pub unsafe fn from_unchecked<C:ToAsciiChar>(ch: C) -> Self {
+        ch.to_ascii_char_unchecked()
     }
 
     /// Converts an ASCII character into a `u8`.
@@ -343,7 +326,7 @@ impl Ascii {
     /// Check if the character is a number (0-9)
     #[inline]
     pub fn is_digit(&self) -> bool {
-        self >= &Ascii::_0 && self <= &Ascii::_9
+        self >= &AsciiChar::_0 && self <= &AsciiChar::_9
     }
 
     /// Check if the character is a letter or number
@@ -355,39 +338,39 @@ impl Ascii {
     /// Check if the character is a space or horizontal tab
     #[inline]
     pub fn is_blank(&self) -> bool {
-        *self == Ascii::Space || *self == Ascii::Tab
+        *self == AsciiChar::Space || *self == AsciiChar::Tab
     }
 
-    /// Check if the character is a ' ', '\t', '\n' or '\r' 
+    /// Check if the character is a ' ', '\t', '\n' or '\r'
     #[inline]
     pub fn is_whitespace(&self) -> bool {
-        self.is_blank() || *self == Ascii::LineFeed
-                        || *self == Ascii::CarriageReturn
+        self.is_blank() || *self == AsciiChar::LineFeed
+                        || *self == AsciiChar::CarriageReturn
     }
 
     /// Check if the character is a control character
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('\0'.to_ascii().unwrap().is_control(), true);
-    /// assert_eq!('n'.to_ascii().unwrap().is_control(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_control(), false);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_control(), true);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('\0'.to_ascii_char().unwrap().is_control(), true);
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_control(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_control(), false);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_control(), true);
     /// ```
     #[inline]
     pub fn is_control(&self) -> bool {
-        self.as_byte() < 0x20 || *self == Ascii::DEL
+        *self < AsciiChar::Space || *self == AsciiChar::DEL
     }
 
     /// Checks if the character is printable (except space)
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_graph(), true);
-    /// assert_eq!(' '.to_ascii().unwrap().is_graph(), false);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_graph(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_graph(), true);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_graph(), false);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_graph(), false);
     /// ```
     #[inline]
     pub fn is_graph(&self) -> bool {
@@ -398,10 +381,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_print(), true);
-    /// assert_eq!(' '.to_ascii().unwrap().is_print(), true);
-    /// assert_eq!('\n'.to_ascii().unwrap().is_print(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_print(), true);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_print(), true);
+    /// assert_eq!('\n'.to_ascii_char().unwrap().is_print(), false);
     /// ```
     #[inline]
     pub fn is_print(&self) -> bool {
@@ -412,10 +395,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('a'.to_ascii().unwrap().is_lowercase(), true);
-    /// assert_eq!('A'.to_ascii().unwrap().is_lowercase(), false);
-    /// assert_eq!('@'.to_ascii().unwrap().is_lowercase(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_lowercase(), true);
+    /// assert_eq!('A'.to_ascii_char().unwrap().is_lowercase(), false);
+    /// assert_eq!('@'.to_ascii_char().unwrap().is_lowercase(), false);
     /// ```
     #[inline]
     pub fn is_lowercase(&self) -> bool {
@@ -426,10 +409,10 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('A'.to_ascii().unwrap().is_uppercase(), true);
-    /// assert_eq!('a'.to_ascii().unwrap().is_uppercase(), false);
-    /// assert_eq!('@'.to_ascii().unwrap().is_uppercase(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('A'.to_ascii_char().unwrap().is_uppercase(), true);
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_uppercase(), false);
+    /// assert_eq!('@'.to_ascii_char().unwrap().is_uppercase(), false);
     /// ```
     #[inline]
     pub fn is_uppercase(&self) -> bool {
@@ -440,11 +423,11 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('n'.to_ascii().unwrap().is_punctuation(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_punctuation(), false);
-    /// assert_eq!('_'.to_ascii().unwrap().is_punctuation(), true);
-    /// assert_eq!('~'.to_ascii().unwrap().is_punctuation(), true);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('n'.to_ascii_char().unwrap().is_punctuation(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_punctuation(), false);
+    /// assert_eq!('_'.to_ascii_char().unwrap().is_punctuation(), true);
+    /// assert_eq!('~'.to_ascii_char().unwrap().is_punctuation(), true);
     /// ```
     #[inline]
     pub fn is_punctuation(&self) -> bool {
@@ -455,12 +438,12 @@ impl Ascii {
     ///
     /// # Examples
     /// ```
-    /// use ascii::AsciiCast;
-    /// assert_eq!('5'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('a'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('F'.to_ascii().unwrap().is_hex(), true);
-    /// assert_eq!('G'.to_ascii().unwrap().is_hex(), false);
-    /// assert_eq!(' '.to_ascii().unwrap().is_hex(), false);
+    /// use ascii::ToAsciiChar;
+    /// assert_eq!('5'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('a'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('F'.to_ascii_char().unwrap().is_hex(), true);
+    /// assert_eq!('G'.to_ascii_char().unwrap().is_hex(), false);
+    /// assert_eq!(' '.to_ascii_char().unwrap().is_hex(), false);
     /// ```
     #[inline]
     pub fn is_hex(&self) -> bool {
@@ -468,33 +451,33 @@ impl Ascii {
     }
 }
 
-impl fmt::Display for Ascii {
+impl fmt::Display for AsciiChar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
     }
 }
 
-impl fmt::Debug for Ascii {
+impl fmt::Debug for AsciiChar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
      }
 }
 
-#[cfg(feature = "unstable")]
-impl AsciiExt for Ascii {
-    type Owned = Ascii;
+#[cfg(not(feature = "no_std"))]
+impl AsciiExt for AsciiChar {
+    type Owned = AsciiChar;
 
     #[inline]
     fn is_ascii(&self) -> bool {
         true
     }
 
-    fn to_ascii_uppercase(&self) -> Ascii {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
+    fn to_ascii_uppercase(&self) -> AsciiChar {
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
-    fn to_ascii_lowercase(&self) -> Ascii {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_nocheck() }
+    fn to_ascii_lowercase(&self) -> AsciiChar {
+        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
@@ -512,150 +495,115 @@ impl AsciiExt for Ascii {
     }
 }
 
-impl<'a> AsciiCast<'a> for u8 {
-    type Target = Ascii;
 
-    #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        transmute(*self)
-    }
-}
-
-impl<'a> AsciiCast<'a> for char {
-    type Target = Ascii;
-
-    #[inline]
-    unsafe fn to_ascii_nocheck(&self) -> Ascii {
-        (*self as u8).to_ascii_nocheck()
-    }
-}
-
-
-/// Error returned by `IntoAscii`.
+/// Error returned by `ToAsciiChar`.
 #[derive(PartialEq)]
-pub struct IntoAsciiError(());
+pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 
-impl fmt::Debug for IntoAsciiError {
+impl fmt::Debug for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
 
-impl fmt::Display for IntoAsciiError {
+impl fmt::Display for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
 
-impl Error for IntoAsciiError {
+#[cfg(not(feature = "no_std"))]
+impl Error for ToAsciiCharError {
     fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
 }
 
-
-/// Convert `char`, `u8` and other character types to `Ascii`.
-pub trait IntoAscii : AsciiExt {
-    /// Convert to `Ascii` without checking that it is an ASCII character.
-    unsafe fn into_ascii_unchecked(self) -> Ascii;
-    /// Convert to `Ascii`.
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError>;
+/// Convert `char`, `u8` and other character types to `AsciiChar`.
+pub trait ToAsciiChar {
+    /// Convert to `AsciiChar` without checking that it is an ASCII character.
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
+    /// Convert to `AsciiChar`.
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
 }
 
-#[cfg(feature = "unstable")]
-impl IntoAscii for Ascii {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
+impl ToAsciiChar for AsciiChar {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         Ok(self)
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         self
     }
 }
 
-impl IntoAscii for u8 {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
-        unsafe{if self <= 0x7F {
-            return Ok(self.into_ascii_unchecked());
+impl ToAsciiChar for u8 {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
+        unsafe{ if self <= 0x7F {
+            return Ok(self.to_ascii_char_unchecked());
         }}
-        Err(IntoAsciiError(()))
+        Err(ToAsciiCharError(()))
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         transmute(self)
     }
 }
 
-impl IntoAscii for char {
-    fn into_ascii(self) -> Result<Ascii,IntoAsciiError> {
-        unsafe{if self as u32 <= 0x7F {
-            return Ok(self.into_ascii_unchecked());
+impl ToAsciiChar for char {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
+        unsafe{ if self as u32 <= 0x7F {
+            return Ok(self.to_ascii_char_unchecked());
         }}
-        Err(IntoAsciiError(()))
+        Err(ToAsciiCharError(()))
     }
-    unsafe fn into_ascii_unchecked(self) -> Ascii {
-        (self as u8).into_ascii_unchecked()
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
+        (self as u8).to_ascii_char_unchecked()
     }
 }
 
 
 #[cfg(test)]
 mod tests {
-    use AsciiCast;
-    use super::{Ascii,IntoAscii,IntoAsciiError};
+    use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 
     #[test]
-    fn to_ascii() {
-        assert_eq!(65_u8.to_ascii(), Ok(Ascii::A));
-        assert_eq!(255_u8.to_ascii(), Err(()));
-
-        assert_eq!('A'.to_ascii(), Ok(Ascii::A));
-        assert_eq!('λ'.to_ascii(), Err(()));
-    }
-
-    #[test]
-    fn into_ascii() {
-        fn generic<C:IntoAscii>(c: C) -> Result<Ascii,IntoAsciiError> {
-            c.into_ascii()
+    fn to_ascii_char() {
+        fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
+            c.to_ascii_char()
         }
-        assert_eq!(generic('A'), Ok(Ascii::A));
-        assert_eq!(generic(b'A'), Ok(Ascii::A));
+        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
+        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
+        assert_eq!(generic('A'), Ok(AsciiChar::A));
+        assert!(generic(200).is_err());
+        assert!(generic('λ').is_err());
     }
 
     #[test]
-    fn as_byte() {
-        assert_eq!(b'A'.to_ascii().unwrap().as_byte(), b'A');
-        assert_eq!('A'.to_ascii().unwrap().as_byte(), b'A');
-    }
-
-    #[test]
-    fn as_char() {
-        assert_eq!(b'A'.to_ascii().unwrap().as_char(), 'A');
-        assert_eq!('A'.to_ascii().unwrap().as_char(), 'A');
+    fn as_byte_and_char() {
+        assert_eq!(AsciiChar::A.as_byte(), b'A');
+        assert_eq!(AsciiChar::A.as_char(),  'A');
     }
 
     #[test]
     fn is_digit() {
-        assert!('0'.to_ascii().unwrap().is_digit());
-        assert!('9'.to_ascii().unwrap().is_digit());
-        assert!(!'/'.to_ascii().unwrap().is_digit());
-        assert!(!':'.to_ascii().unwrap().is_digit());
+        assert_eq!('0'.to_ascii_char().unwrap().is_digit(), true);
+        assert_eq!('9'.to_ascii_char().unwrap().is_digit(), true);
+        assert_eq!('/'.to_ascii_char().unwrap().is_digit(), false);
+        assert_eq!(':'.to_ascii_char().unwrap().is_digit(), false);
     }
 
     #[test]
     fn is_control() {
-        assert!(0x1f_u8.to_ascii().unwrap().is_control());
-        assert!(0x7f_u8.to_ascii().unwrap().is_control());
-        assert!(!' '.to_ascii().unwrap().is_control());
+        assert_eq!(AsciiChar::US.is_control(), true);
+        assert_eq!(AsciiChar::DEL.is_control(), true);
+        assert_eq!(AsciiChar::Space.is_control(), false);
     }
 
     #[test]
-    fn fmt_display_ascii() {
-        assert_eq!(format!("{}", Ascii::t), "t".to_string());
-    }
-
-    #[test]
-    fn fmt_debug_ascii() {
-        assert_eq!(format!("{:?}", Ascii::t), "'t'".to_string());
+    #[cfg(not(feature = "no_std"))]
+    fn fmt_ascii() {
+        assert_eq!(format!("{}", AsciiChar::t), "t".to_string());
+        assert_eq!(format!("{:?}", AsciiChar::t), "'t'".to_string());
     }
 }

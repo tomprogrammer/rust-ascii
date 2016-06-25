@@ -5,13 +5,13 @@ use std::str::FromStr;
 use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
 use std::iter::FromIterator;
 
-use ascii::Ascii;
-use ascii_str::AsciiStr;
+use ascii_char::AsciiChar;
+use ascii_str::{AsciiStr,AsAsciiStr,AsAsciiStrError};
 
 /// A growable string stored as an ASCII encoded buffer.
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiString {
-    vec: Vec<Ascii>,
+    vec: Vec<AsciiChar>,
 }
 
 impl AsciiString {
@@ -65,7 +65,7 @@ impl AsciiString {
     /// use std::mem;
     ///
     /// unsafe {
-    ///    let s = AsciiString::from_bytes("hello").unwrap();
+    ///    let s = AsciiString::from_ascii("hello").unwrap();
     ///    let ptr = s.as_ptr();
     ///    let len = s.len();
     ///    let capacity = s.capacity();
@@ -74,10 +74,10 @@ impl AsciiString {
     ///
     ///    let s = AsciiString::from_raw_parts(ptr as *mut _, len, capacity);
     ///
-    ///    assert_eq!(AsciiString::from_bytes("hello").unwrap(), s);
+    ///    assert_eq!(AsciiString::from_ascii("hello").unwrap(), s);
     /// }
     /// ```
-    pub unsafe fn from_raw_parts(buf: *mut Ascii, length: usize, capacity: usize) -> Self {
+    pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
         AsciiString {
             vec: Vec::from_raw_parts(buf, length, capacity),
         }
@@ -90,11 +90,11 @@ impl AsciiString {
     /// ASCII characters. If this constraint is violated, it may cause memory unsafety issues with
     /// future of the `AsciiString`, as the rest of this library assumes that `AsciiString`s are
     /// ASCII encoded.
-    pub unsafe fn from_bytes_unchecked<B>(bytes: B) -> Self
+    pub unsafe fn from_ascii_unchecked<B>(bytes: B) -> Self
         where B: Into<Vec<u8>>
     {
         let bytes: Vec<u8> = bytes.into();
-        let vec = Vec::from_raw_parts(bytes.as_ptr() as *mut Ascii,
+        let vec = Vec::from_raw_parts(bytes.as_ptr() as *mut AsciiChar,
                                       bytes.len(),
                                       bytes.capacity());
 
@@ -112,17 +112,17 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let foo = AsciiString::from_bytes("foo").unwrap();
-    /// let err = AsciiString::from_bytes("Ŋ");
+    /// let foo = AsciiString::from_ascii("foo").unwrap();
+    /// let err = AsciiString::from_ascii("Ŋ");
     /// assert_eq!(foo.as_str(), "foo");
     /// assert_eq!(err, Err("Ŋ"));
     /// ```
-    pub fn from_bytes<B>(bytes: B) -> Result<AsciiString, B>
+    pub fn from_ascii<B>(bytes: B) -> Result<AsciiString, B>
         where B: Into<Vec<u8>> + AsRef<[u8]>
     {
         unsafe {
             if bytes.as_ref().is_ascii() {
-                Ok( AsciiString::from_bytes_unchecked(bytes) )
+                Ok( AsciiString::from_ascii_unchecked(bytes) )
             } else {
                 Err(bytes)
             }
@@ -133,11 +133,11 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
-    /// # use ascii::{AsciiString, AsciiStr};
+    /// # use ascii::{AsciiString, AsAsciiStr};
     /// use std::str::FromStr;
     /// let mut s = AsciiString::from_str("foo").unwrap();
-    /// s.push_str(AsciiStr::from_str("bar").unwrap());
-    /// assert_eq!(s, AsciiStr::from_str("foobar").unwrap());
+    /// s.push_str("bar".as_ascii_str().unwrap());
+    /// assert_eq!(s, "foobar".as_ascii_str().unwrap());
     /// ```
     #[inline]
     pub fn push_str(&mut self, string: &AsciiStr) {
@@ -218,15 +218,15 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
-    /// # use ascii::{ Ascii, AsciiString};
-    /// let mut s = AsciiString::from_bytes("abc").unwrap();
-    /// s.push(Ascii::from('1').unwrap());
-    /// s.push(Ascii::from('2').unwrap());
-    /// s.push(Ascii::from('3').unwrap());
+    /// # use ascii::{ AsciiChar, AsciiString};
+    /// let mut s = AsciiString::from_ascii("abc").unwrap();
+    /// s.push(AsciiChar::from('1').unwrap());
+    /// s.push(AsciiChar::from('2').unwrap());
+    /// s.push(AsciiChar::from('3').unwrap());
     /// assert_eq!(s, "abc123");
     /// ```
     #[inline]
-    pub fn push(&mut self, ch: Ascii) {
+    pub fn push(&mut self, ch: AsciiChar) {
         self.vec.push(ch)
     }
 
@@ -238,7 +238,7 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let mut s = AsciiString::from_bytes("hello").unwrap();
+    /// let mut s = AsciiString::from_ascii("hello").unwrap();
     /// s.truncate(2);
     /// assert_eq!(s, "he");
     /// ```
@@ -253,14 +253,14 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// let mut s = AsciiString::from_ascii("foo").unwrap();
     /// assert_eq!(s.pop().map(|c| c.as_char()), Some('o'));
     /// assert_eq!(s.pop().map(|c| c.as_char()), Some('o'));
     /// assert_eq!(s.pop().map(|c| c.as_char()), Some('f'));
     /// assert_eq!(s.pop(), None);
     /// ```
     #[inline]
-    pub fn pop(&mut self) -> Option<Ascii> {
+    pub fn pop(&mut self) -> Option<AsciiChar> {
         self.vec.pop()
     }
 
@@ -275,13 +275,13 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// let mut s = AsciiString::from_ascii("foo").unwrap();
     /// assert_eq!(s.remove(0).as_char(), 'f');
     /// assert_eq!(s.remove(1).as_char(), 'o');
     /// assert_eq!(s.remove(0).as_char(), 'o');
     /// ```
     #[inline]
-    pub fn remove(&mut self, idx: usize) -> Ascii {
+    pub fn remove(&mut self, idx: usize) -> AsciiChar {
         self.vec.remove(idx)
     }
 
@@ -295,13 +295,13 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
-    /// # use ascii::{AsciiString,Ascii};
-    /// let mut s = AsciiString::from_bytes("foo").unwrap();
-    /// s.insert(2, Ascii::b);
+    /// # use ascii::{AsciiString,AsciiChar};
+    /// let mut s = AsciiString::from_ascii("foo").unwrap();
+    /// s.insert(2, AsciiChar::b);
     /// assert_eq!(s, "fobo");
     /// ```
     #[inline]
-    pub fn insert(&mut self, idx: usize, ch: Ascii) {
+    pub fn insert(&mut self, idx: usize, ch: AsciiChar) {
         self.vec.insert(idx, ch)
     }
 
@@ -310,7 +310,7 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let s = AsciiString::from_bytes("foo").unwrap();
+    /// let s = AsciiString::from_ascii("foo").unwrap();
     /// assert_eq!(s.len(), 3);
     /// ```
     #[inline]
@@ -322,10 +322,10 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
-    /// # use ascii::{Ascii, AsciiString};
+    /// # use ascii::{AsciiChar, AsciiString};
     /// let mut s = AsciiString::new();
     /// assert!(s.is_empty());
-    /// s.push(Ascii::from('a').unwrap());
+    /// s.push(AsciiChar::from('a').unwrap());
     /// assert!(!s.is_empty());
     /// ```
     #[inline]
@@ -338,7 +338,7 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let mut s = AsciiString::from_bytes("foo").unwrap();
+    /// let mut s = AsciiString::from_ascii("foo").unwrap();
     /// s.clear();
     /// assert!(s.is_empty());
     /// ```
@@ -406,8 +406,8 @@ impl Borrow<AsciiStr> for AsciiString {
     }
 }
 
-impl From<Vec<Ascii>> for AsciiString {
-    fn from(vec: Vec<Ascii>) -> Self {
+impl From<Vec<AsciiChar>> for AsciiString {
+    fn from(vec: Vec<AsciiChar>) -> Self {
         AsciiString { vec: vec }
     }
 }
@@ -446,10 +446,10 @@ impl AsMut<AsciiStr> for AsciiString {
 }
 
 impl FromStr for AsciiString {
-    type Err = ();
+    type Err = AsAsciiStrError;
 
-    fn from_str(s: &str) -> Result<AsciiString, ()> {
-        AsciiStr::from_str(s).map(AsciiStr::to_ascii_string)
+    fn from_str(s: &str) -> Result<AsciiString, AsAsciiStrError> {
+        s.as_ascii_str().map(AsciiStr::to_ascii_string)
     }
 }
 
@@ -465,8 +465,8 @@ impl fmt::Debug for AsciiString {
     }
 }
 
-impl FromIterator<Ascii> for AsciiString {
-    fn from_iter<I: IntoIterator<Item=Ascii>>(iter: I) -> AsciiString {
+impl FromIterator<AsciiChar> for AsciiString {
+    fn from_iter<I: IntoIterator<Item=AsciiChar>>(iter: I) -> AsciiString {
         let mut buf = AsciiString::new();
         buf.extend(iter);
         buf
@@ -481,8 +481,8 @@ impl<'a> FromIterator<&'a AsciiStr> for AsciiString {
     }
 }
 
-impl Extend<Ascii> for AsciiString {
-    fn extend<I: IntoIterator<Item=Ascii>>(&mut self, iterable: I) {
+impl Extend<AsciiChar> for AsciiString {
+    fn extend<I: IntoIterator<Item=AsciiChar>>(&mut self, iterable: I) {
         let iterator = iterable.into_iter();
         let (lower_bound, _) = iterator.size_hint();
         self.reserve(lower_bound);
@@ -492,8 +492,8 @@ impl Extend<Ascii> for AsciiString {
     }
 }
 
-impl<'a> Extend<&'a Ascii> for AsciiString {
-    fn extend<I: IntoIterator<Item=&'a Ascii>>(&mut self, iter: I) {
+impl<'a> Extend<&'a AsciiChar> for AsciiString {
+    fn extend<I: IntoIterator<Item=&'a AsciiChar>>(&mut self, iter: I) {
         self.extend(iter.into_iter().cloned())
     }
 }
@@ -537,38 +537,46 @@ impl<T> IndexMut<T> for AsciiString where AsciiStr: IndexMut<T> {
 
 
 /// Convert vectors into `AsciiString`.
-pub trait IntoAsciiString<T: ?Sized+AsciiExt<Owned=Self>> : Sized+Borrow<T> {
+pub trait IntoAsciiString : Sized {
     /// Convert to `AsciiString` without checking for non-ASCII characters.
-    unsafe fn into_ascii_unchecked(self) -> AsciiString;
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString;
     /// Convert to `AsciiString`.
-    fn into_ascii(self) -> Result<AsciiString,Self> {
-        if self.borrow().is_ascii() {
-            Ok(unsafe { self.into_ascii_unchecked() })
-        } else {
-            Err(self)
-        }
-    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self>;
 }
 
-#[cfg(feature = "unstable")]
-impl IntoAsciiString<AsciiStr> for AsciiString {
-    fn into_ascii(self) -> Result<AsciiString,AsciiString> {
-        Ok(self)
-    }
-    unsafe fn into_ascii_unchecked(self) -> AsciiString {
+impl IntoAsciiString for AsciiString {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self
     }
-}
-
-impl IntoAsciiString<[u8]> for Vec<u8> {
-    unsafe fn into_ascii_unchecked(self) -> AsciiString {
-        AsciiString::from_bytes_unchecked(self)
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        Ok(self)
     }
 }
 
-impl IntoAsciiString<str> for String {
-    unsafe fn into_ascii_unchecked(self) -> AsciiString {
-        self.into_bytes().into_ascii_unchecked()
+impl IntoAsciiString for Vec<AsciiChar> {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from(self)
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        Ok(AsciiString::from(self))
+    }
+}
+
+impl IntoAsciiString for Vec<u8> {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from_ascii_unchecked(self)
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        AsciiString::from_ascii(self)
+    }
+}
+
+impl IntoAsciiString for String {
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        self.into_bytes().into_ascii_string_unchecked()
+    }
+    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+        AsciiString::from_ascii(self)
     }
 }
 
@@ -576,36 +584,36 @@ impl IntoAsciiString<str> for String {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use {Ascii, OwnedAsciiCast};
-    use super::AsciiString;
+    use AsciiChar;
+    use super::{AsciiString, IntoAsciiString};
 
     #[test]
     fn into_string() {
-        let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        let v = AsciiString::from_ascii(&[40_u8, 32, 59][..]).unwrap();
         assert_eq!(Into::<String>::into(v), "( ;".to_string());
     }
 
     #[test]
     fn into_bytes() {
-        let v = AsciiString::from_bytes(&[40_u8, 32, 59][..]).unwrap();
+        let v = AsciiString::from_ascii(&[40_u8, 32, 59][..]).unwrap();
         assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59])
     }
 
     #[test]
     fn from_ascii_vec() {
-        let vec = vec![Ascii::from('A').unwrap(), Ascii::from('B').unwrap()];
+        let vec = vec![AsciiChar::from('A').unwrap(), AsciiChar::from('B').unwrap()];
         assert_eq!(AsciiString::from(vec), AsciiString::from_str("AB").unwrap());
     }
 
     #[test]
     fn fmt_display_ascii_string() {
-        let s = "abc".to_string().into_ascii().unwrap();
+        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
     }
 
     #[test]
     fn fmt_debug_ascii_string() {
-        let s = "abc".to_string().into_ascii().unwrap();
+        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
     }
 }
