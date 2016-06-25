@@ -15,7 +15,7 @@ use ascii_string::AsciiString;
 ///
 /// It wraps an `[AsciiChar]` and implements many of `str`s methods and traits.
 ///
-/// Can be created by a checked conversion from a `str` or `[u8]`,
+/// It can be created by a checked conversion from a `str` or `[u8]`,
 /// or borrowed from an `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
@@ -88,7 +88,8 @@ impl AsciiStr {
         bytes.as_ref().as_ascii_str()
     }
 
-    /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking for non-ASCII characters..
+    /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking
+    /// for non-ASCII characters..
     ///
     /// # Examples
     /// ```
@@ -338,6 +339,7 @@ impl AsciiExt for AsciiStr {
 /// Is used by `As[Mut]AsciiStr` and the `from_ascii` method on `AsciiStr` and `AsciiString`.
 #[derive(Clone,Copy, PartialEq,Eq, Debug)]
 pub struct AsAsciiStrError (usize);
+
 impl AsAsciiStrError {
     /// Returns the index of the first non-ASCII byte.
     ///
