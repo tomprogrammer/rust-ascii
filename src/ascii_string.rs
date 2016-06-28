@@ -645,14 +645,9 @@ mod tests {
     }
 
     #[test]
-    fn fmt_display_ascii_string() {
+    fn fmt_ascii_string() {
         let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
-    }
-
-    #[test]
-    fn fmt_debug_ascii_string() {
-        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
     }
 }
