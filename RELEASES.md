@@ -3,13 +3,15 @@ Unreleased
 * Return `FromAsciiError` instead of the input when `AsciiString::from_ascii()` or `into_ascii_string()` fails.
 
 Version 0.7.0 (2016-06-25)
-==========
-* Rename `Ascii` to `AsciiChar` and convert it into an enum. (with a variant for every ASCII character)
+==========================
+* Rename `Ascii` to `AsciiChar` and convert it into an enum.
+  (with a variant for every ASCII character)
 * Replace `OwnedAsciiCast` with `IntoAsciiString`.
 * Replace `AsciiCast` with `As[Mut]AsciiStr` and `IntoAsciiChar`.
 * Add *from[_ascii]_unchecked* methods.
 * Replace *from_bytes* with *from_ascii* in method names.
-* Return `std::error::Error`-implementing types on error instead of `Option::None` or `Err(())`.
+* Return `std::error::Error`-implementing types instead of `()` and `None` when
+  conversion to `AsciiStr` or `AsciiChar` fails.
 * Implement `AsciiExt` without the `unstable` Cargo feature flag, which is removed.
 * Require Rust 1.9 or later.
 * Add `#[no_std]` support in a Cargo feature.
