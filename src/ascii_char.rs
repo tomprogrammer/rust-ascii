@@ -1,8 +1,8 @@
 extern crate core;
 
 use self::core::mem::transmute;
-use self::core::fmt;
 use self::core::cmp::Ordering;
+use self::core::{fmt, char};
 #[cfg(not(feature = "no_std"))]
 use std::error::Error;
 #[cfg(not(feature = "no_std"))]
@@ -450,6 +450,28 @@ impl AsciiChar {
     pub fn is_hex(&self) -> bool {
         self.is_digit() || (self.as_byte() | 0x20u8).wrapping_sub(b'a') < 6
     }
+
+    /// Unicode has printable versions of the ASCII control codes, like '␛'.
+    ///
+    /// This function is identical with `.as_char()`
+    /// for all values `.is_printable()` returns true for,
+    /// but replaces the control codes with those unicodes printable versions.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::ToAsciiChar;
+    /// assert_eq!('\0'.to_ascii_char().unwrap().as_printable_char(), '␀');
+    /// assert_eq!('\n'.to_ascii_char().unwrap().as_printable_char(), '␊');
+    /// assert_eq!(' '.to_ascii_char().unwrap().as_printable_char(), ' ');
+    /// assert_eq!('p'.to_ascii_char().unwrap().as_printable_char(), 'p');
+    /// ```
+    pub fn as_printable_char(self) -> char {
+        unsafe{ match self as u8 {
+            b' '...b'~' => self.as_char(),
+            127 => '␡',
+            _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
+        }}
+    }
 }
 
 impl fmt::Display for AsciiChar {
@@ -641,7 +663,9 @@ mod tests {
     #[test]
     #[cfg(not(feature = "no_std"))]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", AsciiChar::t), "t".to_string());
-        assert_eq!(format!("{:?}", AsciiChar::t), "'t'".to_string());
+        assert_eq!(format!("{}", AsciiChar::t), "t");
+        assert_eq!(format!("{:?}", AsciiChar::t), "'t'");
+        assert_eq!(format!("{}", AsciiChar::LineFeed), "\n");
+        assert_eq!(format!("{:?}", AsciiChar::LineFeed), "'\\n'");
     }
 }
