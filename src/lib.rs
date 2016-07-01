@@ -39,4 +39,4 @@ mod ascii_string;
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
 #[cfg(not(feature = "no_std"))]
-pub use ascii_string::{AsciiString, IntoAsciiString};
+pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};

@@ -1,6 +1,7 @@
 use std::{fmt, mem};
-use std::ascii::AsciiExt;
 use std::borrow::Borrow;
+use std::error::Error;
+use std::any::Any;
 use std::str::FromStr;
 use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
 use std::iter::FromIterator;
@@ -93,15 +94,7 @@ impl AsciiString {
     pub unsafe fn from_ascii_unchecked<B>(bytes: B) -> Self
         where B: Into<Vec<u8>>
     {
-        let bytes: Vec<u8> = bytes.into();
-        let vec = Vec::from_raw_parts(bytes.as_ptr() as *mut AsciiChar,
-                                      bytes.len(),
-                                      bytes.capacity());
-
-        // We forget `src` to avoid freeing it at the end of the scope.
-        // Otherwise, the returned `AsciiString` would point to freed memory.
-        mem::forget(bytes);
-        AsciiString { vec: vec }
+        AsciiString { vec: mem::transmute(bytes.into()) }
     }
 
     /// Converts anything that can represent a byte buffer into an `AsciiString`.
@@ -112,21 +105,17 @@ impl AsciiString {
     /// # Examples
     /// ```
     /// # use ascii::AsciiString;
-    /// let foo = AsciiString::from_ascii("foo").unwrap();
-    /// let err = AsciiString::from_ascii("Ŋ");
+    /// let foo = AsciiString::from_ascii("foo".to_string()).unwrap();
+    /// let err = AsciiString::from_ascii("Ŋ".to_string()).unwrap_err();
     /// assert_eq!(foo.as_str(), "foo");
-    /// assert_eq!(err, Err("Ŋ"));
+    /// assert_eq!(err.into_source(), "Ŋ");
     /// ```
-    pub fn from_ascii<B>(bytes: B) -> Result<AsciiString, B>
-        where B: Into<Vec<u8>> + AsRef<[u8]>
-    {
-        unsafe {
-            if bytes.as_ref().is_ascii() {
-                Ok( AsciiString::from_ascii_unchecked(bytes) )
-            } else {
-                Err(bytes)
-            }
-        }
+    pub fn from_ascii<B: Into<Vec<u8>> + AsRef<[u8]>>
+    (bytes: B) -> Result<AsciiString, FromAsciiError<B>> {
+        unsafe{ match bytes.as_ref().as_ascii_str() {
+            Ok(_) => Ok(AsciiString::from_ascii_unchecked(bytes)),
+            Err(e) => Err(FromAsciiError{error: e,  owner: bytes}),
+        }}
     }
 
     /// Pushes the given ASCII string onto this ASCII string buffer.
@@ -536,19 +525,69 @@ impl<T> IndexMut<T> for AsciiString where AsciiStr: IndexMut<T> {
 }
 
 
+/// A possible error value when converting an `AsciiString` from a byte vector or string.
+/// It wraps an `AsAsciiStrError` which you can get through the `ascii_error()` method.
+///
+/// This is the error type for `AsciiString::from_ascii()` and `IntoAsciiString::into_ascii_string()``
+/// They will never clone or touch the content of the original type;
+/// It can be extracted by the `into_source` method.
+///
+/// #Examples
+/// ```
+/// # use ascii::IntoAsciiString;
+/// let err = "bø!".to_string().into_ascii_string().unwrap_err();
+/// assert_eq!(err.ascii_error().valid_up_to(), 1);
+/// assert_eq!(err.into_source(), "bø!".to_string());
+/// ```
+#[derive(Clone,Copy, PartialEq,Eq)]
+pub struct FromAsciiError<O> {
+    error: AsAsciiStrError,
+    owner: O,
+}
+impl<O> FromAsciiError<O> {
+    /// Get the position of the first non-ASCII byte or character.
+    pub fn ascii_error(&self) -> AsAsciiStrError {
+        self.error
+    }
+    /// Get back the original, unmodified type.
+    pub fn into_source(self) -> O {
+        self.owner
+    }
+}
+impl<O> fmt::Debug for FromAsciiError<O> {
+    fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(&self.error, fmtr)
+    }
+}
+impl<O> fmt::Display for FromAsciiError<O> {
+    fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.error, fmtr)
+    }
+}
+impl<O:Any> Error for FromAsciiError<O> {
+    fn description(&self) -> &str {
+        self.error.description()
+    }
+    /// Always returns an `AsAsciiStrError`
+    fn cause(&self) -> Option<&Error> {
+        Some(&self.error as &Error)
+    }
+}
+
+
 /// Convert vectors into `AsciiString`.
 pub trait IntoAsciiString : Sized {
     /// Convert to `AsciiString` without checking for non-ASCII characters.
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString;
     /// Convert to `AsciiString`.
-    fn into_ascii_string(self) -> Result<AsciiString,Self>;
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>>;
 }
 
 impl IntoAsciiString for AsciiString {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self
     }
-    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+    fn into_ascii_string(self) -> Result<Self, FromAsciiError<Self>> {
         Ok(self)
     }
 }
@@ -557,7 +596,7 @@ impl IntoAsciiString for Vec<AsciiChar> {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from(self)
     }
-    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         Ok(AsciiString::from(self))
     }
 }
@@ -566,7 +605,7 @@ impl IntoAsciiString for Vec<u8> {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from_ascii_unchecked(self)
     }
-    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self)
     }
 }
@@ -575,7 +614,7 @@ impl IntoAsciiString for String {
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self.into_bytes().into_ascii_string_unchecked()
     }
-    fn into_ascii_string(self) -> Result<AsciiString,Self> {
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self)
     }
 }
@@ -606,14 +645,9 @@ mod tests {
     }
 
     #[test]
-    fn fmt_display_ascii_string() {
+    fn fmt_ascii_string() {
         let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
-    }
-
-    #[test]
-    fn fmt_debug_ascii_string() {
-        let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
     }
 }
