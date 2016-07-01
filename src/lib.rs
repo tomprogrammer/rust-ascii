@@ -31,11 +31,13 @@
 
 #![cfg_attr(feature = "no_std", no_std)]
 
+mod free_functions;
 mod ascii_char;
 mod ascii_str;
 #[cfg(not(feature = "no_std"))]
 mod ascii_string;
 
+pub use free_functions::{caret_encode, caret_decode};
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
 #[cfg(not(feature = "no_std"))]
