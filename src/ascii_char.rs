@@ -2,6 +2,7 @@ extern crate core;
 
 use self::core::mem::transmute;
 use self::core::fmt;
+use self::core::cmp::Ordering;
 #[cfg(not(feature = "no_std"))]
 use std::error::Error;
 #[cfg(not(feature = "no_std"))]
@@ -495,6 +496,36 @@ impl AsciiExt for AsciiChar {
     }
 }
 
+macro_rules! impl_into_partial_eq_ord {($wider:ty, $to_wider:expr) => {
+    impl From<AsciiChar> for $wider {
+        fn from(a: AsciiChar) -> $wider {
+            $to_wider(&a)
+        }
+    }
+    impl PartialEq<$wider> for AsciiChar {
+        fn eq(&self, rhs: &$wider) -> bool {
+            $to_wider(self) == *rhs
+        }
+    }
+    impl PartialEq<AsciiChar> for $wider {
+        fn eq(&self, rhs: &AsciiChar) -> bool {
+            *self == $to_wider(rhs)
+        }
+    }
+    impl PartialOrd<$wider> for AsciiChar {
+        fn partial_cmp(&self, rhs: &$wider) -> Option<Ordering> {
+            $to_wider(self).partial_cmp(rhs)
+        }
+    }
+    impl PartialOrd<AsciiChar> for $wider {
+        fn partial_cmp(&self, rhs: &AsciiChar) -> Option<Ordering> {
+            self.partial_cmp(&$to_wider(rhs))
+        }
+    }
+}}
+impl_into_partial_eq_ord!{u8, AsciiChar::as_byte}
+impl_into_partial_eq_ord!{char, AsciiChar::as_char}
+
 
 /// Error returned by `ToAsciiChar`.
 #[derive(PartialEq)]
@@ -598,6 +629,13 @@ mod tests {
         assert_eq!(AsciiChar::US.is_control(), true);
         assert_eq!(AsciiChar::DEL.is_control(), true);
         assert_eq!(AsciiChar::Space.is_control(), false);
+    }
+
+    #[test]
+    fn cmp_wider() {
+        assert_eq!(AsciiChar::A, 'A');
+        assert_eq!(b'b', AsciiChar::b);
+        assert!(AsciiChar::a < 'z');
     }
 
     #[test]
