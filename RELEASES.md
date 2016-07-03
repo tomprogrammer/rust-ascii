@@ -1,6 +1,8 @@
 Unreleased
 ==========
 * Return `FromAsciiError` instead of the input when `AsciiString::from_ascii()` or `into_ascii_string()` fails.
+* Make `AsciiChar` comparable with `char` and `u8`.
+* Add `AsciiChar::as_printable_char()` and the free functions `caret_encode()` and `caret_decode()`.
 
 Version 0.7.0 (2016-06-25)
 ==========================
