@@ -1,3 +1,7 @@
+Unreleased
+==========
+* Fix the implementation of `AsciiExt::to_ascii_lowercase()` for `AsciiChar` converting to uppercase. (introduced in 0.7.0)
+
 Version 0.7.0 (2016-06-25)
 ==========
 * Rename `Ascii` to `AsciiChar` and convert it into an enum. (with a variant for every ASCII character)
