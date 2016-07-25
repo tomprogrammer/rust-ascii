@@ -521,7 +521,7 @@ impl AsciiExt for AsciiChar {
     }
 
     fn to_ascii_lowercase(&self) -> AsciiChar {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
+        unsafe{ self.as_byte().to_ascii_lowercase().to_ascii_char_unchecked() }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
