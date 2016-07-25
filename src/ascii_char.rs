@@ -472,6 +472,27 @@ impl AsciiChar {
             _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
         }}
     }
+
+    #[cfg(feature = "no_std")]
+    pub fn to_ascii_uppercase(&self) -> Self {
+        unsafe{ match *self as u8 {
+            b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
+                 _      => *self,
+        }}
+    }
+
+    #[cfg(feature = "no_std")]
+    pub fn to_ascii_lowercase(&self) -> Self {
+        unsafe{ match *self as u8 {
+            b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
+                 _      => *self,
+        }}
+    }
+
+    #[cfg(feature = "no_std")]
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.to_ascii_lowercase() == other.to_ascii_lowercase()
+    }
 }
 
 impl fmt::Display for AsciiChar {
@@ -620,11 +641,13 @@ impl ToAsciiChar for char {
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
     use AsciiChar::*;
+    #[cfg(not(feature = "no_std"))]
+    use std::ascii::AsciiExt;
 
     #[test]
     fn to_ascii_char() {
-        fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
-            c.to_ascii_char()
+        fn generic<C:ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
+            ch.to_ascii_char()
         }
         assert_eq!(generic(A), Ok(A));
         assert_eq!(generic(b'A'), Ok(A));
@@ -659,6 +682,22 @@ mod tests {
         assert_eq!(A, 'A');
         assert_eq!(b'b', b);
         assert!(a < 'z');
+    }
+
+    #[test]
+    fn ascii_case() {
+        assert_eq!(At.to_ascii_lowercase(), At);
+        assert_eq!(At.to_ascii_uppercase(), At);
+        assert_eq!(A.to_ascii_lowercase(), a);
+        assert_eq!(A.to_ascii_uppercase(), A);
+        assert_eq!(a.to_ascii_lowercase(), a);
+        assert_eq!(a.to_ascii_uppercase(), A);
+
+        assert!(LineFeed.eq_ignore_ascii_case(&LineFeed));
+        assert!(!LineFeed.eq_ignore_ascii_case(&CarriageReturn));
+        assert!(z.eq_ignore_ascii_case(&Z));
+        assert!(Z.eq_ignore_ascii_case(&z));
+        assert!(!Z.eq_ignore_ascii_case(&DEL));
     }
 
     #[test]
