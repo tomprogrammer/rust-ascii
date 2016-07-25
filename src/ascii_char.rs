@@ -619,23 +619,24 @@ impl ToAsciiChar for char {
 #[cfg(test)]
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
+    use AsciiChar::*;
 
     #[test]
     fn to_ascii_char() {
         fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
             c.to_ascii_char()
         }
-        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
-        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
-        assert_eq!(generic('A'), Ok(AsciiChar::A));
+        assert_eq!(generic(A), Ok(A));
+        assert_eq!(generic(b'A'), Ok(A));
+        assert_eq!(generic('A'), Ok(A));
         assert!(generic(200).is_err());
         assert!(generic('λ').is_err());
     }
 
     #[test]
     fn as_byte_and_char() {
-        assert_eq!(AsciiChar::A.as_byte(), b'A');
-        assert_eq!(AsciiChar::A.as_char(),  'A');
+        assert_eq!(A.as_byte(), b'A');
+        assert_eq!(A.as_char(),  'A');
     }
 
     #[test]
@@ -648,24 +649,24 @@ mod tests {
 
     #[test]
     fn is_control() {
-        assert_eq!(AsciiChar::US.is_control(), true);
-        assert_eq!(AsciiChar::DEL.is_control(), true);
-        assert_eq!(AsciiChar::Space.is_control(), false);
+        assert_eq!(US.is_control(), true);
+        assert_eq!(DEL.is_control(), true);
+        assert_eq!(Space.is_control(), false);
     }
 
     #[test]
     fn cmp_wider() {
-        assert_eq!(AsciiChar::A, 'A');
-        assert_eq!(b'b', AsciiChar::b);
-        assert!(AsciiChar::a < 'z');
+        assert_eq!(A, 'A');
+        assert_eq!(b'b', b);
+        assert!(a < 'z');
     }
 
     #[test]
     #[cfg(not(feature = "no_std"))]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", AsciiChar::t), "t");
-        assert_eq!(format!("{:?}", AsciiChar::t), "'t'");
-        assert_eq!(format!("{}", AsciiChar::LineFeed), "\n");
-        assert_eq!(format!("{:?}", AsciiChar::LineFeed), "'\\n'");
+        assert_eq!(format!("{}", t), "t");
+        assert_eq!(format!("{:?}", t), "'t'");
+        assert_eq!(format!("{}", LineFeed), "\n");
+        assert_eq!(format!("{:?}", LineFeed), "'\\n'");
     }
 }
