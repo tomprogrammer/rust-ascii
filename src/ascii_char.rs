@@ -305,13 +305,13 @@ impl AsciiChar {
 
     /// Converts an ASCII character into a `u8`.
     #[inline]
-    pub fn as_byte(&self) -> u8 {
-        *self as u8
+    pub fn as_byte(self) -> u8 {
+        self as u8
     }
 
     /// Converts an ASCII character into a `char`.
     #[inline]
-    pub fn as_char(&self) -> char {
+    pub fn as_char(self) -> char {
         self.as_byte() as char
     }
 
@@ -319,34 +319,34 @@ impl AsciiChar {
 
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
-    pub fn is_alphabetic(&self) -> bool {
+    pub fn is_alphabetic(self) -> bool {
         let c = self.as_byte() | 0b010_0000;// Turns uppercase into lowercase.
         c >= b'a' && c <= b'z'
     }
 
     /// Check if the character is a number (0-9)
     #[inline]
-    pub fn is_digit(&self) -> bool {
-        self >= &AsciiChar::_0 && self <= &AsciiChar::_9
+    pub fn is_digit(self) -> bool {
+        self >= AsciiChar::_0 && self <= AsciiChar::_9
     }
 
     /// Check if the character is a letter or number
     #[inline]
-    pub fn is_alphanumeric(&self) -> bool {
+    pub fn is_alphanumeric(self) -> bool {
         self.is_alphabetic() || self.is_digit()
     }
 
     /// Check if the character is a space or horizontal tab
     #[inline]
-    pub fn is_blank(&self) -> bool {
-        *self == AsciiChar::Space || *self == AsciiChar::Tab
+    pub fn is_blank(self) -> bool {
+        self == AsciiChar::Space || self == AsciiChar::Tab
     }
 
     /// Check if the character is a ' ', '\t', '\n' or '\r'
     #[inline]
-    pub fn is_whitespace(&self) -> bool {
-        self.is_blank() || *self == AsciiChar::LineFeed
-                        || *self == AsciiChar::CarriageReturn
+    pub fn is_whitespace(self) -> bool {
+        self.is_blank() || self == AsciiChar::LineFeed
+                        || self == AsciiChar::CarriageReturn
     }
 
     /// Check if the character is a control character
@@ -360,8 +360,8 @@ impl AsciiChar {
     /// assert_eq!('\n'.to_ascii_char().unwrap().is_control(), true);
     /// ```
     #[inline]
-    pub fn is_control(&self) -> bool {
-        *self < AsciiChar::Space || *self == AsciiChar::DEL
+    pub fn is_control(self) -> bool {
+        self < AsciiChar::Space || self == AsciiChar::DEL
     }
 
     /// Checks if the character is printable (except space)
@@ -374,7 +374,7 @@ impl AsciiChar {
     /// assert_eq!('\n'.to_ascii_char().unwrap().is_graph(), false);
     /// ```
     #[inline]
-    pub fn is_graph(&self) -> bool {
+    pub fn is_graph(self) -> bool {
         self.as_byte().wrapping_sub(b' '+1) < 0x5E
     }
 
@@ -388,7 +388,7 @@ impl AsciiChar {
     /// assert_eq!('\n'.to_ascii_char().unwrap().is_print(), false);
     /// ```
     #[inline]
-    pub fn is_print(&self) -> bool {
+    pub fn is_print(self) -> bool {
         self.as_byte().wrapping_sub(b' ') < 0x5F
     }
 
@@ -402,7 +402,7 @@ impl AsciiChar {
     /// assert_eq!('@'.to_ascii_char().unwrap().is_lowercase(), false);
     /// ```
     #[inline]
-    pub fn is_lowercase(&self) -> bool {
+    pub fn is_lowercase(self) -> bool {
         self.as_byte().wrapping_sub(b'a') < 26
     }
 
@@ -416,7 +416,7 @@ impl AsciiChar {
     /// assert_eq!('@'.to_ascii_char().unwrap().is_uppercase(), false);
     /// ```
     #[inline]
-    pub fn is_uppercase(&self) -> bool {
+    pub fn is_uppercase(self) -> bool {
         self.as_byte().wrapping_sub(b'A') < 26
     }
 
@@ -431,7 +431,7 @@ impl AsciiChar {
     /// assert_eq!('~'.to_ascii_char().unwrap().is_punctuation(), true);
     /// ```
     #[inline]
-    pub fn is_punctuation(&self) -> bool {
+    pub fn is_punctuation(self) -> bool {
         self.is_graph() && !self.is_alphanumeric()
     }
 
@@ -447,7 +447,7 @@ impl AsciiChar {
     /// assert_eq!(' '.to_ascii_char().unwrap().is_hex(), false);
     /// ```
     #[inline]
-    pub fn is_hex(&self) -> bool {
+    pub fn is_hex(self) -> bool {
         self.is_digit() || (self.as_byte() | 0x20u8).wrapping_sub(b'a') < 6
     }
 
@@ -551,27 +551,27 @@ impl AsciiExt for AsciiChar {
 macro_rules! impl_into_partial_eq_ord {($wider:ty, $to_wider:expr) => {
     impl From<AsciiChar> for $wider {
         fn from(a: AsciiChar) -> $wider {
-            $to_wider(&a)
+            $to_wider(a)
         }
     }
     impl PartialEq<$wider> for AsciiChar {
         fn eq(&self, rhs: &$wider) -> bool {
-            $to_wider(self) == *rhs
+            $to_wider(*self) == *rhs
         }
     }
     impl PartialEq<AsciiChar> for $wider {
         fn eq(&self, rhs: &AsciiChar) -> bool {
-            *self == $to_wider(rhs)
+            *self == $to_wider(*rhs)
         }
     }
     impl PartialOrd<$wider> for AsciiChar {
         fn partial_cmp(&self, rhs: &$wider) -> Option<Ordering> {
-            $to_wider(self).partial_cmp(rhs)
+            $to_wider(*self).partial_cmp(rhs)
         }
     }
     impl PartialOrd<AsciiChar> for $wider {
         fn partial_cmp(&self, rhs: &AsciiChar) -> Option<Ordering> {
-            self.partial_cmp(&$to_wider(rhs))
+            self.partial_cmp(&$to_wider(*rhs))
         }
     }
 }}

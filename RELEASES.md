@@ -1,6 +1,7 @@
 Unreleased
 ==========
 * Return `FromAsciiError` instead of the input when `AsciiString::from_ascii()` or `into_ascii_string()` fails.
+* `AsciiChar::is_*()` and `::as_{byte,char}()` take `self` by value instead of by reference.
 * Make `AsciiChar` comparable with `char` and `u8`.
 * Add `AsciiChar::as_printable_char()` and the free functions `caret_encode()` and `caret_decode()`.
 * Implement some methods from `AsciiExt` and `Error` (which are not in libcore) directly in `no_std` mode:
