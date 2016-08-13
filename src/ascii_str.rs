@@ -340,12 +340,18 @@ impl AsciiExt for AsciiStr {
 #[derive(Clone,Copy, PartialEq,Eq, Debug)]
 pub struct AsAsciiStrError (usize);
 
+const ERRORMSG_STR: &'static str = "one or more bytes are not ASCII";
+
 impl AsAsciiStrError {
     /// Returns the index of the first non-ASCII byte.
     ///
     /// It is the maximum index such that `from_ascii(input[..index])` would return `Ok(_)`.
     pub fn valid_up_to(self) -> usize {
         self.0
+    }
+    #[cfg(feature = "no_std")]
+    pub fn description(&self) -> &'static str {
+        ERRORMSG_STR
     }
 }
 impl fmt::Display for AsAsciiStrError {
@@ -357,7 +363,7 @@ impl fmt::Display for AsAsciiStrError {
 impl Error for AsAsciiStrError {
     /// Returns "one or more bytes are not ASCII"
     fn description(&self) -> &'static str {
-        "one or more bytes are not ASCII"
+        ERRORMSG_STR
     }
 }
 

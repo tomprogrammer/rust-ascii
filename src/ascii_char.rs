@@ -576,6 +576,13 @@ pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 
+#[cfg(feature = "no_std")]
+impl ToAsciiCharError {
+    pub fn description(&self) -> &'static str {
+        ERRORMSG_CHAR
+    }
+}
+
 impl fmt::Debug for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
