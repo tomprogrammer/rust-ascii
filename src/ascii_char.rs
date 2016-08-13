@@ -2,6 +2,8 @@ extern crate core;
 
 use self::core::mem::transmute;
 use self::core::fmt;
+#[cfg(feature = "no_std")]
+use case_map::{ASCII_LOWERCASE_MAP, ASCII_UPPERCASE_MAP};
 #[cfg(not(feature = "no_std"))]
 use std::error::Error;
 #[cfg(not(feature = "no_std"))]
@@ -449,6 +451,48 @@ impl AsciiChar {
     pub fn is_hex(&self) -> bool {
         self.is_digit() || (self.as_byte() | 0x20u8).wrapping_sub(b'a') < 6
     }
+
+    /// Checks that two strings are an ASCII case-insensitive match.
+    ///
+    /// Same as `to_ascii_lowercase(a) == to_ascii_lowercase(b)`, but without allocating and copying
+    /// temporary strings.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.to_ascii_lowercase() == other.to_ascii_lowercase()
+    }
+
+    /// Returns a copy of this ASCII character in lower case.
+    ///
+    /// ASCII letters 'A' to 'Z' are mapped to 'a' to 'z'.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    fn to_ascii_uppercase(&self) -> AsciiChar {
+        unsafe{ ASCII_UPPERCASE_MAP[self.as_byte() as usize].to_ascii_char_unchecked() }
+    }
+
+    /// Returns a copy of this ASCII character in upper case.
+    ///
+    /// ASCII letters 'a' to 'z' are mapped to 'A' to 'Z'.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    fn to_ascii_lowercase(&self) -> AsciiChar {
+        unsafe{ ASCII_LOWERCASE_MAP[self.as_byte() as usize].to_ascii_char_unchecked() }
+    }
+
+    /// Converts the ASCII character to its ASCII upper case equivalent in-place.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn make_ascii_uppercase(&mut self) {
+        *self = self.to_ascii_uppercase();
+    }
+
+    /// Converts the ASCII character to its ASCII lower case equivalent in-place.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn make_ascii_lowercase(&mut self) {
+        *self = self.to_ascii_lowercase();
+    }
 }
 
 impl fmt::Display for AsciiChar {
@@ -501,6 +545,14 @@ impl AsciiExt for AsciiChar {
 pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
+
+#[cfg(feature = "no_std")]
+impl ToAsciiCharError {
+    /// Returns a description for this error, like `std::error::Error::description`.
+    pub fn description(&self) -> &'static str {
+        ERRORMSG_CHAR
+    }
+}
 
 impl fmt::Debug for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {

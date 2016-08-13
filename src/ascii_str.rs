@@ -166,6 +166,35 @@ impl AsciiStr {
                           .rev().take_while(|a| a.is_whitespace() ).count();
         &self[..self.len()-trimmed]
     }
+
+    /// Checks that two strings are an ASCII case-insensitive match.
+    ///
+    /// Same as `to_ascii_lowercase(a) == to_ascii_lowercase(b)`, but without allocating and copying
+    /// temporary strings.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.len() == other.len() &&
+            self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b))
+    }
+
+    /// Converts the ASCII string slice to its ASCII upper case equivalent in-place.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn make_ascii_uppercase(&mut self) {
+        for ascii in &mut self.slice {
+            ascii.make_ascii_uppercase();
+        }
+    }
+
+    /// Converts the ASCII string slice to its ASCII lower case equivalent in-place.
+    #[inline]
+    #[cfg(feature = "no_std")]
+    pub fn make_ascii_lowercase(&mut self) {
+        for ascii in &mut self.slice {
+            ascii.make_ascii_lowercase();
+        }
+    }
 }
 
 impl PartialEq<str> for AsciiStr {
@@ -346,6 +375,12 @@ impl AsAsciiStrError {
     /// It is the maximum index such that `from_ascii(input[..index])` would return `Ok(_)`.
     pub fn valid_up_to(self) -> usize {
         self.0
+    }
+
+    /// Returns a description for this error, like `std::error::Error::description`.
+    #[cfg(feature = "no_std")]
+    pub fn description(&self) -> &'static str {
+        "one or more bytes are not ASCII"
     }
 }
 impl fmt::Display for AsAsciiStrError {
