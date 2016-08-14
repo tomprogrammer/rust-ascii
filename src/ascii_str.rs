@@ -166,6 +166,35 @@ impl AsciiStr {
                           .rev().take_while(|a| a.is_whitespace() ).count();
         &self[..self.len()-trimmed]
     }
+
+    #[cfg(feature = "no_std")]
+    /// Compares two strings case-insensitively.
+    ///
+    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.len() == other.len() &&
+        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
+    }
+
+    #[cfg(feature = "no_std")]
+    /// Replaces lowercase letters with their uppercase equivalent.
+    ///
+    /// A replacement for `AsciiExt::make_ascii_uppercase()`.
+    pub fn make_ascii_uppercase(&mut self) {
+        for a in &mut self.slice {
+            *a = a.to_ascii_uppercase();
+        }
+    }
+
+    #[cfg(feature = "no_std")]
+    /// Replaces uppercase letters with their lowercase equivalent.
+    ///
+    /// A replacement for `AsciiExt::make_ascii_lowercase()`.
+    pub fn make_ascii_lowercase(&mut self) {
+        for a in &mut self.slice {
+            *a = a.to_ascii_lowercase();
+        }
+    }
 }
 
 impl PartialEq<str> for AsciiStr {
@@ -317,7 +346,7 @@ impl AsciiExt for AsciiStr {
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b))
+        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
     }
 
     fn make_ascii_uppercase(&mut self) {
@@ -340,12 +369,19 @@ impl AsciiExt for AsciiStr {
 #[derive(Clone,Copy, PartialEq,Eq, Debug)]
 pub struct AsAsciiStrError (usize);
 
+const ERRORMSG_STR: &'static str = "one or more bytes are not ASCII";
+
 impl AsAsciiStrError {
     /// Returns the index of the first non-ASCII byte.
     ///
     /// It is the maximum index such that `from_ascii(input[..index])` would return `Ok(_)`.
     pub fn valid_up_to(self) -> usize {
         self.0
+    }
+    #[cfg(feature = "no_std")]
+    /// Returns a description for this error, like `std::error::Error::description`.
+    pub fn description(&self) -> &'static str {
+        ERRORMSG_STR
     }
 }
 impl fmt::Display for AsAsciiStrError {
@@ -355,9 +391,8 @@ impl fmt::Display for AsAsciiStrError {
 }
 #[cfg(not(feature = "no_std"))]
 impl Error for AsAsciiStrError {
-    /// Returns "one or more bytes are not ASCII"
     fn description(&self) -> &'static str {
-        "one or more bytes are not ASCII"
+        ERRORMSG_STR
     }
 }
 
@@ -459,9 +494,9 @@ impl AsMutAsciiStr for str {
 #[cfg(test)]
 mod tests {
     use AsciiChar;
-    use super::{AsciiStr, AsAsciiStr, AsAsciiStrError};
+    use super::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
     #[cfg(not(feature = "no_std"))]
-    use super::AsMutAsciiStr;
+    use std::ascii::AsciiExt;
 
     #[test]
     fn generic_as_ascii_str() {
@@ -513,6 +548,19 @@ mod tests {
         let v = AsciiStr::from_ascii(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
         assert_eq!(AsRef::<[u8]>::as_ref(v), b"( ;");
+    }
+
+    #[test]
+    fn ascii_case() {
+        let mut bytes = ([b'a',b'@',b'A'], [b'A',b'@',b'a']);
+        let mut a = bytes.0.as_mut_ascii_str().unwrap();
+        let mut b = bytes.1.as_mut_ascii_str().unwrap();
+        assert!(a.eq_ignore_ascii_case(b));
+        assert!(b.eq_ignore_ascii_case(a));
+        a.make_ascii_lowercase();
+        b.make_ascii_uppercase();
+        assert_eq!(a, "a@a");
+        assert_eq!(b, "A@A");
     }
 
     #[test]

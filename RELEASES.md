@@ -1,6 +1,14 @@
 Unreleased
 ==========
 * Return `FromAsciiError` instead of the input when `AsciiString::from_ascii()` or `into_ascii_string()` fails.
+* Fix `AsciiChar::to_ascii_lowercase()` converting to uppercase. (introduced by 0.7.0)
+* Make `AsciiChar` comparable with `char` and `u8`.
+* Add `AsciiChar::as_printable_char()` and the free functions `caret_encode()` and `caret_decode()`.
+* Implement some methods from `AsciiExt` and `Error` (which are not in libcore) directly in `no_std` mode:
+  * `Ascii{Char,Str}::eq_ignore_ascii_case()`
+  * `AsciiChar::to_ascii_{upper,lower}case()`
+  * `AsciiStr::make_ascii_{upper,lower}case()`
+  * `{ToAsciiChar,AsAsciiStr}Error::description()`
 
 Version 0.7.0 (2016-06-25)
 ==========================

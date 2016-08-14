@@ -6,6 +6,7 @@ rust:
   - beta
   - stable
   - 1.9.0
+  - 1.6.0
 
 before_script:
   - |
@@ -14,14 +15,20 @@ before_script:
 
 script:
   - |
-    travis-cargo build &&
-    travis-cargo test &&
+    travis-cargo --skip 1.6.0 build &&
+    travis-cargo --skip 1.6.0 test &&
     travis-cargo build -- --features=no_std &&
-    travis-cargo test -- --features=no_std &&
-    travis-cargo --only stable doc
+    travis-cargo test -- --features=no_std
 
 after_success:
-  - travis-cargo --only stable doc-upload
+  - |
+    if [ "$TRAVIS_RUST_VERSION" == "stable ]; then
+        travis-cargo doc -- --features=no_std &&
+        mv target/doc target/doc_no_std &&
+        travis-cargo doc &&
+        mv target/doc_no_std target/doc/no_std &&
+        travis-cargo doc-upload
+    fi
 
 env:
   global:

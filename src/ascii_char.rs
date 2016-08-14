@@ -472,6 +472,36 @@ impl AsciiChar {
             _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
         }}
     }
+
+    #[cfg(feature = "no_std")]
+    /// Maps letters `a`...`z` to `A`...`Z` and returns everything else unchanged.
+    ///
+    /// A replacement for `AsciiExt::to_ascii_uppercase()`.
+    pub fn to_ascii_uppercase(&self) -> Self {
+        unsafe{ match *self as u8 {
+            b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
+                 _      => *self,
+        }}
+    }
+
+    #[cfg(feature = "no_std")]
+    /// Maps letters `A`...`Z` to `a`...`z` and returns everything else unchanged.
+    ///
+    /// A replacement for `AsciiExt::to_ascii_lowercase()`.
+    pub fn to_ascii_lowercase(&self) -> Self {
+        unsafe{ match *self as u8 {
+            b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
+                 _      => *self,
+        }}
+    }
+
+    #[cfg(feature = "no_std")]
+    /// Compares two characters case-insensitively.
+    ///
+    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.to_ascii_lowercase() == other.to_ascii_lowercase()
+    }
 }
 
 impl fmt::Display for AsciiChar {
@@ -500,7 +530,7 @@ impl AsciiExt for AsciiChar {
     }
 
     fn to_ascii_lowercase(&self) -> AsciiChar {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
+        unsafe{ self.as_byte().to_ascii_lowercase().to_ascii_char_unchecked() }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
@@ -554,6 +584,14 @@ impl_into_partial_eq_ord!{char, AsciiChar::as_char}
 pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
+
+#[cfg(feature = "no_std")]
+impl ToAsciiCharError {
+    /// Returns a description for this error, like `std::error::Error::description`.
+    pub fn description(&self) -> &'static str {
+        ERRORMSG_CHAR
+    }
+}
 
 impl fmt::Debug for ToAsciiCharError {
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
@@ -619,23 +657,26 @@ impl ToAsciiChar for char {
 #[cfg(test)]
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
+    use AsciiChar::*;
+    #[cfg(not(feature = "no_std"))]
+    use std::ascii::AsciiExt;
 
     #[test]
     fn to_ascii_char() {
-        fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
-            c.to_ascii_char()
+        fn generic<C:ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
+            ch.to_ascii_char()
         }
-        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
-        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
-        assert_eq!(generic('A'), Ok(AsciiChar::A));
+        assert_eq!(generic(A), Ok(A));
+        assert_eq!(generic(b'A'), Ok(A));
+        assert_eq!(generic('A'), Ok(A));
         assert!(generic(200).is_err());
         assert!(generic('λ').is_err());
     }
 
     #[test]
     fn as_byte_and_char() {
-        assert_eq!(AsciiChar::A.as_byte(), b'A');
-        assert_eq!(AsciiChar::A.as_char(),  'A');
+        assert_eq!(A.as_byte(), b'A');
+        assert_eq!(A.as_char(),  'A');
     }
 
     #[test]
@@ -648,24 +689,40 @@ mod tests {
 
     #[test]
     fn is_control() {
-        assert_eq!(AsciiChar::US.is_control(), true);
-        assert_eq!(AsciiChar::DEL.is_control(), true);
-        assert_eq!(AsciiChar::Space.is_control(), false);
+        assert_eq!(US.is_control(), true);
+        assert_eq!(DEL.is_control(), true);
+        assert_eq!(Space.is_control(), false);
     }
 
     #[test]
     fn cmp_wider() {
-        assert_eq!(AsciiChar::A, 'A');
-        assert_eq!(b'b', AsciiChar::b);
-        assert!(AsciiChar::a < 'z');
+        assert_eq!(A, 'A');
+        assert_eq!(b'b', b);
+        assert!(a < 'z');
+    }
+
+    #[test]
+    fn ascii_case() {
+        assert_eq!(At.to_ascii_lowercase(), At);
+        assert_eq!(At.to_ascii_uppercase(), At);
+        assert_eq!(A.to_ascii_lowercase(), a);
+        assert_eq!(A.to_ascii_uppercase(), A);
+        assert_eq!(a.to_ascii_lowercase(), a);
+        assert_eq!(a.to_ascii_uppercase(), A);
+
+        assert!(LineFeed.eq_ignore_ascii_case(&LineFeed));
+        assert!(!LineFeed.eq_ignore_ascii_case(&CarriageReturn));
+        assert!(z.eq_ignore_ascii_case(&Z));
+        assert!(Z.eq_ignore_ascii_case(&z));
+        assert!(!Z.eq_ignore_ascii_case(&DEL));
     }
 
     #[test]
     #[cfg(not(feature = "no_std"))]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", AsciiChar::t), "t");
-        assert_eq!(format!("{:?}", AsciiChar::t), "'t'");
-        assert_eq!(format!("{}", AsciiChar::LineFeed), "\n");
-        assert_eq!(format!("{:?}", AsciiChar::LineFeed), "'\\n'");
+        assert_eq!(format!("{}", t), "t");
+        assert_eq!(format!("{:?}", t), "'t'");
+        assert_eq!(format!("{}", LineFeed), "\n");
+        assert_eq!(format!("{:?}", LineFeed), "'\\n'");
     }
 }
