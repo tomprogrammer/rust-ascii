@@ -6,6 +6,7 @@ rust:
   - beta
   - stable
   - 1.9.0
+  - 1.6.0
 
 before_script:
   - |
@@ -14,8 +15,8 @@ before_script:
 
 script:
   - |
-    travis-cargo build &&
-    travis-cargo test &&
+    travis-cargo --skip 1.6.0 build &&
+    travis-cargo --skip 1.6.0 test &&
     travis-cargo build -- --features=no_std &&
     travis-cargo test -- --features=no_std &&
     travis-cargo --only stable doc
