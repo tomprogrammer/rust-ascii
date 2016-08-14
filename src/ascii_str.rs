@@ -168,12 +168,18 @@ impl AsciiStr {
     }
 
     #[cfg(feature = "no_std")]
+    /// Compares two strings case-insensitively.
+    ///
+    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
         self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
     }
 
     #[cfg(feature = "no_std")]
+    /// Replaces lowercase letters with their uppercase equivalent.
+    ///
+    /// A replacement for `AsciiExt::make_ascii_uppercase()`.
     pub fn make_ascii_uppercase(&mut self) {
         for a in &mut self.slice {
             *a = a.to_ascii_uppercase();
@@ -181,6 +187,9 @@ impl AsciiStr {
     }
 
     #[cfg(feature = "no_std")]
+    /// Replaces uppercase letters with their lowercase equivalent.
+    ///
+    /// A replacement for `AsciiExt::make_ascii_lowercase()`.
     pub fn make_ascii_lowercase(&mut self) {
         for a in &mut self.slice {
             *a = a.to_ascii_lowercase();
@@ -370,6 +379,7 @@ impl AsAsciiStrError {
         self.0
     }
     #[cfg(feature = "no_std")]
+    /// Returns a description for this error, like `std::error::Error::description`.
     pub fn description(&self) -> &'static str {
         ERRORMSG_STR
     }
@@ -381,7 +391,6 @@ impl fmt::Display for AsAsciiStrError {
 }
 #[cfg(not(feature = "no_std"))]
 impl Error for AsAsciiStrError {
-    /// Returns "one or more bytes are not ASCII"
     fn description(&self) -> &'static str {
         ERRORMSG_STR
     }

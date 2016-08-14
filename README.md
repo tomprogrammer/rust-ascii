@@ -8,9 +8,13 @@ Types and conversion traits are described in the
 
 # Using ascii without libstd
 
-Most of `AsciiChar` and `AsciiStr` can be used without `std` by enabling the feature `no_std`. The
-owned string type `AsciiString` and the conversion trait `IntoAsciiString` as well as all methods
-referring to these types aren't available without `std`.
+Most of `AsciiChar` and `AsciiStr` can be used without `std` by enabling the feature `no_std`.  
+The owned string type `AsciiString` and the conversion trait `IntoAsciiString` as well as all methods referring to these types are unavailable.  
+Because libcore doesn't have `AsciiExt` and `Error`, most of their methods are implemented directly:
+* `Ascii{Char,Str}::eq_ignore_ascii_case()`
+* `AsciiChar::to_ascii_{upper,lower}case()`
+* `AsciiStr::make_ascii_{upper,lower}case()`
+* `{ToAsciiChar,AsAsciiStr}Error::description()`
 
 # Requirements
 

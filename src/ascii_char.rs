@@ -474,6 +474,9 @@ impl AsciiChar {
     }
 
     #[cfg(feature = "no_std")]
+    /// Maps letters `a`...`z` to `A`...`Z` and returns everything else unchanged.
+    ///
+    /// A replacement for `AsciiExt::to_ascii_uppercase()`.
     pub fn to_ascii_uppercase(&self) -> Self {
         unsafe{ match *self as u8 {
             b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
@@ -482,6 +485,9 @@ impl AsciiChar {
     }
 
     #[cfg(feature = "no_std")]
+    /// Maps letters `A`...`Z` to `a`...`z` and returns everything else unchanged.
+    ///
+    /// A replacement for `AsciiExt::to_ascii_lowercase()`.
     pub fn to_ascii_lowercase(&self) -> Self {
         unsafe{ match *self as u8 {
             b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
@@ -490,6 +496,9 @@ impl AsciiChar {
     }
 
     #[cfg(feature = "no_std")]
+    /// Compares two characters case-insensitively.
+    ///
+    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.to_ascii_lowercase() == other.to_ascii_lowercase()
     }
@@ -578,6 +587,7 @@ const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 
 #[cfg(feature = "no_std")]
 impl ToAsciiCharError {
+    /// Returns a description for this error, like `std::error::Error::description`.
     pub fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
