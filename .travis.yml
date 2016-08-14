@@ -21,7 +21,7 @@ script:
 
 after_success:
   - |
-    if [ "$TRAVIS_RUST_VERSION" == "stable ]; then
+    if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
         travis-cargo doc -- --features=no_std &&
         mv target/doc target/doc_no_std &&
         travis-cargo doc &&
