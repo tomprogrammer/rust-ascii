@@ -11,11 +11,8 @@
 //! A library that provides ASCII-only string and character types, equivalent to the `char`, `str` and
 //! `String` types in the standard library.
 //!
-//! # Using ascii without libstd
-//!
-//! Most of `AsciiChar` and `AsciiStr` can be used without `std` by enabling the feature `no_std`. The
-//! owned string type `AsciiString` and the conversion trait `IntoAsciiString` as well as all methods
-//! referring to these types aren't available without `std`.
+#![cfg_attr(not(feature = "no_std"), doc="[The documentation for `#[no_std]` mode is here](https://tomprogrammer.github.io/rust-ascii/no_std/ascii/index.html).")]
+#![cfg_attr(feature = "no_std", doc="This is the documentation for `#[no_std]` mode.")]
 //!
 //! # Requirements
 //!
