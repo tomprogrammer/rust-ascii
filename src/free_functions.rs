@@ -16,7 +16,7 @@ use ascii_char::{AsciiChar, ToAsciiChar};
 /// assert_eq!(caret_encode(b'E'), None);
 /// assert_eq!(caret_encode(b'\n'), Some(AsciiChar::J));
 /// ```
-pub fn caret_encode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
+pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     let c = c.into() ^ 0b0100_0000;
     unsafe{ if c >= b'?'  &&  c <= b'_' {
@@ -38,18 +38,18 @@ pub fn caret_encode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
 /// ```
 /// # use ascii::{AsciiChar, caret_decode};
 /// assert_eq!(caret_decode(b'?'), Some(AsciiChar::DEL));
-/// assert_eq!(caret_decode(AsciiChar::C), Some(AsciiChar::EOT));
-/// assert_eq!(caret_decode('\0'), None);
+/// assert_eq!(caret_decode(AsciiChar::D), Some(AsciiChar::EOT));
+/// assert_eq!(caret_decode(b'\0'), None);
 /// ```
 ///
 /// Symmetry:
 ///
 /// ```
 /// # use ascii::{AsciiChar, caret_encode, caret_decode};
-/// assert_eq!(caret_encode(AsciiCHar::US).flat_map(caret_decode),  Some(AsciiChar::US));
-/// assert_eq!(caret_decode('@').flat_map(caret_encode), Some(AsciiChar::At));
+/// assert_eq!(caret_encode(AsciiChar::US).and_then(caret_decode), Some(AsciiChar::US));
+/// assert_eq!(caret_decode(b'@').and_then(caret_encode), Some(AsciiChar::At));
 /// ```
-pub fn caret_decode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
+pub fn caret_decode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     unsafe {match c.into() {
         b'?'...b'_' => Some(AsciiChar::from_unchecked(c.into() ^ 0b0100_0000)),
