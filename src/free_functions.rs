@@ -26,7 +26,7 @@ pub fn caret_encode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
     }}
 }
 
-/// Returns the conrol code represented by a [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
+/// Returns the control code represented by a [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
 /// letter, or `None` if the letter is not used in caret notation.
 ///
 /// This function is the inverse of `caret_encode()`.
@@ -34,6 +34,7 @@ pub fn caret_encode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
 /// # Examples
 ///
 /// Basic usage:
+///
 /// ```
 /// # use ascii::{AsciiChar, caret_decode};
 /// assert_eq!(caret_decode(b'?'), Some(AsciiChar::DEL));
@@ -42,6 +43,7 @@ pub fn caret_encode<C:Copy+Into<u8>>(c: C) -> Option<AsciiChar> {
 /// ```
 ///
 /// Symmetry:
+///
 /// ```
 /// # use ascii::{AsciiChar, caret_encode, caret_decode};
 /// assert_eq!(caret_encode(AsciiCHar::US).flat_map(caret_decode),  Some(AsciiChar::US));
