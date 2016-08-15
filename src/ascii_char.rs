@@ -566,23 +566,26 @@ impl ToAsciiChar for char {
 #[cfg(test)]
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
+    use AsciiChar::*;
+    #[cfg(not(feature = "no_std"))]
+    use std::ascii::AsciiExt;
 
     #[test]
     fn to_ascii_char() {
-        fn generic<C:ToAsciiChar>(c: C) -> Result<AsciiChar, ToAsciiCharError> {
-            c.to_ascii_char()
+        fn generic<C:ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
+            ch.to_ascii_char()
         }
-        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
-        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
-        assert_eq!(generic('A'), Ok(AsciiChar::A));
+        assert_eq!(generic(A), Ok(A));
+        assert_eq!(generic(b'A'), Ok(A));
+        assert_eq!(generic('A'), Ok(A));
         assert!(generic(200).is_err());
         assert!(generic('λ').is_err());
     }
 
     #[test]
     fn as_byte_and_char() {
-        assert_eq!(AsciiChar::A.as_byte(), b'A');
-        assert_eq!(AsciiChar::A.as_char(),  'A');
+        assert_eq!(A.as_byte(), b'A');
+        assert_eq!(A.as_char(),  'A');
     }
 
     #[test]
@@ -595,15 +598,32 @@ mod tests {
 
     #[test]
     fn is_control() {
-        assert_eq!(AsciiChar::US.is_control(), true);
-        assert_eq!(AsciiChar::DEL.is_control(), true);
-        assert_eq!(AsciiChar::Space.is_control(), false);
+        assert_eq!(US.is_control(), true);
+        assert_eq!(DEL.is_control(), true);
+        assert_eq!(Space.is_control(), false);
+    }
+
+    #[test]
+    #[cfg(not(feature = "no_std"))]
+    fn ascii_case() {
+        assert_eq!(At.to_ascii_lowercase(), At);
+        assert_eq!(At.to_ascii_uppercase(), At);
+        assert_eq!(A.to_ascii_lowercase(), a);
+        assert_eq!(A.to_ascii_uppercase(), A);
+        assert_eq!(a.to_ascii_lowercase(), a);
+        assert_eq!(a.to_ascii_uppercase(), A);
+
+        assert!(LineFeed.eq_ignore_ascii_case(&LineFeed));
+        assert!(!LineFeed.eq_ignore_ascii_case(&CarriageReturn));
+        assert!(z.eq_ignore_ascii_case(&Z));
+        assert!(Z.eq_ignore_ascii_case(&z));
+        assert!(!Z.eq_ignore_ascii_case(&DEL));
     }
 
     #[test]
     #[cfg(not(feature = "no_std"))]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", AsciiChar::t), "t".to_string());
-        assert_eq!(format!("{:?}", AsciiChar::t), "'t'".to_string());
+        assert_eq!(format!("{}", t), "t".to_string());
+        assert_eq!(format!("{:?}", t), "'t'".to_string());
     }
 }
