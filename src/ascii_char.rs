@@ -299,6 +299,7 @@ impl AsciiChar {
     }
 
     /// Constructs an ASCII character from a `char` or `u8` without any checks.
+    #[inline]
     pub unsafe fn from_unchecked<C:ToAsciiChar>(ch: C) -> Self {
         ch.to_ascii_char_unchecked()
     }
@@ -477,6 +478,7 @@ impl AsciiChar {
     /// Maps letters `a`...`z` to `A`...`Z` and returns everything else unchanged.
     ///
     /// A replacement for `AsciiExt::to_ascii_uppercase()`.
+    #[inline]
     pub fn to_ascii_uppercase(&self) -> Self {
         unsafe{ match *self as u8 {
             b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
@@ -488,6 +490,7 @@ impl AsciiChar {
     /// Maps letters `A`...`Z` to `a`...`z` and returns everything else unchanged.
     ///
     /// A replacement for `AsciiExt::to_ascii_lowercase()`.
+    #[inline]
     pub fn to_ascii_lowercase(&self) -> Self {
         unsafe{ match *self as u8 {
             b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
@@ -505,12 +508,14 @@ impl AsciiChar {
 }
 
 impl fmt::Display for AsciiChar {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
     }
 }
 
 impl fmt::Debug for AsciiChar {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
      }
@@ -525,10 +530,12 @@ impl AsciiExt for AsciiChar {
         true
     }
 
+    #[inline]
     fn to_ascii_uppercase(&self) -> AsciiChar {
         unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
     }
 
+    #[inline]
     fn to_ascii_lowercase(&self) -> AsciiChar {
         unsafe{ self.as_byte().to_ascii_lowercase().to_ascii_char_unchecked() }
     }
@@ -550,26 +557,31 @@ impl AsciiExt for AsciiChar {
 
 macro_rules! impl_into_partial_eq_ord {($wider:ty, $to_wider:expr) => {
     impl From<AsciiChar> for $wider {
+        #[inline]
         fn from(a: AsciiChar) -> $wider {
             $to_wider(a)
         }
     }
     impl PartialEq<$wider> for AsciiChar {
+        #[inline]
         fn eq(&self, rhs: &$wider) -> bool {
             $to_wider(*self) == *rhs
         }
     }
     impl PartialEq<AsciiChar> for $wider {
+        #[inline]
         fn eq(&self, rhs: &AsciiChar) -> bool {
             *self == $to_wider(*rhs)
         }
     }
     impl PartialOrd<$wider> for AsciiChar {
+        #[inline]
         fn partial_cmp(&self, rhs: &$wider) -> Option<Ordering> {
             $to_wider(*self).partial_cmp(rhs)
         }
     }
     impl PartialOrd<AsciiChar> for $wider {
+        #[inline]
         fn partial_cmp(&self, rhs: &AsciiChar) -> Option<Ordering> {
             self.partial_cmp(&$to_wider(*rhs))
         }
@@ -588,6 +600,7 @@ const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 #[cfg(feature = "no_std")]
 impl ToAsciiCharError {
     /// Returns a description for this error, like `std::error::Error::description`.
+    #[inline]
     pub fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
@@ -607,6 +620,7 @@ impl fmt::Display for ToAsciiCharError {
 
 #[cfg(not(feature = "no_std"))]
 impl Error for ToAsciiCharError {
+    #[inline]
     fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
@@ -621,33 +635,39 @@ pub trait ToAsciiChar {
 }
 
 impl ToAsciiChar for AsciiChar {
+    #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         Ok(self)
     }
+    #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         self
     }
 }
 
 impl ToAsciiChar for u8 {
+    #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         unsafe{ if self <= 0x7F {
             return Ok(self.to_ascii_char_unchecked());
         }}
         Err(ToAsciiCharError(()))
     }
+    #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         transmute(self)
     }
 }
 
 impl ToAsciiChar for char {
+    #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         unsafe{ if self as u32 <= 0x7F {
             return Ok(self.to_ascii_char_unchecked());
         }}
         Err(ToAsciiCharError(()))
     }
+    #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         (self as u8).to_ascii_char_unchecked()
     }

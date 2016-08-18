@@ -78,6 +78,7 @@ impl AsciiString {
     ///    assert_eq!(AsciiString::from_ascii("hello").unwrap(), s);
     /// }
     /// ```
+    #[inline]
     pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
         AsciiString {
             vec: Vec::from_raw_parts(buf, length, capacity),
@@ -91,6 +92,7 @@ impl AsciiString {
     /// ASCII characters. If this constraint is violated, it may cause memory unsafety issues with
     /// future of the `AsciiString`, as the rest of this library assumes that `AsciiString`s are
     /// ASCII encoded.
+    #[inline]
     pub unsafe fn from_ascii_unchecked<B>(bytes: B) -> Self
         where B: Into<Vec<u8>>
     {
@@ -354,12 +356,14 @@ impl DerefMut for AsciiString {
 }
 
 impl PartialEq<str> for AsciiString {
+    #[inline]
     fn eq(&self, other: &str) -> bool {
         **self == *other
     }
 }
 
 impl PartialEq<AsciiString> for str {
+    #[inline]
     fn eq(&self, other: &AsciiString) -> bool {
         **other == *self
     }
@@ -390,12 +394,14 @@ impl_eq! { &'a str, AsciiString }
 impl_eq! { AsciiString, &'a str }
 
 impl Borrow<AsciiStr> for AsciiString {
+    #[inline]
     fn borrow(&self) -> &AsciiStr {
         &*self
     }
 }
 
 impl From<Vec<AsciiChar>> for AsciiString {
+    #[inline]
     fn from(vec: Vec<AsciiChar>) -> Self {
         AsciiString { vec: vec }
     }
@@ -417,18 +423,21 @@ impl Into<Vec<u8>> for AsciiString {
 }
 
 impl Into<String> for AsciiString {
+    #[inline]
     fn into(self) -> String {
         unsafe { String::from_utf8_unchecked(self.into()) }
     }
 }
 
 impl AsRef<AsciiStr> for AsciiString {
+    #[inline]
     fn as_ref(&self) -> &AsciiStr {
         &*self
     }
 }
 
 impl AsMut<AsciiStr> for AsciiString {
+    #[inline]
     fn as_mut(&mut self) -> &mut AsciiStr {
         &mut *self
     }
@@ -443,12 +452,14 @@ impl FromStr for AsciiString {
 }
 
 impl fmt::Display for AsciiString {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&**self, f)
     }
 }
 
 impl fmt::Debug for AsciiString {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(&**self, f)
     }
@@ -546,25 +557,30 @@ pub struct FromAsciiError<O> {
 }
 impl<O> FromAsciiError<O> {
     /// Get the position of the first non-ASCII byte or character.
+    #[inline]
     pub fn ascii_error(&self) -> AsAsciiStrError {
         self.error
     }
     /// Get back the original, unmodified type.
+    #[inline]
     pub fn into_source(self) -> O {
         self.owner
     }
 }
 impl<O> fmt::Debug for FromAsciiError<O> {
+    #[inline]
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(&self.error, fmtr)
     }
 }
 impl<O> fmt::Display for FromAsciiError<O> {
+    #[inline]
     fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.error, fmtr)
     }
 }
 impl<O:Any> Error for FromAsciiError<O> {
+    #[inline]
     fn description(&self) -> &str {
         self.error.description()
     }
@@ -584,36 +600,44 @@ pub trait IntoAsciiString : Sized {
 }
 
 impl IntoAsciiString for AsciiString {
+    #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self
     }
+    #[inline]
     fn into_ascii_string(self) -> Result<Self, FromAsciiError<Self>> {
         Ok(self)
     }
 }
 
 impl IntoAsciiString for Vec<AsciiChar> {
+    #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from(self)
     }
+    #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         Ok(AsciiString::from(self))
     }
 }
 
 impl IntoAsciiString for Vec<u8> {
+    #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from_ascii_unchecked(self)
     }
+    #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self)
     }
 }
 
 impl IntoAsciiString for String {
+    #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         self.into_bytes().into_ascii_string_unchecked()
     }
+    #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self)
     }
