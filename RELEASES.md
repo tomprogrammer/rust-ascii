@@ -4,11 +4,12 @@ Unreleased
 * `AsciiChar::is_*()` and `::as_{byte,char}()` take `self` by value instead of by reference.
 * Make `AsciiChar` comparable with `char` and `u8`.
 * Add `AsciiChar::as_printable_char()` and the free functions `caret_encode()` and `caret_decode()`.
-* Implement some methods from `AsciiExt` and `Error` (which are not in libcore) directly in `no_std` mode:
+* Implement some methods from `AsciiExt` and `Error` (which are not in libcore) directly in `core` mode:
   * `Ascii{Char,Str}::eq_ignore_ascii_case()`
   * `AsciiChar::to_ascii_{upper,lower}case()`
   * `AsciiStr::make_ascii_{upper,lower}case()`
   * `{ToAsciiChar,AsAsciiStr}Error::description()`
+* Replace the `no_std` feature with the additive `std` feature, which is part of the default features. (Issue #29)
 
 Version 0.7.1 (2016-08-15)
 ==========================

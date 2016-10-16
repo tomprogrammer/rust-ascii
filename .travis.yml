@@ -16,16 +16,16 @@ script:
   - |
     travis-cargo --skip 1.6.0 build &&
     travis-cargo --skip 1.6.0 test &&
-    travis-cargo build -- --features=no_std &&
-    travis-cargo test -- --features=no_std
+    travis-cargo build -- --no-default-features &&
+    travis-cargo test -- --no-default-features
 
 after_success:
   - |
     if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
-        travis-cargo doc -- --features=no_std &&
-        mv target/doc target/doc_no_std &&
+        travis-cargo doc -- --no-default-features &&
+        mv target/doc target/doc_core &&
         travis-cargo doc &&
-        mv target/doc_no_std target/doc/no_std &&
+        mv target/doc_core target/doc/core &&
         travis-cargo doc-upload
     fi
 

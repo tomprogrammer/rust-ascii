@@ -1,11 +1,11 @@
 extern crate ascii;
 
 use ascii::{AsciiChar, AsciiStr, AsAsciiStr};
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use ascii::{AsciiString, IntoAsciiString};
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn ascii_vec() {
     let test = b"( ;";
     let a = AsciiStr::from_ascii(test).unwrap();
@@ -28,7 +28,7 @@ fn to_ascii() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn into_ascii() {
     let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
     let v = AsciiString::from(arr.to_vec());
@@ -44,7 +44,7 @@ fn into_ascii() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn compare_ascii_string_ascii_str() {
     let v = b"abc";
     let ascii_string = AsciiString::from_ascii(&v[..]).unwrap();
@@ -54,7 +54,7 @@ fn compare_ascii_string_ascii_str() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn compare_ascii_string_string() {
     let v = b"abc";
     let string = String::from_utf8(v.to_vec()).unwrap();
@@ -64,7 +64,7 @@ fn compare_ascii_string_string() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn compare_ascii_str_string() {
     let v = b"abc";
     let string = String::from_utf8(v.to_vec()).unwrap();
@@ -74,7 +74,7 @@ fn compare_ascii_str_string() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn compare_ascii_string_str() {
     let v = b"abc";
     let sstr = ::std::str::from_utf8(v).unwrap();
@@ -101,7 +101,7 @@ fn compare_ascii_str_slice() {
 }
 
 #[test]
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 fn compare_ascii_string_slice() {
     let b = AsciiString::from_ascii("abc").unwrap();
     let c = AsciiString::from_ascii("ab").unwrap();

@@ -3,9 +3,9 @@ extern crate core;
 use self::core::mem::transmute;
 use self::core::cmp::Ordering;
 use self::core::{fmt, char};
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::error::Error;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::ascii::AsciiExt;
 
 #[allow(non_camel_case_types)]
@@ -474,7 +474,7 @@ impl AsciiChar {
         }}
     }
 
-    #[cfg(feature = "no_std")]
+    #[cfg(not(feature = "std"))]
     /// Maps letters `a`...`z` to `A`...`Z` and returns everything else unchanged.
     ///
     /// A replacement for `AsciiExt::to_ascii_uppercase()`.
@@ -486,7 +486,7 @@ impl AsciiChar {
         }}
     }
 
-    #[cfg(feature = "no_std")]
+    #[cfg(not(feature = "std"))]
     /// Maps letters `A`...`Z` to `a`...`z` and returns everything else unchanged.
     ///
     /// A replacement for `AsciiExt::to_ascii_lowercase()`.
@@ -498,7 +498,7 @@ impl AsciiChar {
         }}
     }
 
-    #[cfg(feature = "no_std")]
+    #[cfg(not(feature = "std"))]
     /// Compares two characters case-insensitively.
     ///
     /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
@@ -521,7 +521,7 @@ impl fmt::Debug for AsciiChar {
      }
 }
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl AsciiExt for AsciiChar {
     type Owned = AsciiChar;
 
@@ -597,7 +597,7 @@ pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
 
-#[cfg(feature = "no_std")]
+#[cfg(not(feature = "std"))]
 impl ToAsciiCharError {
     /// Returns a description for this error, like `std::error::Error::description`.
     #[inline]
@@ -618,7 +618,7 @@ impl fmt::Display for ToAsciiCharError {
     }
 }
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl Error for ToAsciiCharError {
     #[inline]
     fn description(&self) -> &'static str {
@@ -678,7 +678,7 @@ impl ToAsciiChar for char {
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
     use AsciiChar::*;
-    #[cfg(not(feature = "no_std"))]
+    #[cfg(feature = "std")]
     use std::ascii::AsciiExt;
 
     #[test]
@@ -738,7 +738,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(feature = "no_std"))]
+    #[cfg(feature = "std")]
     fn fmt_ascii() {
         assert_eq!(format!("{}", t), "t");
         assert_eq!(format!("{:?}", t), "'t'");
