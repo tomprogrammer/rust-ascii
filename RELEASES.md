@@ -8,6 +8,7 @@ Unreleased
   * `AsciiChar::to_ascii_{upper,lower}case()`
   * `AsciiStr::make_ascii_{upper,lower}case()`
   * `{ToAsciiChar,AsAsciiStr}Error::description()`
+* Replace the `no_std` feature with the additive `std` feature, which is part of the default features. (Issue #29)
 
 Version 0.7.1 (2016-08-15)
 ==========================

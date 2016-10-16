@@ -110,8 +110,9 @@ impl AsciiString {
     /// assert_eq!(foo.as_str(), "foo");
     /// assert_eq!(err.into_source(), "Ŋ");
     /// ```
-    pub fn from_ascii<B: Into<Vec<u8>> + AsRef<[u8]>>
-    (bytes: B) -> Result<AsciiString, FromAsciiError<B>> {
+    pub fn from_ascii<B>(bytes: B) -> Result<AsciiString, FromAsciiError<B>>
+        where B: Into<Vec<u8>> + AsRef<[u8]>
+    {
         unsafe{ match bytes.as_ref().as_ascii_str() {
             Ok(_) => Ok(AsciiString::from_ascii_unchecked(bytes)),
             Err(e) => Err(FromAsciiError{error: e,  owner: bytes}),

@@ -2,13 +2,13 @@ extern crate core;
 
 use self::core::{fmt, mem};
 use self::core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::error::Error;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use std::ascii::AsciiExt;
 
 use ascii_char::AsciiChar;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 use ascii_string::AsciiString;
 
 /// AsciiStr represents a byte or string slice that only contains ASCII characters.
@@ -66,8 +66,8 @@ impl AsciiStr {
         self.as_mut_slice().as_mut_ptr()
     }
 
-    #[cfg(not(feature = "no_std"))]
     /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
+    #[cfg(feature = "std")]
     pub fn to_ascii_string(&self) -> AsciiString {
         AsciiString::from(self.slice.to_vec())
     }
@@ -167,29 +167,29 @@ impl AsciiStr {
         &self[..self.len()-trimmed]
     }
 
-    #[cfg(feature = "no_std")]
     /// Compares two strings case-insensitively.
     ///
     /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
+    #[cfg(not(feature = "std"))]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
         self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
     }
 
-    #[cfg(feature = "no_std")]
     /// Replaces lowercase letters with their uppercase equivalent.
     ///
     /// A replacement for `AsciiExt::make_ascii_uppercase()`.
+    #[cfg(not(feature = "std"))]
     pub fn make_ascii_uppercase(&mut self) {
         for a in &mut self.slice {
             *a = a.to_ascii_uppercase();
         }
     }
 
-    #[cfg(feature = "no_std")]
     /// Replaces uppercase letters with their lowercase equivalent.
     ///
     /// A replacement for `AsciiExt::make_ascii_lowercase()`.
+    #[cfg(not(feature = "std"))]
     pub fn make_ascii_lowercase(&mut self) {
         for a in &mut self.slice {
             *a = a.to_ascii_lowercase();
@@ -209,7 +209,7 @@ impl PartialEq<AsciiStr> for str {
     }
 }
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
@@ -254,7 +254,7 @@ impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
         unsafe{ mem::transmute(slice) }
     }
 }
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     fn from(owned: Box<[AsciiChar]>) -> Box<AsciiStr> {
         unsafe{ mem::transmute(owned) }
@@ -273,7 +273,7 @@ macro_rules! impl_into {
                 unsafe{ mem::transmute(slice) }
             }
         }
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl From<Box<AsciiStr>> for Box<$wider> {
             fn from(owned: Box<AsciiStr>) -> Box<$wider> {
                 unsafe{ mem::transmute(owned) }
@@ -323,7 +323,7 @@ impl_index! { AsciiStr, RangeTo<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFrom<usize>, AsciiStr }
 impl_index! { AsciiStr, RangeFull, AsciiStr }
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl AsciiExt for AsciiStr {
     type Owned = AsciiString;
 
@@ -378,7 +378,7 @@ impl AsAsciiStrError {
     pub fn valid_up_to(self) -> usize {
         self.0
     }
-    #[cfg(feature = "no_std")]
+    #[cfg(not(feature = "std"))]
     /// Returns a description for this error, like `std::error::Error::description`.
     pub fn description(&self) -> &'static str {
         ERRORMSG_STR
@@ -389,7 +389,7 @@ impl fmt::Display for AsAsciiStrError {
         write!(fmtr, "the byte at index {} is not ASCII", self.0)
     }
 }
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl Error for AsAsciiStrError {
     fn description(&self) -> &'static str {
         ERRORMSG_STR
@@ -495,7 +495,7 @@ impl AsMutAsciiStr for str {
 mod tests {
     use AsciiChar;
     use super::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
-    #[cfg(not(feature = "no_std"))]
+    #[cfg(feature = "std")]
     use std::ascii::AsciiExt;
 
     #[test]
@@ -511,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(feature = "no_std"))]
+    #[cfg(feature = "std")]
     fn as_ascii_str() {
         macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
         let mut s: String = "abčd".to_string();
@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(feature = "no_std"))]
+    #[cfg(feature = "std")]
     fn fmt_ascii_str() {
         let s = "abc".as_ascii_str().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
