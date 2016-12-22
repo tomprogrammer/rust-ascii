@@ -1,4 +1,4 @@
-use core::{fmt, mem};
+use core::{fmt, mem, slice};
 use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -148,6 +148,72 @@ impl AsciiStr {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Divide one string slice into two at an index.
+    ///
+    /// The argument, `mid`, should be a byte offset from the start of the string. The two slices
+    /// returned go from the start of the string slice to `mid`, and from `mid` to the end of the
+    /// string slice.
+    ///
+    /// To get mutable string slices instead, see the `split_at_mut()` method.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `mid` is beyond the end of the string slice.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// let s = AsciiStr::from_ascii("Per Martin-Lof").unwrap();
+    /// let (first, last) = s.split_at(3);
+    ///
+    /// assert_eq!("Per", first.as_str());
+    /// assert_eq!(" Martin-Lof", last.as_str());
+    /// ```
+    pub fn split_at(&self, mid: usize) -> (&AsciiStr, &AsciiStr) {
+        assert!(mid <= self.len());
+        (&self[..mid], &self[mid..])
+    }
+
+    /// Divide one mutable string slice into two at an index.
+    ///
+    /// The argument, `mid`, should be a byte offset from the start of the string. The two slices
+    /// returned go from the start of the string slice to `mid`, and from `mid` to the end of the
+    /// string slice.
+    ///
+    /// To get immutable string slices instead, see the `split_at()` method.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `mid` is beyond the end of the string slice.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// # use ascii::{AsMutAsciiStr, AsciiStr};
+    /// let mut s = String::from("Per Martin-Lof");
+    /// let (first, last) = s.as_mut_ascii_str().unwrap().split_at_mut(3);
+    ///
+    /// assert_eq!("Per", first.as_str());
+    /// assert_eq!(" Martin-Lof", last.as_str());
+    /// ```
+    pub fn split_at_mut(&mut self, mid: usize) -> (&mut AsciiStr, &mut AsciiStr) {
+        let len = self.len();
+        assert!(mid <= len);
+        unsafe {
+            let ptr = self.as_mut_ptr();
+            // This now has three mutable references pointing at the same memory. `self`, the rvalue
+            // ret.0, and the rvalue ret.1. `self` is never used after `let ptr = ...`, and so one
+            // can treat it as "dead", and therefore, you only have two real mutable slices.
+            (slice::from_raw_parts_mut(ptr, mid).as_mut_ascii_str_unchecked(),
+             slice::from_raw_parts_mut(ptr.offset(mid as isize), len - mid).as_mut_ascii_str_unchecked())
+        }
     }
 
     /// Returns an ASCII string slice with leading and trailing whitespace removed.
