@@ -8,43 +8,56 @@ use std::ascii::AsciiExt;
 use ascii_char::AsciiChar;
 #[cfg(feature = "std")]
 use ascii_string::AsciiString;
+use iterators::{Bytes, SplitWhitespace};
 
 /// AsciiStr represents a byte or string slice that only contains ASCII characters.
 ///
 /// It wraps an `[AsciiChar]` and implements many of `str`s methods and traits.
 ///
-/// It can be created by a checked conversion from a `str` or `[u8]`,
-/// or borrowed from an `AsciiString`.
+/// It can be created by a checked conversion from a `str` or `[u8]`, or borrowed from an
+/// `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [AsciiChar],
 }
 
 impl AsciiStr {
-    /// Coerces into an `AsciiStr` slice.
+    /// Coerces `s` into an `AsciiStr` slice.
     pub fn new<S: AsRef<AsciiStr> + ?Sized>(s: &S) -> &AsciiStr {
         s.as_ref()
     }
 
-    /// Converts `&self` to a `&str` slice.
+    /// Converts the ascii string slice to a UTF-8 string slice.
     #[inline]
     pub fn as_str(&self) -> &str {
         unsafe { mem::transmute(&self.slice) }
     }
 
-    /// Converts `&self` into a byte slice.
+    /// Converts the ascii string slice to a mutable UTF-8 string slice.
+    #[inline]
+    pub fn as_mut_str(&mut self) -> &mut str {
+        unsafe { mem::transmute(&mut self.slice) }
+    }
+
+    /// Converts the ascii string slice into a byte slice.
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
         unsafe { mem::transmute(&self.slice) }
     }
 
-    /// Returns the entire string as slice of `AsciiChar`s.
+    /// Converts the ascii string slice into a mutable byte slice.
+    #[inline]
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+        unsafe { mem::transmute(&mut self.slice) }
+    }
+
+    /// Returns the entire ascii string slice as slice of `AsciiChar`s.
     #[inline]
     pub fn as_slice(&self) -> &[AsciiChar] {
         &self.slice
     }
 
-    /// Returns the entire string as mutable slice of `AsciiChar`s.
+    /// Returns the entire ascii string slice as mutable slice of `AsciiChar`s.
     #[inline]
     pub fn as_mut_slice(&mut self) -> &mut [AsciiChar] {
         &mut self.slice
@@ -235,10 +248,22 @@ impl AsRef<[u8]> for AsciiStr {
         self.as_bytes()
     }
 }
+impl AsMut<[u8]> for AsciiStr {
+    #[inline]
+    fn as_mut(&mut self) -> &mut [u8] {
+        self.as_mut_bytes()
+    }
+}
 impl AsRef<str> for AsciiStr {
     #[inline]
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+impl AsMut<str> for AsciiStr {
+    #[inline]
+    fn as_mut(&mut self) -> &mut str {
+        self.as_mut_str()
     }
 }
 impl AsRef<[AsciiChar]> for AsciiStr {
