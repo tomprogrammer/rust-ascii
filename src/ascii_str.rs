@@ -1,4 +1,5 @@
 use core::{fmt, mem, slice};
+use core::slice::{Iter, IterMut};
 use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -8,7 +9,6 @@ use std::ascii::AsciiExt;
 use ascii_char::AsciiChar;
 #[cfg(feature = "std")]
 use ascii_string::AsciiString;
-use iterators::{Bytes, SplitWhitespace};
 
 /// AsciiStr represents a byte or string slice that only contains ASCII characters.
 ///
@@ -617,6 +617,25 @@ impl AsMutAsciiStr for str {
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         mem::transmute(self)
+    }
+}
+
+impl<'a> IntoIterator for &'a AsciiStr {
+    type Item = &'a AsciiChar;
+    type IntoIter = Iter<'a, AsciiChar>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.iter()
+    }
+}
+impl<'a> IntoIterator for &'a mut AsciiStr {
+    type Item = &'a mut AsciiChar;
+    type IntoIter = IterMut<'a, AsciiChar>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.slice.iter_mut()
     }
 }
 
