@@ -1,7 +1,5 @@
-extern crate core;
-
-use self::core::{fmt, mem};
-use self::core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+use core::{fmt, mem};
+use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]

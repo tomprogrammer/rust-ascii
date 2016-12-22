@@ -29,6 +29,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate core;
+
 mod free_functions;
 mod ascii_char;
 mod ascii_str;

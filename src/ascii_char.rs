@@ -1,8 +1,6 @@
-extern crate core;
-
-use self::core::mem::transmute;
-use self::core::cmp::Ordering;
-use self::core::{fmt, char};
+use core::mem::transmute;
+use core::cmp::Ordering;
+use core::{fmt, char};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
