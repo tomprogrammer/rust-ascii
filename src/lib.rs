@@ -37,6 +37,6 @@ mod ascii_string;
 
 pub use free_functions::{caret_encode, caret_decode};
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
-pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
+pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError, Chars, CharsMut, Lines};
 #[cfg(feature = "std")]
 pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};
