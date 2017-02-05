@@ -78,7 +78,7 @@ impl AsciiStr {
 
     /// Returns an iterator over the lines of the `AsciiStr`, which are themselves `AsciiStr`s.
     ///
-    /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\n\r`).
+    /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\r\n`).
     ///
     /// The final line ending is optional.
     #[inline]
