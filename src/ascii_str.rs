@@ -733,6 +733,7 @@ mod tests {
 
     #[test]
     fn chars_iter_mut() {
+        use std::ascii::AsciiExt;
         let mut chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
         let mut ascii = chars.as_mut_ascii_str().unwrap();
 
