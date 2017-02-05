@@ -761,9 +761,12 @@ mod tests {
         }
 
         let empty_lines = b"\n\r\n\n\r\n";
+        let mut ensure_iterated = false;
         for line in AsciiStr::from_ascii(&empty_lines).unwrap().lines() {
+            ensure_iterated = true;
             assert!(line.is_empty());
         }
+        assert!(ensure_iterated);
     }
 
     #[test]
