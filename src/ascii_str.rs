@@ -495,7 +495,7 @@ impl<'a> Iterator for Lines<'a> {
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (0, Some(self.string.len()))
+        (self.len(), Some(self.len() + 1))
     }
 }
 
@@ -751,6 +751,7 @@ mod tests {
         let lines: [&str; 3] = ["great work", "cool beans", "awesome stuff"];
         let joined = "great work\ncool beans\r\nawesome stuff\n";
         let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
+        assert_eq!(ascii.lines().len(), 3);
         for (asciiline, line) in ascii.lines().zip(&lines) {
             assert_eq!(asciiline, *line);
         }
