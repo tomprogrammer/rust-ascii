@@ -738,7 +738,7 @@ mod tests {
 
         for (i, achar) in ascii.chars_mut().enumerate() {
             if i == 0 {
-                *achar = b'H';
+                *achar = AsciiChar::H;
             }
         }
 
