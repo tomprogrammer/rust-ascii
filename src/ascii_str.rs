@@ -495,7 +495,7 @@ impl<'a> Iterator for Lines<'a> {
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.len(), Some(self.len() + 1))
+        (self.len(), Some(self.len()))
     }
 }
 
