@@ -749,25 +749,37 @@ mod tests {
     fn lines_iter() {
         use super::core::iter::Iterator;
         let lines: [&str; 3] = ["great work", "cool beans", "awesome stuff"];
-        let joined = "great work\ncool beans\r\nawesome stuff\n";
+        let joined = "great work\ncool beans\r\nawesome stuff";
         let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
         assert_eq!(ascii.lines().len(), 3);
         for (asciiline, line) in ascii.lines().zip(&lines) {
             assert_eq!(asciiline, *line);
         }
 
+        let joined_with_trailing_newline = "great work\ncool beans\r\nawesome stuff\n";
+        let ascii_trailing_nl = AsciiStr::from_ascii(joined_with_trailing_newline.as_bytes()).unwrap();
+        assert_eq!(ascii.lines().len(), ascii_trailing_nl.lines().len());
+
         let trailing_line_break = b"\n";
-        for _ in AsciiStr::from_ascii(&trailing_line_break).unwrap().lines() {
+        let ascii = AsciiStr::from_ascii(&trailing_line_break).unwrap();
+        assert_eq!(ascii.lines().len(), 0);
+        for _ in ascii.lines() {
             unreachable!();
         }
 
         let empty_lines = b"\n\r\n\n\r\n";
         let mut ensure_iterated = false;
-        for line in AsciiStr::from_ascii(&empty_lines).unwrap().lines() {
+        let ascii = AsciiStr::from_ascii(&empty_lines).unwrap();
+        assert_eq!(ascii.lines().len(), 3);
+        for line in ascii.lines() {
             ensure_iterated = true;
             assert!(line.is_empty());
         }
         assert!(ensure_iterated);
+
+        let single_line = b"Hola, senor";
+        let ascii = AsciiStr::from_ascii(single_line).unwrap();
+        assert_eq!(ascii.lines().len(), 1);
     }
 
     #[test]
