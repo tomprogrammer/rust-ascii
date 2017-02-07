@@ -481,7 +481,7 @@ impl<'a> Iterator for Lines<'a> {
             Some(i) => i,
             None => return None
         };
-        let line: &AsciiStr = From::from(&self.string[curr_idx..next_idx]);
+        let line = &self.string[curr_idx..next_idx];
 
         self.current_index = next_idx + linebreak_skip;
 
