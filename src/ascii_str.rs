@@ -2,6 +2,7 @@ extern crate core;
 
 use self::core::{fmt, mem};
 use self::core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+use self::core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
@@ -137,6 +138,32 @@ impl AsciiStr {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Returns an iterator over the characters of the `AsciiStr`.
+    #[inline]
+    pub fn chars(&self) -> Chars {
+        self.slice.iter()
+    }
+
+    /// Returns an iterator over the characters of the `AsciiStr` which allows you to modify the
+    /// value of each `AsciiChar`.
+    #[inline]
+    pub fn chars_mut(&mut self) -> CharsMut {
+        self.slice.iter_mut()
+    }
+
+    /// Returns an iterator over the lines of the `AsciiStr`, which are themselves `AsciiStr`s.
+    ///
+    /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\r\n`).
+    ///
+    /// The final line ending is optional.
+    #[inline]
+    pub fn lines(&self) -> Lines {
+        Lines {
+            current_index: 0,
+            string: self
+        }
     }
 
     /// Returns an ASCII string slice with leading and trailing whitespace removed.
@@ -389,6 +416,97 @@ impl AsciiExt for AsciiStr {
 }
 
 
+impl<'a> IntoIterator for &'a AsciiStr {
+    type Item = &'a AsciiChar;
+    type IntoIter = Chars<'a>;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.chars()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut AsciiStr {
+    type Item = &'a mut AsciiChar;
+    type IntoIter = CharsMut<'a>;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.chars_mut()
+    }
+}
+
+/// An immutable iterator over the characters of an `AsciiStr`.
+pub type Chars<'a> = Iter<'a, AsciiChar>;
+
+/// A mutable iterator over the characters of an `AsciiStr`.
+pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
+
+/// An iterator over the lines of the internal character array.
+#[derive(Debug)]
+pub struct Lines<'a> {
+    // TODO: should this use `core::slice::Split` internally?
+    current_index: usize,
+    string: &'a AsciiStr
+}
+
+impl<'a> Iterator for Lines<'a> {
+    type Item = &'a AsciiStr;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let curr_idx = self.current_index;
+        let len = self.string.len();
+        if curr_idx >= len {
+            return None;
+        }
+
+        let mut next_idx = None;
+        let mut linebreak_skip = 0;
+
+        for i in curr_idx..(len-1) {
+            match (self.string[i], self.string[i + 1]) {
+                (AsciiChar::CarriageReturn, AsciiChar::LineFeed) => {
+                    next_idx = Some(i);
+                    linebreak_skip = 2;
+                    break;
+                }
+                (AsciiChar::LineFeed, _) => {
+                    next_idx = Some(i);
+                    linebreak_skip = 1;
+                    break;
+                }
+                _ => {}
+            }
+        }
+
+        let next_idx = match next_idx {
+            Some(i) => i,
+            None => return None
+        };
+        let line = &self.string[curr_idx..next_idx];
+
+        self.current_index = next_idx + linebreak_skip;
+
+        if line.is_empty() && self.current_index == self.string.len() {
+            // This is a trailing line break
+            None
+        } else {
+            Some(line)
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len(), Some(self.len()))
+    }
+}
+
+impl<'a> ExactSizeIterator for Lines<'a> {
+    #[inline]
+    fn len(&self) -> usize {
+        self.string.chars().skip(self.current_index).filter(|&&c| c == AsciiChar::LineFeed).count()
+    }
+}
+
+
 /// Error that is returned when a sequence of `u8` are not all ASCII.
 ///
 /// Is used by `As[Mut]AsciiStr` and the `from_ascii` method on `AsciiStr` and `AsciiString`.
@@ -602,6 +720,62 @@ mod tests {
         b.make_ascii_uppercase();
         assert_eq!(a, "a@a");
         assert_eq!(b, "A@A");
+    }
+
+    #[test]
+    fn chars_iter() {
+        let chars = &[b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
+        let ascii = AsciiStr::from_ascii(chars).unwrap();
+        for (achar, byte) in ascii.chars().zip(chars.iter()) {
+            assert_eq!(achar, byte);
+        }
+    }
+
+    #[test]
+    fn chars_iter_mut() {
+        let mut chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
+        let mut ascii = chars.as_mut_ascii_str().unwrap();
+
+        *ascii.chars_mut().next().unwrap() = AsciiChar::H;
+
+        assert_eq!(ascii[0], b'H');
+    }
+
+    #[test]
+    fn lines_iter() {
+        use super::core::iter::Iterator;
+        let lines: [&str; 3] = ["great work", "cool beans", "awesome stuff"];
+        let joined = "great work\ncool beans\r\nawesome stuff";
+        let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
+        assert_eq!(ascii.lines().len(), 3);
+        for (asciiline, line) in ascii.lines().zip(&lines) {
+            assert_eq!(asciiline, *line);
+        }
+
+        let joined_with_trailing_newline = "great work\ncool beans\r\nawesome stuff\n";
+        let ascii_trailing_nl = AsciiStr::from_ascii(joined_with_trailing_newline.as_bytes()).unwrap();
+        assert_eq!(ascii.lines().len(), ascii_trailing_nl.lines().len());
+
+        let trailing_line_break = b"\n";
+        let ascii = AsciiStr::from_ascii(&trailing_line_break).unwrap();
+        assert_eq!(ascii.lines().len(), 0);
+        for _ in ascii.lines() {
+            unreachable!();
+        }
+
+        let empty_lines = b"\n\r\n\n\r\n";
+        let mut ensure_iterated = false;
+        let ascii = AsciiStr::from_ascii(&empty_lines).unwrap();
+        assert_eq!(ascii.lines().len(), 3);
+        for line in ascii.lines() {
+            ensure_iterated = true;
+            assert!(line.is_empty());
+        }
+        assert!(ensure_iterated);
+
+        let single_line = b"Hola, senor";
+        let ascii = AsciiStr::from_ascii(single_line).unwrap();
+        assert_eq!(ascii.lines().len(), 1);
     }
 
     #[test]
