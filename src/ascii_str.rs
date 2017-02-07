@@ -479,7 +479,7 @@ impl<'a> Iterator for Lines<'a> {
             Some(i) => i,
             None => return None
         };
-        let line: &AsciiStr = From::from(&self.string[curr_idx..next_idx]);
+        let line = &self.string[curr_idx..next_idx];
 
         self.current_index = next_idx + linebreak_skip;
 
@@ -721,11 +721,7 @@ mod tests {
         let mut chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
         let mut ascii = chars.as_mut_ascii_str().unwrap();
 
-        for (i, achar) in ascii.chars_mut().enumerate() {
-            if i == 0 {
-                *achar = AsciiChar::H;
-            }
-        }
+        *ascii.chars_mut().next().unwrap() = AsciiChar::H;
 
         assert_eq!(ascii[0], b'H');
     }
