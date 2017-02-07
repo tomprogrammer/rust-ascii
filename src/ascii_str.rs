@@ -440,7 +440,7 @@ pub type Chars<'a> = Iter<'a, AsciiChar>;
 pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
 
 /// An iterator over the lines of the internal character array.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Lines<'a> {
     current_index: usize,
     string: &'a AsciiStr
