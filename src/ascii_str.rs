@@ -63,32 +63,6 @@ impl AsciiStr {
         self.as_slice().as_ptr()
     }
 
-    /// Returns an iterator over the characters of the `AsciiStr`.
-    #[inline]
-    pub fn chars(&self) -> Chars {
-        self.slice.iter()
-    }
-
-    /// Returns an iterator over the characters of the `AsciiStr` which allows you to modify the
-    /// value of each `AsciiChar`.
-    #[inline]
-    pub fn chars_mut(&mut self) -> CharsMut {
-        self.slice.iter_mut()
-    }
-
-    /// Returns an iterator over the lines of the `AsciiStr`, which are themselves `AsciiStr`s.
-    ///
-    /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\r\n`).
-    ///
-    /// The final line ending is optional.
-    #[inline]
-    pub fn lines(&self) -> Lines {
-        Lines {
-            current_index: 0,
-            string: self
-        }
-    }
-
     /// Returns an unsafe mutable pointer to the `AsciiStr`'s buffer.
     ///
     /// The caller must ensure that the slice outlives the pointer this function returns, or else it
@@ -164,6 +138,32 @@ impl AsciiStr {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Returns an iterator over the characters of the `AsciiStr`.
+    #[inline]
+    pub fn chars(&self) -> Chars {
+        self.slice.iter()
+    }
+
+    /// Returns an iterator over the characters of the `AsciiStr` which allows you to modify the
+    /// value of each `AsciiChar`.
+    #[inline]
+    pub fn chars_mut(&mut self) -> CharsMut {
+        self.slice.iter_mut()
+    }
+
+    /// Returns an iterator over the lines of the `AsciiStr`, which are themselves `AsciiStr`s.
+    ///
+    /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\r\n`).
+    ///
+    /// The final line ending is optional.
+    #[inline]
+    pub fn lines(&self) -> Lines {
+        Lines {
+            current_index: 0,
+            string: self
+        }
     }
 
     /// Returns an ASCII string slice with leading and trailing whitespace removed.
