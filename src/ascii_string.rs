@@ -466,6 +466,20 @@ impl fmt::Debug for AsciiString {
     }
 }
 
+impl fmt::Write for AsciiString {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        let astr = try!(AsciiStr::from_ascii(s.as_bytes()).map_err(|_| fmt::Error));
+        self.push_str(astr);
+        Ok(())
+    }
+
+    fn write_char(&mut self, c: char) -> fmt::Result {
+        let achar = try!(AsciiChar::from(c).map_err(|_| fmt::Error));
+        self.push(achar);
+        Ok(())
+    }
+}
+
 impl FromIterator<AsciiChar> for AsciiString {
     fn from_iter<I: IntoIterator<Item=AsciiChar>>(iter: I) -> AsciiString {
         let mut buf = AsciiString::new();
@@ -644,7 +658,6 @@ impl IntoAsciiString for String {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
@@ -674,5 +687,24 @@ mod tests {
         let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
         assert_eq!(format!("{:?}", s), "\"abc\"".to_string());
+    }
+
+    #[test]
+    fn write_fmt() {
+        use std::fmt;
+        use std::str;
+
+        let mut s0 = AsciiString::new();
+        fmt::write(&mut s0, format_args!("Hello World")).unwrap();
+        assert_eq!(s0, "Hello World");
+
+        let mut s1 = AsciiString::new();
+        fmt::write(&mut s1, format_args!("{}", 9)).unwrap();
+        assert_eq!(s1, "9");
+
+        let mut s2 = AsciiString::new();
+        let sparkle_heart_bytes = [240, 159, 146, 150];
+        let sparkle_heart = str::from_utf8(&sparkle_heart_bytes).unwrap();
+        assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
     }
 }
