@@ -468,7 +468,7 @@ impl fmt::Debug for AsciiString {
 
 impl fmt::Write for AsciiString {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let astr = try!(AsciiStr::from_ascii(s.as_bytes()).map_err(|_| fmt::Error));
+        let astr = try!(AsciiStr::from_ascii(s).map_err(|_| fmt::Error));
         self.push_str(astr);
         Ok(())
     }
