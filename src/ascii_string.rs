@@ -691,8 +691,7 @@ mod tests {
 
     #[test]
     fn write_fmt() {
-        use std::fmt;
-        use std::str;
+        use std::{fmt, str};
 
         let mut s0 = AsciiString::new();
         fmt::write(&mut s0, format_args!("Hello World")).unwrap();
