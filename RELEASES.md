@@ -1,5 +1,10 @@
+Version 0.8.1 (2017-02-11)
+==========================
+* Add `Chars`, `CharsMut` and `Lines` iterators.
+* Implement `std::fmt::Write` for `AsciiString`.
+
 Version 0.8.0 (2017-01-02)
-==========
+==========================
 
 Breaking changes:
 

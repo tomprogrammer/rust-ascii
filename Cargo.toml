@@ -2,7 +2,7 @@ test = [{name = "tests", path = "tests.rs"}]
 
 [package]
 name = "ascii"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Thomas Bahn <thomas@thomas-bahn.net>",
            "Torbjørn Birch Moltu <t.b.moltu@lyse.net>",
            "Simon Sapin <simon.sapin@exyr.org>"]
