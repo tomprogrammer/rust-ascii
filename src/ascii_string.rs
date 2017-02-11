@@ -466,6 +466,8 @@ impl fmt::Debug for AsciiString {
     }
 }
 
+/// Please note that the `std::fmt::Result` returned by these methods does not support
+/// transmission of an error other than that an error occurred.
 impl fmt::Write for AsciiString {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let astr = try!(AsciiStr::from_ascii(s).map_err(|_| fmt::Error));
