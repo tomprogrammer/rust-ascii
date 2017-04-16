@@ -29,6 +29,9 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "quickcheck")]
+extern crate quickcheck;
+
 mod free_functions;
 mod ascii_char;
 mod ascii_str;
