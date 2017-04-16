@@ -649,10 +649,32 @@ impl IntoAsciiString for Vec<u8> {
     }
 }
 
+impl<'a> IntoAsciiString for &'a [u8] {
+    #[inline]
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from_ascii_unchecked(self)
+    }
+    #[inline]
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+        AsciiString::from_ascii(self)
+    }
+}
+
 impl IntoAsciiString for String {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        self.into_bytes().into_ascii_string_unchecked()
+        AsciiString::from_ascii_unchecked(self)
+    }
+    #[inline]
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+        AsciiString::from_ascii(self)
+    }
+}
+
+impl<'a> IntoAsciiString for &'a str {
+    #[inline]
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from_ascii_unchecked(self)
     }
     #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
