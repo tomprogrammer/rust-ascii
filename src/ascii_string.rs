@@ -6,6 +6,9 @@ use std::str::FromStr;
 use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
 use std::iter::FromIterator;
 
+#[cfg(feature = "quickcheck")]
+use quickcheck::{Arbitrary, Gen};
+
 use ascii_char::AsciiChar;
 use ascii_str::{AsciiStr,AsAsciiStr,AsAsciiStrError};
 
@@ -679,6 +682,23 @@ impl<'a> IntoAsciiString for &'a str {
     #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self)
+    }
+}
+
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for AsciiString {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        let size = { let s = g.size(); g.gen_range(0, s) };
+        let mut s = AsciiString::with_capacity(size);
+        for _ in 0..size {
+            s.push(AsciiChar::arbitrary(g));
+        }
+        s
+    }
+
+    fn shrink(&self) -> Box<Iterator<Item = Self>> {
+        let chars: Vec<AsciiChar> = self.as_slice().to_vec();
+        Box::new(chars.shrink().map(|x| x.into_iter().collect::<AsciiString>()))
     }
 }
 

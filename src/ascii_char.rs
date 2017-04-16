@@ -1,5 +1,8 @@
 extern crate core;
 
+#[cfg(feature = "quickcheck")]
+use quickcheck::{Arbitrary, Gen};
+
 use self::core::mem::transmute;
 use self::core::cmp::Ordering;
 use self::core::{fmt, char};
@@ -673,6 +676,44 @@ impl ToAsciiChar for char {
     }
 }
 
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for AsciiChar {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        let mode = g.gen_range(0, 100);
+        match mode {
+            0...14 => {
+                // Control characters
+                unsafe { AsciiChar::from_unchecked(g.gen_range(0,0x1F) as u8) }
+            }
+            15...39 => {
+                // Characters often used in programming languages
+                *g.choose(&[
+                    AsciiChar::Space, AsciiChar::Tab, AsciiChar::LineFeed, AsciiChar::Tilde,
+                    AsciiChar::Grave, AsciiChar::Exclamation, AsciiChar::At, AsciiChar::Hash,
+                    AsciiChar::Dollar, AsciiChar::Percent, AsciiChar::Ampersand,
+                    AsciiChar::Asterisk, AsciiChar::ParenOpen, AsciiChar::ParenClose,
+                    AsciiChar::UnderScore, AsciiChar::Minus, AsciiChar::Equal, AsciiChar::Plus,
+                    AsciiChar::BracketOpen, AsciiChar::BracketClose, AsciiChar::CurlyBraceOpen,
+                    AsciiChar::CurlyBraceClose, AsciiChar::Colon, AsciiChar::Semicolon,
+                    AsciiChar::Apostrophe, AsciiChar::Quotation, AsciiChar::BackSlash,
+                    AsciiChar::VerticalBar, AsciiChar::Caret, AsciiChar::Comma, AsciiChar::LessThan,
+                    AsciiChar::GreaterThan, AsciiChar::Dot, AsciiChar::Slash, AsciiChar::Question,
+                    AsciiChar::_0, AsciiChar::_1, AsciiChar::_2, AsciiChar::_3, AsciiChar::_3,
+                    AsciiChar::_4 , AsciiChar::_6, AsciiChar::_7, AsciiChar::_8, AsciiChar::_9,
+                ]).unwrap()
+            }
+            40...99 => {
+                // Completely arbitrary characters
+                unsafe { AsciiChar::from_unchecked(g.gen_range(0, 0x7F) as u8) }
+            }
+            _ => unreachable!()
+        }
+    }
+
+    fn shrink(&self) -> Box<Iterator<Item = Self>> {
+        Box::new((*self as u8).shrink().filter_map(|x| AsciiChar::from(x).ok()))
+    }
+}
 
 #[cfg(test)]
 mod tests {
