@@ -1,3 +1,9 @@
+Version 0.8.2 (2017-04-17)
+==========================
+* Implement `IntoAsciiString` for `&'a str` and `&'a [u8]`.
+* Implement the `quickcheck::Arbitrary` trait for `AsciiChar` and `AsciiString`.
+  The implementation is enabled by the `quickcheck` feature.
+
 Version 0.8.1 (2017-02-11)
 ==========================
 * Add `Chars`, `CharsMut` and `Lines` iterators.
