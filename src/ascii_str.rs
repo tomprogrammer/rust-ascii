@@ -393,7 +393,7 @@ impl AsciiExt for AsciiStr {
 
     fn to_ascii_lowercase(&self) -> AsciiString {
         let mut ascii_string = self.to_ascii_string();
-        ascii_string.make_ascii_uppercase();
+        ascii_string.make_ascii_lowercase();
         ascii_string
     }
 
@@ -701,6 +701,8 @@ mod tests {
         let mut b = bytes.1.as_mut_ascii_str().unwrap();
         assert!(a.eq_ignore_ascii_case(b));
         assert!(b.eq_ignore_ascii_case(a));
+        assert_eq!(a.to_ascii_lowercase().as_str(), "a@a");
+        assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
         a.make_ascii_lowercase();
         b.make_ascii_uppercase();
         assert_eq!(a, "a@a");

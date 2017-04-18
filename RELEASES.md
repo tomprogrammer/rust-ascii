@@ -1,3 +1,7 @@
+Version 0.8.3 (2017-04-18)
+==========================
+* Bugfix: `<AsciiStr as AsciiExt>::to_ascii_lowercase` did erroneously convert to uppercase.
+
 Version 0.8.2 (2017-04-17)
 ==========================
 * Implement `IntoAsciiString` for `&'a str` and `&'a [u8]`.
