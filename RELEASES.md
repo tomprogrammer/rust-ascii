@@ -1,3 +1,7 @@
+Version 0.8.4 (2017-04-18)
+==========================
+* Fix the tests when running without std.
+
 Version 0.8.3 (2017-04-18)
 ==========================
 * Bugfix: `<AsciiStr as AsciiExt>::to_ascii_lowercase` did erroneously convert to uppercase.

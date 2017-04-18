@@ -695,18 +695,26 @@ mod tests {
     }
 
     #[test]
-    fn ascii_case() {
+    fn make_ascii_case() {
         let mut bytes = ([b'a',b'@',b'A'], [b'A',b'@',b'a']);
         let mut a = bytes.0.as_mut_ascii_str().unwrap();
         let mut b = bytes.1.as_mut_ascii_str().unwrap();
         assert!(a.eq_ignore_ascii_case(b));
         assert!(b.eq_ignore_ascii_case(a));
-        assert_eq!(a.to_ascii_lowercase().as_str(), "a@a");
-        assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
         a.make_ascii_lowercase();
         b.make_ascii_uppercase();
         assert_eq!(a, "a@a");
         assert_eq!(b, "A@A");
+    }
+
+    #[test]
+    #[cfg(features = "std")]
+    fn to_ascii_case() {
+        let mut bytes = ([b'a',b'@',b'A'], [b'A',b'@',b'a']);
+        let mut a = bytes.0.as_mut_ascii_str().unwrap();
+        let mut b = bytes.1.as_mut_ascii_str().unwrap();
+        assert_eq!(a.to_ascii_lowercase().as_str(), "a@a");
+        assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
     }
 
     #[test]
