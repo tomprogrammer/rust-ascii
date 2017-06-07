@@ -1,7 +1,7 @@
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
-use core::mem::transmute;
+use core::mem;
 use core::cmp::Ordering;
 use core::{fmt, char};
 #[cfg(feature = "std")]
@@ -671,7 +671,7 @@ impl ToAsciiChar for u8 {
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        transmute(self)
+        mem::transmute(self)
     }
 }
 

@@ -96,7 +96,14 @@ impl AsciiString {
     where
         B: Into<Vec<u8>>,
     {
-        AsciiString { vec: mem::transmute(bytes.into()) }
+        let mut bytes = bytes.into();
+        let vec = Vec::from_raw_parts(
+            bytes.as_mut_ptr() as *mut AsciiChar,
+            bytes.len(),
+            bytes.capacity(),
+        );
+        mem::forget(bytes);
+        AsciiString { vec: vec }
     }
 
     /// Converts anything that can represent a byte buffer into an `AsciiString`.
@@ -351,14 +358,16 @@ impl Deref for AsciiString {
 
     #[inline]
     fn deref(&self) -> &AsciiStr {
-        unsafe { mem::transmute(&self.vec[..]) }
+        let ptr = &*self.vec as *const [AsciiChar] as *const AsciiStr;
+        unsafe { &*ptr }
     }
 }
 
 impl DerefMut for AsciiString {
     #[inline]
     fn deref_mut(&mut self) -> &mut AsciiStr {
-        unsafe { mem::transmute(&mut self.vec[..]) }
+        let ptr = &mut *self.vec as *mut [AsciiChar] as *mut AsciiStr;
+        unsafe { &mut *ptr }
     }
 }
 
