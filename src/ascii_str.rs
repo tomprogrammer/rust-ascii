@@ -30,13 +30,15 @@ impl AsciiStr {
     /// Converts `&self` to a `&str` slice.
     #[inline]
     pub fn as_str(&self) -> &str {
-        unsafe { mem::transmute(&self.slice) }
+        let ptr = self as *const AsciiStr as *const str;
+        unsafe { &*ptr }
     }
 
     /// Converts `&self` into a byte slice.
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
-        unsafe { mem::transmute(&self.slice) }
+        let ptr = self as *const AsciiStr as *const [u8];
+        unsafe { &*ptr }
     }
 
     /// Returns the entire string as slice of `AsciiChar`s.
@@ -297,20 +299,23 @@ impl Default for &'static AsciiStr {
 impl<'a> From<&'a [AsciiChar]> for &'a AsciiStr {
     #[inline]
     fn from(slice: &[AsciiChar]) -> &AsciiStr {
-        unsafe { mem::transmute(slice) }
+        let ptr = slice as *const [AsciiChar] as *const AsciiStr;
+        unsafe { &*ptr }
     }
 }
 impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
     #[inline]
     fn from(slice: &mut [AsciiChar]) -> &mut AsciiStr {
-        unsafe { mem::transmute(slice) }
+        let ptr = slice as *mut [AsciiChar] as *mut AsciiStr;
+        unsafe { &mut *ptr }
     }
 }
 #[cfg(feature = "std")]
 impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     #[inline]
     fn from(owned: Box<[AsciiChar]>) -> Box<AsciiStr> {
-        unsafe { mem::transmute(owned) }
+        let ptr = Box::into_raw(owned) as *mut AsciiStr;
+        unsafe { Box::from_raw(ptr) }
     }
 }
 
@@ -319,20 +324,23 @@ macro_rules! impl_into {
         impl<'a> From<&'a AsciiStr> for &'a$wider {
             #[inline]
             fn from(slice: &AsciiStr) -> &$wider {
-                unsafe{ mem::transmute(slice) }
+                let ptr = slice as *const AsciiStr as *const $wider;
+                unsafe { &*ptr }
             }
         }
         impl<'a> From<&'a mut AsciiStr> for &'a mut $wider {
             #[inline]
             fn from(slice: &mut AsciiStr) -> &mut $wider {
-                unsafe{ mem::transmute(slice) }
+                let ptr = slice as *mut AsciiStr as *mut $wider;
+                unsafe { &mut *ptr }
             }
         }
         #[cfg(feature = "std")]
         impl From<Box<AsciiStr>> for Box<$wider> {
             #[inline]
             fn from(owned: Box<AsciiStr>) -> Box<$wider> {
-                unsafe{ mem::transmute(owned) }
+                let ptr = Box::into_raw(owned) as *mut $wider;
+                unsafe { Box::from_raw(ptr) }
             }
         }
     }
@@ -356,30 +364,47 @@ impl fmt::Debug for AsciiStr {
 }
 
 macro_rules! impl_index {
-    ($lhs:ty, $idx:ty, $rhs:ty) => {
-        impl Index<$idx> for $lhs {
-            type Output = $rhs;
+    ($idx:ty) => {
+        impl Index<$idx> for AsciiStr {
+            type Output = AsciiStr;
 
             #[inline]
-            fn index(&self, index: $idx) -> &$rhs {
-                unsafe { mem::transmute(&self.slice[index]) }
+            fn index(&self, index: $idx) -> &AsciiStr {
+                let ptr = &self.slice[index] as *const [AsciiChar] as *const AsciiStr;
+                unsafe { &* ptr }
             }
         }
 
-        impl IndexMut<$idx> for $lhs {
+        impl IndexMut<$idx> for AsciiStr {
             #[inline]
-            fn index_mut(&mut self, index: $idx) -> &mut $rhs {
-                unsafe { mem::transmute(&mut self.slice[index]) }
+            fn index_mut(&mut self, index: $idx) -> &mut AsciiStr {
+                let ptr = &mut self.slice[index] as *mut [AsciiChar] as *mut AsciiStr;
+                unsafe { &mut *ptr }
             }
         }
     }
 }
 
-impl_index! { AsciiStr, usize, AsciiChar }
-impl_index! { AsciiStr, Range<usize>, AsciiStr }
-impl_index! { AsciiStr, RangeTo<usize>, AsciiStr }
-impl_index! { AsciiStr, RangeFrom<usize>, AsciiStr }
-impl_index! { AsciiStr, RangeFull, AsciiStr }
+impl_index! { Range<usize> }
+impl_index! { RangeTo<usize> }
+impl_index! { RangeFrom<usize> }
+impl_index! { RangeFull }
+
+impl Index<usize> for AsciiStr {
+    type Output = AsciiChar;
+
+    #[inline]
+    fn index(&self, index: usize) -> &AsciiChar {
+        unsafe { mem::transmute(&self.slice[index]) }
+    }
+}
+
+impl IndexMut<usize> for AsciiStr {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut AsciiChar {
+        unsafe { mem::transmute(&mut self.slice[index]) }
+    }
+}
 
 #[cfg(feature = "std")]
 impl AsciiExt for AsciiStr {
@@ -603,7 +628,8 @@ impl AsAsciiStr for [u8] {
     }
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        mem::transmute(self)
+        let ptr = self as *const [u8] as *const AsciiStr;
+        &*ptr
     }
 }
 impl AsMutAsciiStr for [u8] {
@@ -615,7 +641,8 @@ impl AsMutAsciiStr for [u8] {
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        mem::transmute(self)
+        let ptr = self as *mut [u8] as *mut AsciiStr;
+        &mut *ptr
     }
 }
 
@@ -637,7 +664,8 @@ impl AsMutAsciiStr for str {
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        mem::transmute(self)
+        let ptr = self as *mut str as *mut AsciiStr;
+        &mut *ptr
     }
 }
 
