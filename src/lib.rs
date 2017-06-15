@@ -29,6 +29,9 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "std")]
+extern crate core;
+
 #[cfg(feature = "quickcheck")]
 extern crate quickcheck;
 

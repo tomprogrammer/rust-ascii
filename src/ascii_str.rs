@@ -1,8 +1,6 @@
-extern crate core;
-
-use self::core::{fmt, mem};
-use self::core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
-use self::core::slice::{Iter, IterMut};
+use core::{fmt, mem};
+use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+use core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
@@ -16,8 +14,8 @@ use ascii_string::AsciiString;
 ///
 /// It wraps an `[AsciiChar]` and implements many of `str`s methods and traits.
 ///
-/// It can be created by a checked conversion from a `str` or `[u8]`,
-/// or borrowed from an `AsciiString`.
+/// It can be created by a checked conversion from a `str` or `[u8]`, or borrowed from an
+/// `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsciiStr {
     slice: [AsciiChar],
@@ -747,7 +745,7 @@ mod tests {
 
     #[test]
     fn lines_iter() {
-        use super::core::iter::Iterator;
+        use core::iter::Iterator;
         let lines: [&str; 3] = ["great work", "cool beans", "awesome stuff"];
         let joined = "great work\ncool beans\r\nawesome stuff\n";
         let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
