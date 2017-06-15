@@ -8,8 +8,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! A library that provides ASCII-only string and character types, equivalent to the `char`, `str` and
-//! `String` types in the standard library.
+//! A library that provides ASCII-only string and character types, equivalent to the `char`, `str`
+//! and `String` types in the standard library.
 //!
 #![cfg_attr(feature = "std", doc="[The documentation for the `core` mode is here](https://tomprogrammer.github.io/rust-ascii/core/ascii/index.html).")]
 #![cfg_attr(not(feature = "std"), doc="This is the documentation for `core` mode.")]

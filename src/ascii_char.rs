@@ -17,271 +17,271 @@ use std::ascii::AsciiExt;
 #[repr(u8)]
 pub enum AsciiChar {
     /// `'\0'`
-    Null            =   0,
+    Null = 0,
     /// [Start Of Heading](http://en.wikipedia.org/wiki/Start_of_Heading)
-    SOH             =   1,
+    SOH = 1,
     /// [Start Of teXt](http://en.wikipedia.org/wiki/Start_of_Text)
-    SOX             =   2,
+    SOX = 2,
     /// [End of TeXt](http://en.wikipedia.org/wiki/End-of-Text_character)
-    ETX             =   3,
+    ETX = 3,
     /// [End Of Transmission](http://en.wikipedia.org/wiki/End-of-Transmission_character)
-    EOT             =   4,
+    EOT = 4,
     /// [Enquiry](http://en.wikipedia.org/wiki/Enquiry_character)
-    ENQ             =   5,
+    ENQ = 5,
     /// [Acknowledgement](http://en.wikipedia.org/wiki/Acknowledge_character)
-    ACK             =   6,
+    ACK = 6,
     /// [bell / alarm / audible](http://en.wikipedia.org/wiki/Bell_character)
     ///
     /// `'\a'` is not recognized by Rust.
-    Bell            =   7,
+    Bell = 7,
     /// [Backspace](http://en.wikipedia.org/wiki/Backspace)
     ///
     /// `'\b'` is not recognized by Rust.
-    BackSpace       =   8,
+    BackSpace = 8,
     /// `'\t'`
-    Tab             =   9,
+    Tab = 9,
     /// `'\n'`
-    LineFeed        =  10,
+    LineFeed = 10,
     /// [Vertical tab](http://en.wikipedia.org/wiki/Vertical_Tab)
     ///
     /// `'\v'` is not recognized by Rust.
-    VT              =  11,
+    VT = 11,
     /// [Form Feed](http://en.wikipedia.org/wiki/Form_Feed)
     ///
     /// `'\f'` is not recognized by Rust.
-    FF              =  12,
+    FF = 12,
     /// `'\r'`
-    CarriageReturn  =  13,
+    CarriageReturn = 13,
     /// [Shift In](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
-    SI              =  14,
+    SI = 14,
     /// [Shift Out](http://en.wikipedia.org/wiki/Shift_Out_and_Shift_In_characters)
-    SO              =  15,
+    SO = 15,
     /// [Data Link Escape](http://en.wikipedia.org/wiki/Data_Link_Escape)
-    DLE             =  16,
+    DLE = 16,
     /// [Device control 1, often XON](http://en.wikipedia.org/wiki/Device_Control_1)
-    DC1             =  17,
+    DC1 = 17,
     /// Device control 2
-    DC2             =  18,
+    DC2 = 18,
     /// Device control 3, Often XOFF
-    DC3             =  19,
+    DC3 = 19,
     /// Device control 4
-    DC4             =  20,
+    DC4 = 20,
     /// [Negative AcKnowledgement](http://en.wikipedia.org/wiki/Negative-acknowledge_character)
-    NAK             =  21,
+    NAK = 21,
     /// [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
-    SYN             =  22,
+    SYN = 22,
     /// [End of Transmission Block](http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
-    ETB             =  23,
+    ETB = 23,
     /// [Cancel](http://en.wikipedia.org/wiki/Cancel_character)
-    CAN             =  24,
+    CAN = 24,
     /// [End of Medium](http://en.wikipedia.org/wiki/End_of_Medium)
-    EM              =  25,
+    EM = 25,
     /// [Substitute](http://en.wikipedia.org/wiki/Substitute_character)
-    SUB             =  26,
+    SUB = 26,
     /// [Escape](http://en.wikipedia.org/wiki/Escape_character)
     ///
     /// `'\e'` is not recognized by Rust.
-    ESC             =  27,
+    ESC = 27,
     /// [File Separator](http://en.wikipedia.org/wiki/File_separator)
-    FS              =  28,
+    FS = 28,
     /// [Group Separator](http://en.wikipedia.org/wiki/Group_separator)
-    GS              =  29,
+    GS = 29,
     /// [Record Separator](http://en.wikipedia.org/wiki/Record_separator)
-    RS              =  30,
+    RS = 30,
     /// [Unit Separator](http://en.wikipedia.org/wiki/Unit_separator)
-    US              =  31,
+    US = 31,
     /// `' '`
-    Space           =  32,
+    Space = 32,
     /// `'!'`
-    Exclamation     =  33,
+    Exclamation = 33,
     /// `'"'`
-    Quotation       =  34,
+    Quotation = 34,
     /// `'#'`
-    Hash            =  35,
+    Hash = 35,
     /// `'$'`
-    Dollar          =  36,
+    Dollar = 36,
     /// `'%'`
-    Percent         =  37,
+    Percent = 37,
     /// `'&'`
-    Ampersand       =  38,
+    Ampersand = 38,
     /// `'\''`
-    Apostrophe      =  39,
+    Apostrophe = 39,
     /// `'('`
-    ParenOpen       =  40,
+    ParenOpen = 40,
     /// `')'`
-    ParenClose      =  41,
+    ParenClose = 41,
     /// `'*'`
-    Asterisk        =  42,
+    Asterisk = 42,
     /// `'+'`
-    Plus            =  43,
+    Plus = 43,
     /// `','`
-    Comma           =  44,
+    Comma = 44,
     /// `'-'`
-    Minus           =  45,
+    Minus = 45,
     /// `'.'`
-    Dot             =  46,
+    Dot = 46,
     /// `'/'`
-    Slash           =  47,
+    Slash = 47,
     /// `'0'`
-    _0              =  48,
+    _0 = 48,
     /// `'1'`
-    _1              =  49,
+    _1 = 49,
     /// `'2'`
-    _2              =  50,
+    _2 = 50,
     /// `'3'`
-    _3              =  51,
+    _3 = 51,
     /// `'4'`
-    _4              =  52,
+    _4 = 52,
     /// `'5'`
-    _5              =  53,
+    _5 = 53,
     /// `'6'`
-    _6              =  54,
+    _6 = 54,
     /// `'7'`
-    _7              =  55,
+    _7 = 55,
     /// `'8'`
-    _8              =  56,
+    _8 = 56,
     /// `'9'`
-    _9              =  57,
+    _9 = 57,
     /// `':'`
-    Colon           =  58,
+    Colon = 58,
     /// `';'`
-    Semicolon       =  59,
+    Semicolon = 59,
     /// `'<'`
-    LessThan        =  60,
+    LessThan = 60,
     /// `'='`
-    Equal           =  61,
+    Equal = 61,
     /// `'>'`
-    GreaterThan     =  62,
+    GreaterThan = 62,
     /// `'?'`
-    Question        =  63,
+    Question = 63,
     /// `'@'`
-    At              =  64,
+    At = 64,
     /// `'A'`
-    A               =  65,
+    A = 65,
     /// `'B'`
-    B               =  66,
+    B = 66,
     /// `'C'`
-    C               =  67,
+    C = 67,
     /// `'D'`
-    D               =  68,
+    D = 68,
     /// `'E'`
-    E               =  69,
+    E = 69,
     /// `'F'`
-    F               =  70,
+    F = 70,
     /// `'G'`
-    G               =  71,
+    G = 71,
     /// `'H'`
-    H               =  72,
+    H = 72,
     /// `'I'`
-    I               =  73,
+    I = 73,
     /// `'J'`
-    J               =  74,
+    J = 74,
     /// `'K'`
-    K               =  75,
+    K = 75,
     /// `'L'`
-    L               =  76,
+    L = 76,
     /// `'M'`
-    M               =  77,
+    M = 77,
     /// `'N'`
-    N               =  78,
+    N = 78,
     /// `'O'`
-    O               =  79,
+    O = 79,
     /// `'P'`
-    P               =  80,
+    P = 80,
     /// `'Q'`
-    Q               =  81,
+    Q = 81,
     /// `'R'`
-    R               =  82,
+    R = 82,
     /// `'S'`
-    S               =  83,
+    S = 83,
     /// `'T'`
-    T               =  84,
+    T = 84,
     /// `'U'`
-    U               =  85,
+    U = 85,
     /// `'V'`
-    V               =  86,
+    V = 86,
     /// `'W'`
-    W               =  87,
+    W = 87,
     /// `'X'`
-    X               =  88,
+    X = 88,
     /// `'Y'`
-    Y               =  89,
+    Y = 89,
     /// `'Z'`
-    Z               =  90,
+    Z = 90,
     /// `'['`
-    BracketOpen     =  91,
+    BracketOpen = 91,
     /// `'\'`
-    BackSlash       =  92,
+    BackSlash = 92,
     /// `']'`
-    BracketClose    =  93,
+    BracketClose = 93,
     /// `'_'`
-    Caret           =  94,
+    Caret = 94,
     /// `'_'`
-    UnderScore      =  95,
+    UnderScore = 95,
     /// `'`'`
-    Grave           =  96,
+    Grave = 96,
     /// `'a'`
-    a               =  97,
+    a = 97,
     /// `'b'`
-    b               =  98,
+    b = 98,
     /// `'c'`
-    c               =  99,
+    c = 99,
     /// `'d'`
-    d               = 100,
+    d = 100,
     /// `'e'`
-    e               = 101,
+    e = 101,
     /// `'f'`
-    f               = 102,
+    f = 102,
     /// `'g'`
-    g               = 103,
+    g = 103,
     /// `'h'`
-    h               = 104,
+    h = 104,
     /// `'i'`
-    i               = 105,
+    i = 105,
     /// `'j'`
-    j               = 106,
+    j = 106,
     /// `'k'`
-    k               = 107,
+    k = 107,
     /// `'l'`
-    l               = 108,
+    l = 108,
     /// `'m'`
-    m               = 109,
+    m = 109,
     /// `'n'`
-    n               = 110,
+    n = 110,
     /// `'o'`
-    o               = 111,
+    o = 111,
     /// `'p'`
-    p               = 112,
+    p = 112,
     /// `'q'`
-    q               = 113,
+    q = 113,
     /// `'r'`
-    r               = 114,
+    r = 114,
     /// `'s'`
-    s               = 115,
+    s = 115,
     /// `'t'`
-    t               = 116,
+    t = 116,
     /// `'u'`
-    u               = 117,
+    u = 117,
     /// `'v'`
-    v               = 118,
+    v = 118,
     /// `'w'`
-    w               = 119,
+    w = 119,
     /// `'x'`
-    x               = 120,
+    x = 120,
     /// `'y'`
-    y               = 121,
+    y = 121,
     /// `'z'`
-    z               = 122,
+    z = 122,
     /// `'{'`
-    CurlyBraceOpen  = 123,
+    CurlyBraceOpen = 123,
     /// `'|'`
-    VerticalBar     = 124,
+    VerticalBar = 124,
     /// `'}'`
     CurlyBraceClose = 125,
     /// `'~'`
-    Tilde           = 126,
+    Tilde = 126,
     /// [Delete](http://en.wikipedia.org/wiki/Delete_character)
-    DEL             = 127,
+    DEL = 127,
 }
 
 impl AsciiChar {
@@ -297,13 +297,13 @@ impl AsciiChar {
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
-    pub fn from<C:ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
+    pub fn from<C: ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
         ch.to_ascii_char()
     }
 
     /// Constructs an ASCII character from a `char` or `u8` without any checks.
     #[inline]
-    pub unsafe fn from_unchecked<C:ToAsciiChar>(ch: C) -> Self {
+    pub unsafe fn from_unchecked<C: ToAsciiChar>(ch: C) -> Self {
         ch.to_ascii_char_unchecked()
     }
 
@@ -324,7 +324,7 @@ impl AsciiChar {
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
     pub fn is_alphabetic(self) -> bool {
-        let c = self.as_byte() | 0b010_0000;// Turns uppercase into lowercase.
+        let c = self.as_byte() | 0b010_0000; // Turns uppercase into lowercase.
         c >= b'a' && c <= b'z'
     }
 
@@ -349,8 +349,7 @@ impl AsciiChar {
     /// Check if the character is a ' ', '\t', '\n' or '\r'
     #[inline]
     pub fn is_whitespace(self) -> bool {
-        self.is_blank() || self == AsciiChar::LineFeed
-                        || self == AsciiChar::CarriageReturn
+        self.is_blank() || self == AsciiChar::LineFeed || self == AsciiChar::CarriageReturn
     }
 
     /// Check if the character is a control character
@@ -379,7 +378,7 @@ impl AsciiChar {
     /// ```
     #[inline]
     pub fn is_graph(self) -> bool {
-        self.as_byte().wrapping_sub(b' '+1) < 0x5E
+        self.as_byte().wrapping_sub(b' ' + 1) < 0x5E
     }
 
     /// Checks if the character is printable (including space)
@@ -470,11 +469,13 @@ impl AsciiChar {
     /// assert_eq!('p'.to_ascii_char().unwrap().as_printable_char(), 'p');
     /// ```
     pub fn as_printable_char(self) -> char {
-        unsafe{ match self as u8 {
-            b' '...b'~' => self.as_char(),
-            127 => '␡',
-            _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
-        }}
+        unsafe {
+            match self as u8 {
+                b' '...b'~' => self.as_char(),
+                127 => '␡',
+                _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
+            }
+        }
     }
 
     #[cfg(not(feature = "std"))]
@@ -483,10 +484,12 @@ impl AsciiChar {
     /// A replacement for `AsciiExt::to_ascii_uppercase()`.
     #[inline]
     pub fn to_ascii_uppercase(&self) -> Self {
-        unsafe{ match *self as u8 {
-            b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
-                 _      => *self,
-        }}
+        unsafe {
+            match *self as u8 {
+                b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
+                _ => *self,
+            }
+        }
     }
 
     #[cfg(not(feature = "std"))]
@@ -495,10 +498,12 @@ impl AsciiChar {
     /// A replacement for `AsciiExt::to_ascii_lowercase()`.
     #[inline]
     pub fn to_ascii_lowercase(&self) -> Self {
-        unsafe{ match *self as u8 {
-            b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
-                 _      => *self,
-        }}
+        unsafe {
+            match *self as u8 {
+                b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
+                _ => *self,
+            }
+        }
     }
 
     #[cfg(not(feature = "std"))]
@@ -521,7 +526,7 @@ impl fmt::Debug for AsciiChar {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_char().fmt(f)
-     }
+    }
 }
 
 #[cfg(feature = "std")]
@@ -535,12 +540,20 @@ impl AsciiExt for AsciiChar {
 
     #[inline]
     fn to_ascii_uppercase(&self) -> AsciiChar {
-        unsafe{ self.as_byte().to_ascii_uppercase().to_ascii_char_unchecked() }
+        unsafe {
+            self.as_byte()
+                .to_ascii_uppercase()
+                .to_ascii_char_unchecked()
+        }
     }
 
     #[inline]
     fn to_ascii_lowercase(&self) -> AsciiChar {
-        unsafe{ self.as_byte().to_ascii_lowercase().to_ascii_char_unchecked() }
+        unsafe {
+            self.as_byte()
+                .to_ascii_lowercase()
+                .to_ascii_char_unchecked()
+        }
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
@@ -610,13 +623,13 @@ impl ToAsciiCharError {
 }
 
 impl fmt::Debug for ToAsciiCharError {
-    fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
 
 impl fmt::Display for ToAsciiCharError {
-    fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "{}", ERRORMSG_CHAR)
     }
 }
@@ -651,9 +664,11 @@ impl ToAsciiChar for AsciiChar {
 impl ToAsciiChar for u8 {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        unsafe{ if self <= 0x7F {
-            return Ok(self.to_ascii_char_unchecked());
-        }}
+        unsafe {
+            if self <= 0x7F {
+                return Ok(self.to_ascii_char_unchecked());
+            }
+        }
         Err(ToAsciiCharError(()))
     }
     #[inline]
@@ -665,9 +680,11 @@ impl ToAsciiChar for u8 {
 impl ToAsciiChar for char {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        unsafe{ if self as u32 <= 0x7F {
-            return Ok(self.to_ascii_char_unchecked());
-        }}
+        unsafe {
+            if self as u32 <= 0x7F {
+                return Ok(self.to_ascii_char_unchecked());
+            }
+        }
         Err(ToAsciiCharError(()))
     }
     #[inline]
@@ -683,7 +700,7 @@ impl Arbitrary for AsciiChar {
         match mode {
             0...14 => {
                 // Control characters
-                unsafe { AsciiChar::from_unchecked(g.gen_range(0,0x1F) as u8) }
+                unsafe { AsciiChar::from_unchecked(g.gen_range(0, 0x1F) as u8) }
             }
             15...39 => {
                 // Characters often used in programming languages
@@ -706,12 +723,14 @@ impl Arbitrary for AsciiChar {
                 // Completely arbitrary characters
                 unsafe { AsciiChar::from_unchecked(g.gen_range(0, 0x7F) as u8) }
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
     fn shrink(&self) -> Box<Iterator<Item = Self>> {
-        Box::new((*self as u8).shrink().filter_map(|x| AsciiChar::from(x).ok()))
+        Box::new((*self as u8).shrink().filter_map(
+            |x| AsciiChar::from(x).ok(),
+        ))
     }
 }
 
@@ -724,7 +743,7 @@ mod tests {
 
     #[test]
     fn to_ascii_char() {
-        fn generic<C:ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
+        fn generic<C: ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
             ch.to_ascii_char()
         }
         assert_eq!(generic(A), Ok(A));
@@ -737,7 +756,7 @@ mod tests {
     #[test]
     fn as_byte_and_char() {
         assert_eq!(A.as_byte(), b'A');
-        assert_eq!(A.as_char(),  'A');
+        assert_eq!(A.as_char(), 'A');
     }
 
     #[test]

@@ -91,7 +91,8 @@ impl AsciiStr {
     /// ```
     #[inline]
     pub fn from_ascii<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, AsAsciiStrError>
-        where B: AsRef<[u8]>
+    where
+        B: AsRef<[u8]>,
     {
         bytes.as_ref().as_ascii_str()
     }
@@ -107,7 +108,8 @@ impl AsciiStr {
     /// ```
     #[inline]
     pub unsafe fn from_ascii_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
-        where B: AsRef<[u8]>
+    where
+        B: AsRef<[u8]>,
     {
         bytes.as_ref().as_ascii_str_unchecked()
     }
@@ -162,7 +164,7 @@ impl AsciiStr {
     pub fn lines(&self) -> Lines {
         Lines {
             current_index: 0,
-            string: self
+            string: self,
         }
     }
 
@@ -187,7 +189,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_left());
     /// ```
     pub fn trim_left(&self) -> &Self {
-        &self[self.slice.iter().take_while(|a| a.is_whitespace() ).count()..]
+        &self[self.slice.iter().take_while(|a| a.is_whitespace()).count()..]
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -199,9 +201,12 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_right());
     /// ```
     pub fn trim_right(&self) -> &Self {
-        let trimmed = self.slice.into_iter()
-                          .rev().take_while(|a| a.is_whitespace() ).count();
-        &self[..self.len()-trimmed]
+        let trimmed = self.slice
+            .into_iter()
+            .rev()
+            .take_while(|a| a.is_whitespace())
+            .count();
+        &self[..self.len() - trimmed]
     }
 
     /// Compares two strings case-insensitively.
@@ -210,7 +215,9 @@ impl AsciiStr {
     #[cfg(not(feature = "std"))]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
+            self.slice.iter().zip(other.slice.iter()).all(|(a, b)| {
+                a.eq_ignore_ascii_case(b)
+            })
     }
 
     /// Replaces lowercase letters with their uppercase equivalent.
@@ -278,7 +285,7 @@ impl AsRef<[AsciiChar]> for AsciiStr {
 }
 impl AsMut<[AsciiChar]> for AsciiStr {
     #[inline]
-    fn as_mut(&mut self) -> &mut[AsciiChar] {
+    fn as_mut(&mut self) -> &mut [AsciiChar] {
         &mut self.slice
     }
 }
@@ -286,26 +293,26 @@ impl AsMut<[AsciiChar]> for AsciiStr {
 impl Default for &'static AsciiStr {
     #[inline]
     fn default() -> &'static AsciiStr {
-        unsafe{ "".as_ascii_str_unchecked() }
+        unsafe { "".as_ascii_str_unchecked() }
     }
 }
-impl<'a> From<&'a[AsciiChar]> for &'a AsciiStr {
+impl<'a> From<&'a [AsciiChar]> for &'a AsciiStr {
     #[inline]
     fn from(slice: &[AsciiChar]) -> &AsciiStr {
-        unsafe{ mem::transmute(slice) }
+        unsafe { mem::transmute(slice) }
     }
 }
 impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
     #[inline]
-    fn from(slice: &mut[AsciiChar]) -> &mut AsciiStr {
-        unsafe{ mem::transmute(slice) }
+    fn from(slice: &mut [AsciiChar]) -> &mut AsciiStr {
+        unsafe { mem::transmute(slice) }
     }
 }
 #[cfg(feature = "std")]
 impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     #[inline]
     fn from(owned: Box<[AsciiChar]>) -> Box<AsciiStr> {
-        unsafe{ mem::transmute(owned) }
+        unsafe { mem::transmute(owned) }
     }
 }
 
@@ -399,7 +406,9 @@ impl AsciiExt for AsciiStr {
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-        self.slice.iter().zip(other.slice.iter()).all(|(a, b)| a.eq_ignore_ascii_case(b) )
+            self.slice.iter().zip(other.slice.iter()).all(|(a, b)| {
+                a.eq_ignore_ascii_case(b)
+            })
     }
 
     fn make_ascii_uppercase(&mut self) {
@@ -443,7 +452,7 @@ pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
 #[derive(Clone, Debug)]
 pub struct Lines<'a> {
     current_index: usize,
-    string: &'a AsciiStr
+    string: &'a AsciiStr,
 }
 
 impl<'a> Iterator for Lines<'a> {
@@ -459,7 +468,7 @@ impl<'a> Iterator for Lines<'a> {
         let mut next_idx = None;
         let mut linebreak_skip = 0;
 
-        for i in curr_idx..(len-1) {
+        for i in curr_idx..(len - 1) {
             match (self.string[i], self.string[i + 1]) {
                 (AsciiChar::CarriageReturn, AsciiChar::LineFeed) => {
                     next_idx = Some(i);
@@ -477,7 +486,7 @@ impl<'a> Iterator for Lines<'a> {
 
         let next_idx = match next_idx {
             Some(i) => i,
-            None => return None
+            None => return None,
         };
         let line = &self.string[curr_idx..next_idx];
 
@@ -495,8 +504,8 @@ impl<'a> Iterator for Lines<'a> {
 /// Error that is returned when a sequence of `u8` are not all ASCII.
 ///
 /// Is used by `As[Mut]AsciiStr` and the `from_ascii` method on `AsciiStr` and `AsciiString`.
-#[derive(Clone,Copy, PartialEq,Eq, Debug)]
-pub struct AsAsciiStrError (usize);
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct AsAsciiStrError(usize);
 
 const ERRORMSG_STR: &'static str = "one or more bytes are not ASCII";
 
@@ -516,7 +525,7 @@ impl AsAsciiStrError {
     }
 }
 impl fmt::Display for AsAsciiStrError {
-    fn fmt(&self,  fmtr: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmtr: &mut fmt::Formatter) -> fmt::Result {
         write!(fmtr, "the byte at index {} is not ASCII", self.0)
     }
 }
@@ -534,7 +543,7 @@ pub trait AsAsciiStr {
     /// Convert to an ASCII slice without checking for non-ASCII characters.
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
     /// Convert to an ASCII slice.
-    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError>;
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError>;
 }
 
 /// Convert mutable slices of bytes to `AsciiStr`.
@@ -542,12 +551,12 @@ pub trait AsMutAsciiStr {
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
     /// Convert to a mutable ASCII slice.
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError>;
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError>;
 }
 
 impl AsAsciiStr for AsciiStr {
     #[inline]
-    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self)
     }
     #[inline]
@@ -557,7 +566,7 @@ impl AsAsciiStr for AsciiStr {
 }
 impl AsMutAsciiStr for AsciiStr {
     #[inline]
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         Ok(self)
     }
     #[inline]
@@ -568,7 +577,7 @@ impl AsMutAsciiStr for AsciiStr {
 
 impl AsAsciiStr for [AsciiChar] {
     #[inline]
-    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self.into())
     }
     #[inline]
@@ -578,7 +587,7 @@ impl AsAsciiStr for [AsciiChar] {
 }
 impl AsMutAsciiStr for [AsciiChar] {
     #[inline]
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         Ok(self.into())
     }
     #[inline]
@@ -588,10 +597,10 @@ impl AsMutAsciiStr for [AsciiChar] {
 }
 
 impl AsAsciiStr for [u8] {
-    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
-        match self.iter().position(|&b| b > 127 ) {
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        match self.iter().position(|&b| b > 127) {
             Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe{ Ok(self.as_ascii_str_unchecked()) },
+            None => unsafe { Ok(self.as_ascii_str_unchecked()) },
         }
     }
     #[inline]
@@ -600,10 +609,10 @@ impl AsAsciiStr for [u8] {
     }
 }
 impl AsMutAsciiStr for [u8] {
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
-        match self.iter().position(|&b| b > 127 ) {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
+        match self.iter().position(|&b| b > 127) {
             Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe{ Ok(self.as_mut_ascii_str_unchecked()) },
+            None => unsafe { Ok(self.as_mut_ascii_str_unchecked()) },
         }
     }
     #[inline]
@@ -613,7 +622,7 @@ impl AsMutAsciiStr for [u8] {
 }
 
 impl AsAsciiStr for str {
-    fn as_ascii_str(&self) -> Result<&AsciiStr,AsAsciiStrError> {
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         self.as_bytes().as_ascii_str()
     }
     #[inline]
@@ -622,10 +631,10 @@ impl AsAsciiStr for str {
     }
 }
 impl AsMutAsciiStr for str {
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr,AsAsciiStrError> {
-        match self.bytes().position(|b| b > 127 ) {
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
+        match self.bytes().position(|b| b > 127) {
             Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe{ Ok(self.as_mut_ascii_str_unchecked()) },
+            None => unsafe { Ok(self.as_mut_ascii_str_unchecked()) },
         }
     }
     #[inline]
@@ -644,7 +653,7 @@ mod tests {
 
     #[test]
     fn generic_as_ascii_str() {
-        fn generic<C:AsAsciiStr+?Sized>(c: &C) -> Result<&AsciiStr,AsAsciiStrError> {
+        fn generic<C: AsAsciiStr + ?Sized>(c: &C) -> Result<&AsciiStr, AsAsciiStrError> {
             c.as_ascii_str()
         }
         let arr = [AsciiChar::A];
@@ -696,7 +705,7 @@ mod tests {
 
     #[test]
     fn make_ascii_case() {
-        let mut bytes = ([b'a',b'@',b'A'], [b'A',b'@',b'a']);
+        let mut bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
         let mut a = bytes.0.as_mut_ascii_str().unwrap();
         let mut b = bytes.1.as_mut_ascii_str().unwrap();
         assert!(a.eq_ignore_ascii_case(b));
@@ -710,7 +719,7 @@ mod tests {
     #[test]
     #[cfg(features = "std")]
     fn to_ascii_case() {
-        let mut bytes = ([b'a',b'@',b'A'], [b'A',b'@',b'a']);
+        let mut bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
         let mut a = bytes.0.as_mut_ascii_str().unwrap();
         let mut b = bytes.1.as_mut_ascii_str().unwrap();
         assert_eq!(a.to_ascii_lowercase().as_str(), "a@a");

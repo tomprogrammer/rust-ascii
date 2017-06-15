@@ -19,11 +19,13 @@ use ascii_char::{AsciiChar, ToAsciiChar};
 pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     let c = c.into() ^ 0b0100_0000;
-    unsafe{ if c >= b'?'  &&  c <= b'_' {
-        Some(c.to_ascii_char_unchecked())
-    } else {
-        None
-    }}
+    unsafe {
+        if c >= b'?' && c <= b'_' {
+            Some(c.to_ascii_char_unchecked())
+        } else {
+            None
+        }
+    }
 }
 
 /// Returns the control code represented by a [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
@@ -51,8 +53,10 @@ pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
 /// ```
 pub fn caret_decode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
-    unsafe {match c.into() {
-        b'?'...b'_' => Some(AsciiChar::from_unchecked(c.into() ^ 0b0100_0000)),
-        _ => None,
-    }}
+    unsafe {
+        match c.into() {
+            b'?'...b'_' => Some(AsciiChar::from_unchecked(c.into() ^ 0b0100_0000)),
+            _ => None,
+        }
+    }
 }
