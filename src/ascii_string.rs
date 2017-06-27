@@ -445,6 +445,13 @@ impl AsRef<AsciiStr> for AsciiString {
     }
 }
 
+impl AsRef<[u8]> for AsciiString {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
 impl AsMut<AsciiStr> for AsciiString {
     #[inline]
     fn as_mut(&mut self) -> &mut AsciiStr {

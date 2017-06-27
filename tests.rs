@@ -33,7 +33,8 @@ fn into_ascii() {
     let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
     let v = AsciiString::from(arr.to_vec());
     assert_eq!(b"( ;".to_vec().into_ascii_string(), Ok(v.clone()));
-    assert_eq!("( ;".to_string().into_ascii_string(), Ok(v));
+    assert_eq!("( ;".to_string().into_ascii_string(), Ok(v.clone()));
+    assert_eq!(b"( ;", AsRef::<[u8]>::as_ref(&v));
 
     let err = "zoä华".to_string().into_ascii_string().unwrap_err();
     assert_eq!(Err(err.ascii_error()), "zoä华".as_ascii_str());
