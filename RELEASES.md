@@ -1,3 +1,7 @@
+Version 0.8.5 (2017-07-02)
+==========================
+* Implement `AsRef<u8> for AsciiString`.
+
 Version 0.8.4 (2017-04-18)
 ==========================
 * Fix the tests when running without std.
