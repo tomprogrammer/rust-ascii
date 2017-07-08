@@ -189,7 +189,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_left());
     /// ```
     pub fn trim_left(&self) -> &Self {
-        &self[self.slice.iter().take_while(|a| a.is_whitespace()).count()..]
+        &self[self.chars().take_while(|a| a.is_whitespace()).count()..]
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -201,8 +201,7 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_right());
     /// ```
     pub fn trim_right(&self) -> &Self {
-        let trimmed = self.slice
-            .into_iter()
+        let trimmed = self.chars()
             .rev()
             .take_while(|a| a.is_whitespace())
             .count();
@@ -215,7 +214,7 @@ impl AsciiStr {
     #[cfg(not(feature = "std"))]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-            self.slice.iter().zip(other.slice.iter()).all(|(a, b)| {
+            self.chars().zip(other.chars()).all(|(a, b)| {
                 a.eq_ignore_ascii_case(b)
             })
     }
@@ -225,7 +224,7 @@ impl AsciiStr {
     /// A replacement for `AsciiExt::make_ascii_uppercase()`.
     #[cfg(not(feature = "std"))]
     pub fn make_ascii_uppercase(&mut self) {
-        for a in &mut self.slice {
+        for a in &mut self {
             *a = a.to_ascii_uppercase();
         }
     }
@@ -235,7 +234,7 @@ impl AsciiStr {
     /// A replacement for `AsciiExt::make_ascii_lowercase()`.
     #[cfg(not(feature = "std"))]
     pub fn make_ascii_lowercase(&mut self) {
-        for a in &mut self.slice {
+        for a in &mut self {
             *a = a.to_ascii_lowercase();
         }
     }

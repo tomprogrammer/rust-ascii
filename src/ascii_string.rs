@@ -146,7 +146,7 @@ impl AsciiString {
     /// ```
     #[inline]
     pub fn push_str(&mut self, string: &AsciiStr) {
-        self.vec.extend(string.as_slice().iter().cloned())
+        self.vec.extend(string.chars().cloned())
     }
 
     /// Returns the number of bytes that this ASCII string buffer can hold without reallocating.
