@@ -224,7 +224,7 @@ impl AsciiStr {
     /// A replacement for `AsciiExt::make_ascii_uppercase()`.
     #[cfg(not(feature = "std"))]
     pub fn make_ascii_uppercase(&mut self) {
-        for a in &mut self {
+        for a in self.chars_mut() {
             *a = a.to_ascii_uppercase();
         }
     }
@@ -234,7 +234,7 @@ impl AsciiStr {
     /// A replacement for `AsciiExt::make_ascii_lowercase()`.
     #[cfg(not(feature = "std"))]
     pub fn make_ascii_lowercase(&mut self) {
-        for a in &mut self {
+        for a in self.chars_mut() {
             *a = a.to_ascii_lowercase();
         }
     }
@@ -428,19 +428,19 @@ impl AsciiExt for AsciiStr {
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
-            self.slice.iter().zip(other.slice.iter()).all(|(a, b)| {
+            self.chars().zip(other.chars()).all(|(a, b)| {
                 a.eq_ignore_ascii_case(b)
             })
     }
 
     fn make_ascii_uppercase(&mut self) {
-        for ascii in &mut self.slice {
+        for ascii in self.chars_mut() {
             ascii.make_ascii_uppercase();
         }
     }
 
     fn make_ascii_lowercase(&mut self) {
-        for ascii in &mut self.slice {
+        for ascii in self.chars_mut() {
             ascii.make_ascii_lowercase();
         }
     }
