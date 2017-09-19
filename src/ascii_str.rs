@@ -577,7 +577,7 @@ pub trait AsMutAsciiStr {
 }
 
 // These generic implementations mirror the generic implementations for AsRef<T> in core.
-impl<'a, T> AsAsciiStr for &'a T where T: AsAsciiStr + ?Sized {
+impl<'a, T: ?Sized> AsAsciiStr for &'a T where T: AsAsciiStr {
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         <T as AsAsciiStr>::as_ascii_str(*self)
@@ -589,7 +589,7 @@ impl<'a, T> AsAsciiStr for &'a T where T: AsAsciiStr + ?Sized {
     }
 }
 
-impl<'a, T> AsAsciiStr for &'a mut T where T: AsAsciiStr + ?Sized {
+impl<'a, T: ?Sized> AsAsciiStr for &'a mut T where T: AsAsciiStr {
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         <T as AsAsciiStr>::as_ascii_str(*self)
@@ -601,7 +601,7 @@ impl<'a, T> AsAsciiStr for &'a mut T where T: AsAsciiStr + ?Sized {
     }
 }
 
-impl<'a, T> AsMutAsciiStr for &'a mut T where T: AsMutAsciiStr + ?Sized {
+impl<'a, T: ?Sized> AsMutAsciiStr for &'a mut T where T: AsMutAsciiStr {
     #[inline]
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         <T as AsMutAsciiStr>::as_mut_ascii_str(*self)
