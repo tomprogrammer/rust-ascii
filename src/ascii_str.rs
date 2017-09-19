@@ -576,6 +576,43 @@ pub trait AsMutAsciiStr {
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError>;
 }
 
+// These generic implementations mirror the generic implementations for AsRef<T> in core.
+impl<'a, T> AsAsciiStr for &'a T where T: AsAsciiStr + ?Sized {
+    #[inline]
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        <T as AsAsciiStr>::as_ascii_str(*self)
+    }
+
+    #[inline]
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
+        <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
+    }
+}
+
+impl<'a, T> AsAsciiStr for &'a mut T where T: AsAsciiStr + ?Sized {
+    #[inline]
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        <T as AsAsciiStr>::as_ascii_str(*self)
+    }
+
+    #[inline]
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
+        <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
+    }
+}
+
+impl<'a, T> AsMutAsciiStr for &'a mut T where T: AsMutAsciiStr + ?Sized {
+    #[inline]
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
+        <T as AsMutAsciiStr>::as_mut_ascii_str(*self)
+    }
+
+    #[inline]
+    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
+        <T as AsMutAsciiStr>::as_mut_ascii_str_unchecked(*self)
+    }
+}
+
 impl AsAsciiStr for AsciiStr {
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
@@ -686,6 +723,26 @@ mod tests {
         assert_eq!(generic("A"), Ok(ascii_str));
         assert_eq!(generic(&b"A"[..]), Ok(ascii_str));
         assert_eq!(generic(ascii_str), Ok(ascii_str));
+        assert_eq!(generic(&"A"), Ok(ascii_str));
+        assert_eq!(generic(&ascii_str), Ok(ascii_str));
+        assert_eq!(generic(&mut "A"), Ok(ascii_str));
+    }
+
+    #[test]
+    fn generic_as_mut_ascii_str() {
+        fn generic_mut<C: AsMutAsciiStr + ?Sized>(
+            c: &mut C,
+        ) -> Result<&mut AsciiStr, AsAsciiStrError> {
+            c.as_mut_ascii_str()
+        }
+
+        let mut arr_mut = [AsciiChar::B];
+        let mut ascii_str_mut: &mut AsciiStr = arr_mut.as_mut().into();
+        // Need a second reference to prevent overlapping mutable borrows
+        let mut arr_mut_2 = [AsciiChar::B];
+        let mut ascii_str_mut_2: &mut AsciiStr = arr_mut_2.as_mut().into();
+        assert_eq!(generic_mut(&mut ascii_str_mut), Ok(&mut *ascii_str_mut_2));
+        assert_eq!(generic_mut(ascii_str_mut), Ok(&mut *ascii_str_mut_2));
     }
 
     #[test]
