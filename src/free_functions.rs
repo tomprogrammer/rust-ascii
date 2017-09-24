@@ -28,8 +28,10 @@ pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     }
 }
 
-/// Returns the control code represented by a [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
-/// letter, or `None` if the letter is not used in caret notation.
+/// Returns the control code represented by a [caret notation] letter, or `None` if the letter is
+/// not used in caret notation.
+///
+/// [caret notation]: https://en.wikipedia.org/wiki/Caret_notation
 ///
 /// This function is the inverse of `caret_encode()`.
 ///

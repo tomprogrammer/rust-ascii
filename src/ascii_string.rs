@@ -3,14 +3,14 @@ use std::borrow::Borrow;
 use std::error::Error;
 use std::any::Any;
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
+use std::ops::{Add, Deref, DerefMut, Index, IndexMut};
 use std::iter::FromIterator;
 
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
 use ascii_char::AsciiChar;
-use ascii_str::{AsciiStr, AsAsciiStr, AsAsciiStrError};
+use ascii_str::{AsAsciiStr, AsAsciiStrError, AsciiStr};
 
 /// A growable string stored as an ASCII encoded buffer.
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -42,7 +42,9 @@ impl AsciiString {
     /// ```
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
-        AsciiString { vec: Vec::with_capacity(capacity) }
+        AsciiString {
+            vec: Vec::with_capacity(capacity),
+        }
     }
 
     /// Creates a new `AsciiString` from a length, capacity and pointer.
@@ -81,7 +83,9 @@ impl AsciiString {
     /// ```
     #[inline]
     pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
-        AsciiString { vec: Vec::from_raw_parts(buf, length, capacity) }
+        AsciiString {
+            vec: Vec::from_raw_parts(buf, length, capacity),
+        }
     }
 
     /// Converts a vector of bytes to an `AsciiString` without checking for non-ASCII characters.
@@ -728,9 +732,11 @@ impl Arbitrary for AsciiString {
 
     fn shrink(&self) -> Box<Iterator<Item = Self>> {
         let chars: Vec<AsciiChar> = self.as_slice().to_vec();
-        Box::new(chars.shrink().map(
-            |x| x.into_iter().collect::<AsciiString>(),
-        ))
+        Box::new(
+            chars
+                .shrink()
+                .map(|x| x.into_iter().collect::<AsciiString>()),
+        )
     }
 }
 

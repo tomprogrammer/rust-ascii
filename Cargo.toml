@@ -1,11 +1,27 @@
 [package]
-authors = ["Thomas Bahn <thomas@thomas-bahn.net>", "Torbjørn Birch Moltu <t.b.moltu@lyse.net>", "Simon Sapin <simon.sapin@exyr.org>"]
+authors = [
+    "Thomas Bahn <thomas@thomas-bahn.net>",
+    "Torbjørn Birch Moltu <t.b.moltu@lyse.net>",
+    "Simon Sapin <simon.sapin@exyr.org>",
+]
 description = "ASCII-only equivalents to `char`, `str` and `String`."
 documentation = "https://tomprogrammer.github.io/rust-ascii/ascii/index.html"
 license = "Apache-2.0 / MIT"
 name = "ascii"
 repository = "https://github.com/tomprogrammer/rust-ascii"
 version = "0.8.6"
+
+[[test]]
+name = "tests"
+path = "tests.rs"
+
+[dependencies.libc]
+default-features = false
+version = "0.2.31"
+
+[dependencies.memchr]
+default-features = false
+version = "1.0.1"
 
 [dependencies.quickcheck]
 optional = true
@@ -14,7 +30,3 @@ version = "0.4.1"
 [features]
 default = ["std"]
 std = []
-
-[[test]]
-name = "tests"
-path = "tests.rs"

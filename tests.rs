@@ -1,6 +1,6 @@
 extern crate ascii;
 
-use ascii::{AsciiChar, AsciiStr, AsAsciiStr};
+use ascii::{AsAsciiStr, AsciiChar, AsciiStr};
 #[cfg(feature = "std")]
 use ascii::{AsciiString, IntoAsciiString};
 

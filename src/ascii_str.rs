@@ -1,5 +1,5 @@
 use core::{fmt, mem};
-use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+use core::ops::{Index, IndexMut, Range, RangeFrom, RangeFull, RangeTo};
 use core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -201,10 +201,7 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_right());
     /// ```
     pub fn trim_right(&self) -> &Self {
-        let trimmed = self.chars()
-            .rev()
-            .take_while(|a| a.is_whitespace())
-            .count();
+        let trimmed = self.chars().rev().take_while(|a| a.is_whitespace()).count();
         &self[..self.len() - trimmed]
     }
 
@@ -213,10 +210,10 @@ impl AsciiStr {
     /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
     #[cfg(not(feature = "std"))]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.len() == other.len() &&
-            self.chars().zip(other.chars()).all(|(a, b)| {
-                a.eq_ignore_ascii_case(b)
-            })
+        self.len() == other.len()
+            && self.chars()
+                .zip(other.chars())
+                .all(|(a, b)| a.eq_ignore_ascii_case(b))
     }
 
     /// Replaces lowercase letters with their uppercase equivalent.
@@ -427,10 +424,10 @@ impl AsciiExt for AsciiStr {
     }
 
     fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.len() == other.len() &&
-            self.chars().zip(other.chars()).all(|(a, b)| {
-                a.eq_ignore_ascii_case(b)
-            })
+        self.len() == other.len()
+            && self.chars()
+                .zip(other.chars())
+                .all(|(a, b)| a.eq_ignore_ascii_case(b))
     }
 
     fn make_ascii_uppercase(&mut self) {
@@ -577,7 +574,10 @@ pub trait AsMutAsciiStr {
 }
 
 // These generic implementations mirror the generic implementations for AsRef<T> in core.
-impl<'a, T: ?Sized> AsAsciiStr for &'a T where T: AsAsciiStr {
+impl<'a, T: ?Sized> AsAsciiStr for &'a T
+where
+    T: AsAsciiStr,
+{
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         <T as AsAsciiStr>::as_ascii_str(*self)
@@ -589,7 +589,10 @@ impl<'a, T: ?Sized> AsAsciiStr for &'a T where T: AsAsciiStr {
     }
 }
 
-impl<'a, T: ?Sized> AsAsciiStr for &'a mut T where T: AsAsciiStr {
+impl<'a, T: ?Sized> AsAsciiStr for &'a mut T
+where
+    T: AsAsciiStr,
+{
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         <T as AsAsciiStr>::as_ascii_str(*self)
@@ -601,7 +604,10 @@ impl<'a, T: ?Sized> AsAsciiStr for &'a mut T where T: AsAsciiStr {
     }
 }
 
-impl<'a, T: ?Sized> AsMutAsciiStr for &'a mut T where T: AsMutAsciiStr {
+impl<'a, T: ?Sized> AsMutAsciiStr for &'a mut T
+where
+    T: AsMutAsciiStr,
+{
     #[inline]
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         <T as AsMutAsciiStr>::as_mut_ascii_str(*self)
@@ -709,7 +715,7 @@ impl AsMutAsciiStr for str {
 #[cfg(test)]
 mod tests {
     use AsciiChar;
-    use super::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
+    use super::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
     #[cfg(feature = "std")]
     use std::ascii::AsciiExt;
 

@@ -11,8 +11,9 @@
 //! A library that provides ASCII-only string and character types, equivalent to the `char`, `str`
 //! and `String` types in the standard library.
 //!
-#![cfg_attr(feature = "std", doc="[The documentation for the `core` mode is here](https://tomprogrammer.github.io/rust-ascii/core/ascii/index.html).")]
-#![cfg_attr(not(feature = "std"), doc="This is the documentation for `core` mode.")]
+#![cfg_attr(feature = "std",
+           doc = "[The documentation for the `core` mode is here](https://tomprogrammer.github.io/rust-ascii/core/ascii/index.html).")]
+#![cfg_attr(not(feature = "std"), doc = "This is the documentation for `core` mode.")]
 //! Please refer to the readme file to learn about the different feature modes of this crate.
 //!
 //! # Requirements
@@ -32,6 +33,9 @@
 #[cfg(feature = "std")]
 extern crate core;
 
+#[cfg(feature = "std")]
+extern crate libc;
+extern crate memchr;
 #[cfg(feature = "quickcheck")]
 extern crate quickcheck;
 
@@ -41,8 +45,11 @@ mod ascii_str;
 #[cfg(feature = "std")]
 mod ascii_string;
 
-pub use free_functions::{caret_encode, caret_decode};
-pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
-pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError, Chars, CharsMut, Lines};
 #[cfg(feature = "std")]
-pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};
+pub mod ffi;
+
+pub use free_functions::{caret_decode, caret_encode};
+pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
+pub use ascii_str::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr, Chars, CharsMut, Lines};
+#[cfg(feature = "std")]
+pub use ascii_string::{AsciiString, FromAsciiError, IntoAsciiString};

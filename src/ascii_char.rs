@@ -3,7 +3,7 @@ use quickcheck::{Arbitrary, Gen};
 
 use core::mem;
 use core::cmp::Ordering;
-use core::{fmt, char};
+use core::{char, fmt};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
@@ -68,7 +68,8 @@ pub enum AsciiChar {
     NAK = 21,
     /// [Synchronous idle](http://en.wikipedia.org/wiki/Synchronous_Idle)
     SYN = 22,
-    /// [End of Transmission Block](http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
+    /// [End of Transmission Block]
+    /// (http://en.wikipedia.org/wiki/End-of-Transmission-Block_character)
     ETB = 23,
     /// [Cancel](http://en.wikipedia.org/wiki/Cancel_character)
     CAN = 24,
@@ -726,9 +727,11 @@ impl Arbitrary for AsciiChar {
     }
 
     fn shrink(&self) -> Box<Iterator<Item = Self>> {
-        Box::new((*self as u8).shrink().filter_map(
-            |x| AsciiChar::from(x).ok(),
-        ))
+        Box::new(
+            (*self as u8)
+                .shrink()
+                .filter_map(|x| AsciiChar::from(x).ok()),
+        )
     }
 }
 
