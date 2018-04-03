@@ -740,7 +740,7 @@ mod tests {
         let mut ascii_str_mut: &mut AsciiStr = arr_mut.as_mut().into();
         // Need a second reference to prevent overlapping mutable borrows
         let mut arr_mut_2 = [AsciiChar::B];
-        let mut ascii_str_mut_2: &mut AsciiStr = arr_mut_2.as_mut().into();
+        let ascii_str_mut_2: &mut AsciiStr = arr_mut_2.as_mut().into();
         assert_eq!(generic_mut(&mut ascii_str_mut), Ok(&mut *ascii_str_mut_2));
         assert_eq!(generic_mut(ascii_str_mut), Ok(&mut *ascii_str_mut_2));
     }
@@ -788,8 +788,8 @@ mod tests {
     #[test]
     fn make_ascii_case() {
         let mut bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
-        let mut a = bytes.0.as_mut_ascii_str().unwrap();
-        let mut b = bytes.1.as_mut_ascii_str().unwrap();
+        let a = bytes.0.as_mut_ascii_str().unwrap();
+        let b = bytes.1.as_mut_ascii_str().unwrap();
         assert!(a.eq_ignore_ascii_case(b));
         assert!(b.eq_ignore_ascii_case(a));
         a.make_ascii_lowercase();
@@ -799,13 +799,15 @@ mod tests {
     }
 
     #[test]
-    #[cfg(features = "std")]
+    #[cfg(feature = "std")]
     fn to_ascii_case() {
-        let mut bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
-        let mut a = bytes.0.as_mut_ascii_str().unwrap();
-        let mut b = bytes.1.as_mut_ascii_str().unwrap();
+        let bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
+        let a = bytes.0.as_ascii_str().unwrap();
+        let b = bytes.1.as_ascii_str().unwrap();
         assert_eq!(a.to_ascii_lowercase().as_str(), "a@a");
         assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
+        assert_eq!(b.to_ascii_lowercase().as_str(), "a@a");
+        assert_eq!(b.to_ascii_uppercase().as_str(), "A@A");
     }
 
     #[test]
@@ -819,8 +821,8 @@ mod tests {
 
     #[test]
     fn chars_iter_mut() {
-        let mut chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
-        let mut ascii = chars.as_mut_ascii_str().unwrap();
+        let chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
+        let ascii = chars.as_mut_ascii_str().unwrap();
 
         *ascii.chars_mut().next().unwrap() = AsciiChar::H;
 
