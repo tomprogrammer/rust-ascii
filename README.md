@@ -18,12 +18,8 @@ ascii = "0.8"
 Most of `AsciiChar` and `AsciiStr` can be used without `std` by disabling the
 default features. The owned string type `AsciiString` and the conversion trait
 `IntoAsciiString` as well as all methods referring to these types are
-unavailable. Because libcore doesn't have `AsciiExt` and `Error`, most of their
-methods are implemented directly:
-* `Ascii{Char,Str}::eq_ignore_ascii_case()`
-* `AsciiChar::to_ascii_{upper,lower}case()`
-* `AsciiStr::make_ascii_{upper,lower}case()`
-* `{ToAsciiChar,AsAsciiStr}Error::description()`
+unavailable. The `Error` trait is also unavailable, but `description()` is made
+available as an inherent method for `ToAsciiCharError` and `AsAsciiStrError`.
 
 To use the `ascii` crate in `core`-only mode in your cargo project just add the
 following dependency declaration in `Cargo.toml`:

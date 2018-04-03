@@ -1,3 +1,7 @@
+// #[allow(deprecated)] doesn't silence warnings on the method invocations,
+// which would call the inherent methods if AsciiExt wasn't in scope.
+#![cfg_attr(feature = "std", allow(deprecated))]
+
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
@@ -476,10 +480,17 @@ impl AsciiChar {
         }
     }
 
-    #[cfg(not(feature = "std"))]
+    /// Replaces letters `a` to `z` with `A` to `Z`
+    pub fn make_ascii_uppercase(&mut self) {
+        *self = self.to_ascii_uppercase()
+    }
+
+    /// Replaces letters `A` to `Z` with `a` to `z`
+    pub fn make_ascii_lowercase(&mut self) {
+        *self = self.to_ascii_lowercase()
+    }
+
     /// Maps letters `a`...`z` to `A`...`Z` and returns everything else unchanged.
-    ///
-    /// A replacement for `AsciiExt::to_ascii_uppercase()`.
     #[inline]
     pub fn to_ascii_uppercase(&self) -> Self {
         unsafe {
@@ -490,10 +501,7 @@ impl AsciiChar {
         }
     }
 
-    #[cfg(not(feature = "std"))]
     /// Maps letters `A`...`Z` to `a`...`z` and returns everything else unchanged.
-    ///
-    /// A replacement for `AsciiExt::to_ascii_lowercase()`.
     #[inline]
     pub fn to_ascii_lowercase(&self) -> Self {
         unsafe {
@@ -504,10 +512,7 @@ impl AsciiChar {
         }
     }
 
-    #[cfg(not(feature = "std"))]
     /// Compares two characters case-insensitively.
-    ///
-    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.to_ascii_lowercase() == other.to_ascii_lowercase()
     }
@@ -736,8 +741,6 @@ impl Arbitrary for AsciiChar {
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
     use AsciiChar::*;
-    #[cfg(feature = "std")]
-    use std::ascii::AsciiExt;
 
     #[test]
     fn to_ascii_char() {
@@ -793,6 +796,28 @@ mod tests {
         assert!(z.eq_ignore_ascii_case(&Z));
         assert!(Z.eq_ignore_ascii_case(&z));
         assert!(!Z.eq_ignore_ascii_case(&DEL));
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn ascii_ext() {
+        #[allow(deprecated)]
+        use std::ascii::AsciiExt;
+        assert!(AsciiExt::is_ascii(&Null));
+        assert!(AsciiExt::is_ascii(&DEL));
+        assert!(AsciiExt::eq_ignore_ascii_case(&a, &A));
+        assert!(!AsciiExt::eq_ignore_ascii_case(&A, &At));
+        assert_eq!(AsciiExt::to_ascii_lowercase(&A), a);
+        assert_eq!(AsciiExt::to_ascii_uppercase(&A), A);
+        assert_eq!(AsciiExt::to_ascii_lowercase(&a), a);
+        assert_eq!(AsciiExt::to_ascii_uppercase(&a), A);
+        assert_eq!(AsciiExt::to_ascii_lowercase(&At), At);
+        assert_eq!(AsciiExt::to_ascii_uppercase(&At), At);
+        let mut mutable = (A,a);
+        AsciiExt::make_ascii_lowercase(&mut mutable.0);
+        AsciiExt::make_ascii_uppercase(&mut mutable.1);
+        assert_eq!(mutable.0, a);
+        assert_eq!(mutable.1, A);
     }
 
     #[test]

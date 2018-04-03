@@ -1,3 +1,7 @@
+// #[allow(deprecated)] doesn't silence warnings on the method invocations,
+// which would call the inherent methods if AsciiExt wasn't in scope.
+#![cfg_attr(feature = "std", allow(deprecated))]
+
 use core::{fmt, mem};
 use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 use core::slice::{Iter, IterMut};
@@ -209,9 +213,6 @@ impl AsciiStr {
     }
 
     /// Compares two strings case-insensitively.
-    ///
-    /// A replacement for `AsciiExt::eq_ignore_ascii_case()`.
-    #[cfg(not(feature = "std"))]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
             self.chars().zip(other.chars()).all(|(a, b)| {
@@ -220,9 +221,6 @@ impl AsciiStr {
     }
 
     /// Replaces lowercase letters with their uppercase equivalent.
-    ///
-    /// A replacement for `AsciiExt::make_ascii_uppercase()`.
-    #[cfg(not(feature = "std"))]
     pub fn make_ascii_uppercase(&mut self) {
         for a in self.chars_mut() {
             *a = a.to_ascii_uppercase();
@@ -230,13 +228,26 @@ impl AsciiStr {
     }
 
     /// Replaces uppercase letters with their lowercase equivalent.
-    ///
-    /// A replacement for `AsciiExt::make_ascii_lowercase()`.
-    #[cfg(not(feature = "std"))]
     pub fn make_ascii_lowercase(&mut self) {
         for a in self.chars_mut() {
             *a = a.to_ascii_lowercase();
         }
+    }
+
+    /// Returns a copy of this string where letters 'a' to 'z' are mapped to 'A' to 'Z'.
+    #[cfg(feature="std")]
+    pub fn to_ascii_uppercase(&self) -> AsciiString {
+        let mut ascii_string = self.to_ascii_string();
+        ascii_string.make_ascii_uppercase();
+        ascii_string
+    }
+
+    /// Returns a copy of this string where letters 'A' to 'Z' are mapped to 'a' to 'z'.
+    #[cfg(feature="std")]
+    pub fn to_ascii_lowercase(&self) -> AsciiString {
+        let mut ascii_string = self.to_ascii_string();
+        ascii_string.make_ascii_lowercase();
+        ascii_string
     }
 }
 
@@ -710,8 +721,6 @@ impl AsMutAsciiStr for str {
 mod tests {
     use AsciiChar;
     use super::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
-    #[cfg(feature = "std")]
-    use std::ascii::AsciiExt;
 
     #[test]
     fn generic_as_ascii_str() {
@@ -808,6 +817,25 @@ mod tests {
         assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
         assert_eq!(b.to_ascii_lowercase().as_str(), "a@a");
         assert_eq!(b.to_ascii_uppercase().as_str(), "A@A");
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn ascii_ext() {
+        #[allow(deprecated)]
+        use std::ascii::AsciiExt;
+        assert!(AsciiExt::is_ascii(<&AsciiStr>::default()));
+        let mut mutable = String::from("a@AA@a");
+        let parts = mutable.split_at_mut(3);
+        let a = parts.0.as_mut_ascii_str().unwrap();
+        let b = parts.1.as_mut_ascii_str().unwrap();
+        assert!(AsciiExt::eq_ignore_ascii_case(a, b));
+        assert_eq!(AsciiExt::to_ascii_lowercase(a).as_str(), "a@a");
+        assert_eq!(AsciiExt::to_ascii_uppercase(b).as_str(), "A@A");
+        AsciiExt::make_ascii_uppercase(a);
+        AsciiExt::make_ascii_lowercase(b);
+        assert_eq!(a, "A@A");
+        assert_eq!(b, "a@a");
     }
 
     #[test]
