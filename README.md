@@ -31,7 +31,7 @@ ascii = { version = "0.8", default-features = false }
 # Requirements
 
 The minimum supported Rust version is 1.9.0.
-Enabling the quickcheck integration requires Rust 1.20.0.
+Enabling the quickcheck integration requires Rust 1.12.0.
 
 # History
 
