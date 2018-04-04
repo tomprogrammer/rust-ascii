@@ -1,16 +1,10 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
-// #[allow(deprecated)] doesn't silence warnings on the method invocations,
-// which would call the inherent methods if AsciiExt wasn't in scope.
-#![cfg_attr(feature = "std", allow(deprecated))]
-
 use core::mem;
 use core::cmp::Ordering;
 use core::{fmt, char};
 #[cfg(feature = "std")]
 use std::error::Error;
-#[cfg(feature = "std")]
-use std::ascii::AsciiExt;
 
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
@@ -531,48 +525,6 @@ impl fmt::Debug for AsciiChar {
     }
 }
 
-#[cfg(feature = "std")]
-impl AsciiExt for AsciiChar {
-    type Owned = AsciiChar;
-
-    #[inline]
-    fn is_ascii(&self) -> bool {
-        true
-    }
-
-    #[inline]
-    fn to_ascii_uppercase(&self) -> AsciiChar {
-        unsafe {
-            self.as_byte()
-                .to_ascii_uppercase()
-                .to_ascii_char_unchecked()
-        }
-    }
-
-    #[inline]
-    fn to_ascii_lowercase(&self) -> AsciiChar {
-        unsafe {
-            self.as_byte()
-                .to_ascii_lowercase()
-                .to_ascii_char_unchecked()
-        }
-    }
-
-    fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.as_byte().eq_ignore_ascii_case(&other.as_byte())
-    }
-
-    #[inline]
-    fn make_ascii_uppercase(&mut self) {
-        *self = self.to_ascii_uppercase();
-    }
-
-    #[inline]
-    fn make_ascii_lowercase(&mut self) {
-        *self = self.to_ascii_lowercase();
-    }
-}
-
 impl Default for AsciiChar {
     fn default() -> AsciiChar {
         AsciiChar::Null
@@ -781,33 +733,17 @@ mod tests {
         assert_eq!(a.to_ascii_lowercase(), a);
         assert_eq!(a.to_ascii_uppercase(), A);
 
+        let mut mutable = (A,a);
+        mutable.0.make_ascii_lowercase();
+        mutable.1.make_ascii_uppercase();
+        assert_eq!(mutable.0, a);
+        assert_eq!(mutable.1, A);
+
         assert!(LineFeed.eq_ignore_ascii_case(&LineFeed));
         assert!(!LineFeed.eq_ignore_ascii_case(&CarriageReturn));
         assert!(z.eq_ignore_ascii_case(&Z));
         assert!(Z.eq_ignore_ascii_case(&z));
         assert!(!Z.eq_ignore_ascii_case(&DEL));
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn ascii_ext() {
-        #[allow(deprecated)]
-        use std::ascii::AsciiExt;
-        assert!(AsciiExt::is_ascii(&Null));
-        assert!(AsciiExt::is_ascii(&DEL));
-        assert!(AsciiExt::eq_ignore_ascii_case(&a, &A));
-        assert!(!AsciiExt::eq_ignore_ascii_case(&A, &At));
-        assert_eq!(AsciiExt::to_ascii_lowercase(&A), a);
-        assert_eq!(AsciiExt::to_ascii_uppercase(&A), A);
-        assert_eq!(AsciiExt::to_ascii_lowercase(&a), a);
-        assert_eq!(AsciiExt::to_ascii_uppercase(&a), A);
-        assert_eq!(AsciiExt::to_ascii_lowercase(&At), At);
-        assert_eq!(AsciiExt::to_ascii_uppercase(&At), At);
-        let mut mutable = (A,a);
-        AsciiExt::make_ascii_lowercase(&mut mutable.0);
-        AsciiExt::make_ascii_uppercase(&mut mutable.1);
-        assert_eq!(mutable.0, a);
-        assert_eq!(mutable.1, A);
     }
 
     #[test]

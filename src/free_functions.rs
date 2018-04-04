@@ -2,8 +2,6 @@
 
 use ascii_char::{AsciiChar, ToAsciiChar};
 
-// I would like to require C: AsciiExt, but it's not in core.
-
 /// Terminals use [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
 /// to display some typed control codes, such as ^D for EOT and ^Z for SUB.
 ///

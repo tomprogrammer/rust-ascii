@@ -1,16 +1,10 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
-// #[allow(deprecated)] doesn't silence warnings on the method invocations,
-// which would call the inherent methods if AsciiExt wasn't in scope.
-#![cfg_attr(feature = "std", allow(deprecated))]
-
 use core::fmt;
 use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 use core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
-#[cfg(feature = "std")]
-use std::ascii::AsciiExt;
 #[cfg(feature = "std")]
 use std::ffi::CStr;
 
@@ -476,47 +470,6 @@ impl IndexMut<usize> for AsciiStr {
     }
 }
 
-#[cfg(feature = "std")]
-impl AsciiExt for AsciiStr {
-    type Owned = AsciiString;
-
-    #[inline]
-    fn is_ascii(&self) -> bool {
-        true
-    }
-
-    fn to_ascii_uppercase(&self) -> AsciiString {
-        let mut ascii_string = self.to_ascii_string();
-        ascii_string.make_ascii_uppercase();
-        ascii_string
-    }
-
-    fn to_ascii_lowercase(&self) -> AsciiString {
-        let mut ascii_string = self.to_ascii_string();
-        ascii_string.make_ascii_lowercase();
-        ascii_string
-    }
-
-    fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.len() == other.len() &&
-            self.chars().zip(other.chars()).all(|(a, b)| {
-                a.eq_ignore_ascii_case(b)
-            })
-    }
-
-    fn make_ascii_uppercase(&mut self) {
-        for ascii in self.chars_mut() {
-            ascii.make_ascii_uppercase();
-        }
-    }
-
-    fn make_ascii_lowercase(&mut self) {
-        for ascii in self.chars_mut() {
-            ascii.make_ascii_lowercase();
-        }
-    }
-}
-
 impl<'a> IntoIterator for &'a AsciiStr {
     type Item = &'a AsciiChar;
     type IntoIter = Chars<'a>;
@@ -943,25 +896,6 @@ mod tests {
         assert_eq!(a.to_ascii_uppercase().as_str(), "A@A");
         assert_eq!(b.to_ascii_lowercase().as_str(), "a@a");
         assert_eq!(b.to_ascii_uppercase().as_str(), "A@A");
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn ascii_ext() {
-        #[allow(deprecated)]
-        use std::ascii::AsciiExt;
-        assert!(AsciiExt::is_ascii(<&AsciiStr>::default()));
-        let mut mutable = String::from("a@AA@a");
-        let parts = mutable.split_at_mut(3);
-        let a = parts.0.as_mut_ascii_str().unwrap();
-        let b = parts.1.as_mut_ascii_str().unwrap();
-        assert!(AsciiExt::eq_ignore_ascii_case(a, b));
-        assert_eq!(AsciiExt::to_ascii_lowercase(a).as_str(), "a@a");
-        assert_eq!(AsciiExt::to_ascii_uppercase(b).as_str(), "A@A");
-        AsciiExt::make_ascii_uppercase(a);
-        AsciiExt::make_ascii_lowercase(b);
-        assert_eq!(a, "A@A");
-        assert_eq!(b, "a@a");
     }
 
     #[test]
