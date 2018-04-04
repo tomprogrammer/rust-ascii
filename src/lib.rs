@@ -17,9 +17,8 @@
 //!
 //! # Requirements
 //!
-//! The `ascii` library requires rustc 1.9.0 or greater, due to the [stabilization of
-//! `AsciiExt`](https://github.com/rust-lang/rust/pull/32804). Using only `core` instead of `std` in
-//! your project lowers this requirement to rustc 1.6.0 or greater.
+//! The minimum supported Rust version is 1.9.0.
+//! Enabling the quickcheck integration requires Rust 1.12.0.
 //!
 //! # History
 //!
