@@ -1,3 +1,10 @@
+Version 0.8.7 (2018-04-04)
+==========================
+* Implement `AsAsciiStr` and `AsMutAsciiStr` for references to to types that implement them.
+* Make all methods of deprecated `AsciiExt` except `is_ascii()` available as inherent methods in std-mode.
+* Compile without warnings on Rust 1.26.0
+* Acknowledge that the crate doesn't compile on Rust < 1.8.0 (cannot be fixed without breaking changes).
+
 Version 0.8.6 (2017-07-02)
 ==========================
 * Implement `AsRef<u8> for AsciiString`.
