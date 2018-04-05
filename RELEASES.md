@@ -1,3 +1,7 @@
+Version 0.9.0 (2018-04-05)
+==========================
+* Update the optional `quickcheck` feature to version 0.6.
+
 Version 0.8.7 (2018-04-04)
 ==========================
 * Implement `AsAsciiStr` and `AsMutAsciiStr` for references to to types that implement them.
