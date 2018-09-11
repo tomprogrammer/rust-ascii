@@ -1,3 +1,8 @@
+Version 0.10.0 (TBD)
+==========================
+* Implement the `serde::Serialize` and `serde::Deserialize` traits for `AsciiChar` and `AsciiString`.
+  The implementation is enabled by the `serde` feature.
+
 Version 0.9.0 (2018-04-05)
 ==========================
 * Update the optional `quickcheck` feature to version 0.6.

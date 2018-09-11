@@ -18,6 +18,7 @@ use std::ascii::AsciiExt;
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AsciiChar {
     /// `'\0'`
@@ -829,5 +830,21 @@ mod tests {
         assert_eq!(format!("{:?}", t), "'t'");
         assert_eq!(format!("{}", LineFeed), "\n");
         assert_eq!(format!("{:?}", LineFeed), "'\\n'");
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize() {
+        use serde;
+        fn assert_serialize<T: serde::Serialize>() {}
+        assert_serialize::<AsciiChar>();
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize() {
+        use serde;
+        fn assert_deserialize<'de, T: serde::Deserialize<'de>>() {}
+        assert_deserialize::<AsciiChar>();
     }
 }

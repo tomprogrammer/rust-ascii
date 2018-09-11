@@ -20,7 +20,8 @@
 //! # Requirements
 //!
 //! The minimum supported Rust version is 1.9.0.
-//! Enabling the quickcheck integration requires Rust 1.12.0.
+//! Enabling the quickcheck feature requires Rust 1.12.0.
+//! Enabling the serde feature requires Rust 1.13.0.
 //!
 //! # History
 //!
@@ -35,6 +36,10 @@ extern crate core;
 
 #[cfg(feature = "quickcheck")]
 extern crate quickcheck;
+
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
 
 mod free_functions;
 mod ascii_char;
