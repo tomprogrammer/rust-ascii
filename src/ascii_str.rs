@@ -1,3 +1,5 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 // #[allow(deprecated)] doesn't silence warnings on the method invocations,
 // which would call the inherent methods if AsciiExt wasn't in scope.
 #![cfg_attr(feature = "std", allow(deprecated))]
