@@ -1,4 +1,4 @@
-Version 0.10.0 (TBD)
+Version 0.9.1 (TBD)
 ==========================
 * Implement the `serde::Serialize` and `serde::Deserialize` traits for `AsciiChar` and `AsciiString`.
   The implementation is enabled by the `serde` feature.

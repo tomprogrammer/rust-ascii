@@ -10,7 +10,7 @@ You can include this crate in your cargo project by adding it to the
 dependencies section in `Cargo.toml`:
 ```toml
 [dependencies]
-ascii = "0.8"
+ascii = "0.9"
 ```
 
 # Using ascii without libstd
@@ -25,7 +25,7 @@ To use the `ascii` crate in `core`-only mode in your cargo project just add the
 following dependency declaration in `Cargo.toml`:
 ```toml
 [dependencies]
-ascii = { version = "0.8", default-features = false }
+ascii = { version = "0.9", default-features = false }
 ```
 
 # Requirements
