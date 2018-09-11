@@ -1,3 +1,5 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 extern crate ascii;
 
 use ascii::{AsciiChar, AsciiStr, AsAsciiStr};

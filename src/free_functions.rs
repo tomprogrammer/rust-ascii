@@ -1,3 +1,5 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 use ascii_char::{AsciiChar, ToAsciiChar};
 
 // I would like to require C: AsciiExt, but it's not in core.

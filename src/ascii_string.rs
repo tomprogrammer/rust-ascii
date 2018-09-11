@@ -1,3 +1,5 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 use std::{fmt, mem};
 use std::borrow::Borrow;
 use std::error::Error;
