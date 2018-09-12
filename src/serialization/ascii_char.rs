@@ -28,10 +28,11 @@ impl<'de> Visitor<'de> for AsciiCharVisitor {
 
     #[inline]
     fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
-        let mut iter = v.chars();
-        match (iter.next(), iter.next()) {
-            (Some(c), None) => self.visit_char(c),
-            _ => Err(Error::invalid_value(Unexpected::Str(v), &self)),
+        if v.len() == 1 {
+            let c = v.chars().next().unwrap();
+            self.visit_char(c)
+        } else {
+            Err(Error::invalid_value(Unexpected::Str(v), &self))
         }
     }
 }
