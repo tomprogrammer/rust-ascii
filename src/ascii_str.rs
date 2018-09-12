@@ -167,7 +167,6 @@ impl AsciiStr {
     #[inline]
     pub fn lines(&self) -> Lines {
         Lines {
-            current_index: 0,
             string: self,
         }
     }
@@ -484,52 +483,36 @@ pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
 /// An iterator over the lines of the internal character array.
 #[derive(Clone, Debug)]
 pub struct Lines<'a> {
-    current_index: usize,
     string: &'a AsciiStr,
 }
 
 impl<'a> Iterator for Lines<'a> {
     type Item = &'a AsciiStr;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let curr_idx = self.current_index;
-        let len = self.string.len();
-        if curr_idx >= len {
+    fn next(&mut self) -> Option<&'a AsciiStr> {
+        if self.string.is_empty() {
             return None;
         }
 
-        let mut next_idx = None;
-        let mut linebreak_skip = 0;
-
-        for i in curr_idx..(len - 1) {
-            match (self.string[i], self.string[i + 1]) {
-                (AsciiChar::CarriageReturn, AsciiChar::LineFeed) => {
-                    next_idx = Some(i);
-                    linebreak_skip = 2;
-                    break;
-                }
-                (AsciiChar::LineFeed, _) => {
-                    next_idx = Some(i);
-                    linebreak_skip = 1;
-                    break;
-                }
-                _ => {}
-            }
-        }
-
-        let next_idx = match next_idx {
-            Some(i) => i,
-            None => return None,
-        };
-        let line = &self.string[curr_idx..next_idx];
-
-        self.current_index = next_idx + linebreak_skip;
-
-        if line.is_empty() && self.current_index == self.string.len() {
-            // This is a trailing line break
-            None
-        } else {
+        if let Some(idx) = self.string
+            .chars()
+            .position(|&chr| chr == AsciiChar::LineFeed)
+        {
+            let line = if idx > 0 && self.string[idx - 1] == AsciiChar::CarriageReturn {
+                &self.string[..idx - 1]
+            } else {
+                &self.string[..idx]
+            };
+            self.string = &self.string[idx + 1..];
             Some(line)
+        } else {
+            if !self.string.is_empty() {
+                let line = self.string;
+                self.string = &self.string[..0];
+                Some(line)
+            } else {
+                None
+            }
         }
     }
 }
@@ -569,7 +552,6 @@ impl Error for AsAsciiStrError {
         ERRORMSG_STR
     }
 }
-
 
 /// Convert slices of bytes to `AsciiStr`.
 pub trait AsAsciiStr {
@@ -860,8 +842,16 @@ mod tests {
     #[test]
     fn lines_iter() {
         use core::iter::Iterator;
-        let lines: [&str; 3] = ["great work", "cool beans", "awesome stuff"];
-        let joined = "great work\ncool beans\r\nawesome stuff\n";
+
+        let lines: [&str; 4] = ["foo", "bar", "", "baz"];
+        let joined = "foo\r\nbar\n\nbaz\n";
+        let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
+        for (asciiline, line) in ascii.lines().zip(&lines) {
+            assert_eq!(asciiline, *line);
+        }
+
+        let lines: [&str; 4] = ["foo", "bar", "", "baz"];
+        let joined = "foo\r\nbar\n\nbaz";
         let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
         for (asciiline, line) in ascii.lines().zip(&lines) {
             assert_eq!(asciiline, *line);
@@ -869,18 +859,18 @@ mod tests {
 
         let trailing_line_break = b"\n";
         let ascii = AsciiStr::from_ascii(&trailing_line_break).unwrap();
-        for _ in ascii.lines() {
-            unreachable!();
-        }
+        let mut line_iter = ascii.lines();
+        assert_eq!(line_iter.next(), Some(AsciiStr::from_ascii("").unwrap()));
+        assert_eq!(line_iter.next(), None);
 
         let empty_lines = b"\n\r\n\n\r\n";
-        let mut ensure_iterated = false;
+        let mut iter_count = 0;
         let ascii = AsciiStr::from_ascii(&empty_lines).unwrap();
         for line in ascii.lines() {
-            ensure_iterated = true;
+            iter_count += 1;
             assert!(line.is_empty());
         }
-        assert!(ensure_iterated);
+        assert_eq!(4, iter_count);
     }
 
     #[test]
