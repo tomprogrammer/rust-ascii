@@ -1,7 +1,9 @@
-Version 0.9.1 (TBD)
+Version 0.9.1 (2018-09-12)
 ==========================
 * Implement the `serde::Serialize` and `serde::Deserialize` traits for `AsciiChar`, `AsciiStr`, and `AsciiString`.
   The implementation is enabled by the `serde` feature.
+* **Bugfix**: `AsciiStr::lines()` now behaves similar to `str::lines()`.
+  ([#51](https://github.com/tomprogrammer/rust-ascii/issues/51))
 
 Version 0.9.0 (2018-04-05)
 ==========================
