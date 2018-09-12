@@ -19,9 +19,9 @@
 //!
 //! # Requirements
 //!
-//! The minimum supported Rust version is 1.9.0.
-//! Enabling the quickcheck feature requires Rust 1.12.0.
-//! Enabling the serde feature requires Rust 1.13.0.
+//! - The minimum supported Rust version is 1.9.0
+//! - Enabling the quickcheck feature requires Rust 1.12.0
+//! - Enabling the serde feature requires Rust 1.13.0
 //!
 //! # History
 //!
@@ -38,17 +38,21 @@ extern crate core;
 extern crate quickcheck;
 
 #[cfg(feature = "serde")]
-#[macro_use]
 extern crate serde;
 
-mod free_functions;
+#[cfg(all(test, feature = "serde_test"))]
+extern crate serde_test;
+
 mod ascii_char;
 mod ascii_str;
 #[cfg(feature = "std")]
 mod ascii_string;
+mod free_functions;
+#[cfg(feature = "serde")]
+mod serialization;
 
-pub use free_functions::{caret_encode, caret_decode};
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError, Chars, CharsMut, Lines};
 #[cfg(feature = "std")]
 pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};
+pub use free_functions::{caret_encode, caret_decode};
