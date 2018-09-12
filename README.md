@@ -30,9 +30,9 @@ ascii = { version = "0.9", default-features = false }
 
 # Requirements
 
-The minimum supported Rust version is 1.9.0.
-Enabling the quickcheck feature requires Rust 1.12.0.
-Enabling the serde feature requires Rust 1.13.0.
+- The minimum supported Rust version is 1.9.0
+- Enabling the quickcheck feature requires Rust 1.12.0
+- Enabling the serde feature requires Rust 1.13.0
 
 # History
 

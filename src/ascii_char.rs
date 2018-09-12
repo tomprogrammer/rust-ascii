@@ -18,7 +18,6 @@ use std::ascii::AsciiExt;
 #[allow(non_camel_case_types)]
 /// An ASCII character. It wraps a `u8`, with the highest bit always zero.
 #[derive(Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AsciiChar {
     /// `'\0'`
