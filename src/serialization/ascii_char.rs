@@ -45,24 +45,37 @@ impl<'de> Deserialize<'de> for AsciiChar {
     }
 }
 
-#[cfg(all(test, feature = "serde_test"))]
+#[cfg(test)]
 mod tests {
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
-
     use super::*;
 
+    #[cfg(feature = "serde_test")]
     const ASCII_CHAR: char = 'e';
+    #[cfg(feature = "serde_test")]
     const ASCII_STR: &str = "e";
+    #[cfg(feature = "serde_test")]
     const UNICODE_CHAR: char = 'é';
 
     #[test]
+    fn basic() {
+        fn assert_serialize<T: Serialize>() {}
+        assert_serialize::<AsciiChar>();
+        fn assert_deserialize<'de, T: Deserialize<'de>>() {}
+        assert_deserialize::<AsciiChar>();
+    }
+
+    #[test]
+    #[cfg(feature = "serde_test")]
     fn serialize() {
+        use serde_test::{assert_tokens, Token};
         let ascii_char = AsciiChar::from(ASCII_CHAR).unwrap();
         assert_tokens(&ascii_char, &[Token::Char(ASCII_CHAR)]);
     }
 
     #[test]
+    #[cfg(feature = "serde_test")]
     fn deserialize() {
+        use serde_test::{assert_de_tokens, assert_de_tokens_error, Token};
         let ascii_char = AsciiChar::from(ASCII_CHAR).unwrap();
         assert_de_tokens(&ascii_char, &[Token::String(ASCII_STR)]);
         assert_de_tokens(&ascii_char, &[Token::Str(ASCII_STR)]);

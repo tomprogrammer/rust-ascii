@@ -40,23 +40,35 @@ impl<'de: 'a, 'a> Deserialize<'de> for &'a AsciiStr {
     }
 }
 
-#[cfg(all(test, feature = "serde_test"))]
+#[cfg(test)]
 mod tests {
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
-
     use super::*;
 
+    #[cfg(feature = "serde_test")]
     const ASCII: &str = "Francais";
+    #[cfg(feature = "serde_test")]
     const UNICODE: &str = "Français";
 
     #[test]
+    fn basic() {
+        fn assert_serialize<T: Serialize>() {}
+        assert_serialize::<&AsciiStr>();
+        fn assert_deserialize<'de, T: Deserialize<'de>>() {}
+        assert_deserialize::<&AsciiStr>();
+    }
+
+    #[test]
+    #[cfg(feature = "serde_test")]
     fn serialize() {
+        use serde_test::{assert_tokens, Token};
         let ascii_str = AsciiStr::from_ascii(ASCII).unwrap();
         assert_tokens(&ascii_str, &[Token::BorrowedStr(ASCII)]);
     }
 
     #[test]
+    #[cfg(feature = "serde_test")]
     fn deserialize() {
+        use serde_test::{assert_de_tokens, assert_de_tokens_error, Token};
         let ascii_str = AsciiStr::from_ascii(ASCII).unwrap();
         assert_de_tokens(&ascii_str, &[Token::BorrowedBytes(ASCII.as_bytes())]);
         assert_de_tokens_error::<&AsciiStr>(

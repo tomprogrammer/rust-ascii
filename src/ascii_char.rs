@@ -831,19 +831,4 @@ mod tests {
         assert_eq!(format!("{:?}", LineFeed), "'\\n'");
     }
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn serialize() {
-        use serde;
-        fn assert_serialize<T: serde::Serialize>() {}
-        assert_serialize::<AsciiChar>();
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn deserialize() {
-        use serde;
-        fn assert_deserialize<'de, T: serde::Deserialize<'de>>() {}
-        assert_deserialize::<AsciiChar>();
-    }
 }

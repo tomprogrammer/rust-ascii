@@ -105,17 +105,28 @@ impl<'de> Deserialize<'de> for AsciiString {
     }
 }
 
-#[cfg(all(test, feature = "serde_test"))]
+#[cfg(test)]
 mod tests {
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
-
     use super::*;
 
+    #[cfg(feature = "serde_test")]
     const ASCII: &str = "Francais";
+    #[cfg(feature = "serde_test")]
     const UNICODE: &str = "Français";
 
     #[test]
+    fn basic() {
+        fn assert_serialize<T: Serialize>() {}
+        assert_serialize::<AsciiString>();
+        fn assert_deserialize<'de, T: Deserialize<'de>>() {}
+        assert_deserialize::<AsciiString>();
+    }
+
+    #[test]
+    #[cfg(feature = "serde_test")]
     fn serialize() {
+        use serde_test::{assert_tokens, Token};
+
         let ascii_string = AsciiString::from_ascii(ASCII).unwrap();
         assert_tokens(&ascii_string, &[Token::String(ASCII)]);
         assert_tokens(&ascii_string, &[Token::Str(ASCII)]);
@@ -123,7 +134,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde_test")]
     fn deserialize() {
+        use serde_test::{assert_de_tokens, assert_de_tokens_error, Token};
         let ascii_string = AsciiString::from_ascii(ASCII).unwrap();
         assert_de_tokens(&ascii_string, &[Token::Bytes(ASCII.as_bytes())]);
         assert_de_tokens(&ascii_string, &[Token::BorrowedBytes(ASCII.as_bytes())]);

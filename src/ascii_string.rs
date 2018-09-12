@@ -784,20 +784,4 @@ mod tests {
         let sparkle_heart = str::from_utf8(&sparkle_heart_bytes).unwrap();
         assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
     }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn serialize() {
-        use serde;
-        fn assert_serialize<T: serde::Serialize>() {}
-        assert_serialize::<AsciiString>();
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn deserialize() {
-        use serde;
-        fn assert_deserialize<'de, T: serde::Deserialize<'de>>() {}
-        assert_deserialize::<AsciiString>();
-    }
 }
