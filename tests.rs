@@ -118,7 +118,7 @@ fn extend_from_iterator() {
     use ::std::borrow::Cow;
 
     let abc = "abc".as_ascii_str().unwrap();
-    let mut s = abc.chars().cloned().collect::<AsciiString>();
+    let mut s = abc.chars().collect::<AsciiString>();
     assert_eq!(s, abc);
     s.extend(abc);
     assert_eq!(s, "abcabc");

@@ -145,14 +145,14 @@ impl AsciiStr {
     /// Returns an iterator over the characters of the `AsciiStr`.
     #[inline]
     pub fn chars(&self) -> Chars {
-        self.slice.iter()
+        Chars(self.slice.iter())
     }
 
     /// Returns an iterator over the characters of the `AsciiStr` which allows you to modify the
     /// value of each `AsciiChar`.
     #[inline]
     pub fn chars_mut(&mut self) -> CharsMut {
-        self.slice.iter_mut()
+        CharsMut(self.slice.iter_mut())
     }
 
     /// Returns an iterator over parts of the `AsciiStr` separated by a character.
@@ -230,7 +230,7 @@ impl AsciiStr {
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.len() == other.len() &&
             self.chars().zip(other.chars()).all(|(a, b)| {
-                a.eq_ignore_ascii_case(b)
+                a.eq_ignore_ascii_case(&b)
             })
     }
 
@@ -470,12 +470,16 @@ impl IndexMut<usize> for AsciiStr {
     }
 }
 
+/// Produces references for compatibility with `[u8]`.
+///
+/// (`str` doesn't implement `IntoIterator` for its references,
+///  so there is no compatibility to lose.)
 impl<'a> IntoIterator for &'a AsciiStr {
     type Item = &'a AsciiChar;
-    type IntoIter = Chars<'a>;
+    type IntoIter = CharsRef<'a>;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.chars()
+        CharsRef(self.as_slice().iter())
     }
 }
 
@@ -488,11 +492,93 @@ impl<'a> IntoIterator for &'a mut AsciiStr {
     }
 }
 
-/// An immutable iterator over the characters of an `AsciiStr`.
-pub type Chars<'a> = Iter<'a, AsciiChar>;
+/// A copying iterator over the characters of an `AsciiStr`.
+#[derive(Clone, Debug)]
+pub struct Chars<'a>(Iter<'a, AsciiChar>);
+impl<'a> Chars<'a> {
+    /// Returns the ascii string slice with the remaining characters.
+    pub fn as_str(&self) -> &'a AsciiStr {
+        self.0.as_slice().into()
+    }
+}
+impl<'a> Iterator for Chars<'a> {
+    type Item = AsciiChar;
+    #[inline]
+    fn next(&mut self) -> Option<AsciiChar> {
+        self.0.next().cloned()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+impl<'a> DoubleEndedIterator for Chars<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<AsciiChar> {
+        self.0.next_back().cloned()
+    }
+}
+impl<'a> ExactSizeIterator for Chars<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
 
 /// A mutable iterator over the characters of an `AsciiStr`.
-pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
+#[derive(Debug)]
+pub struct CharsMut<'a>(IterMut<'a, AsciiChar>);
+impl<'a> CharsMut<'a> {
+    /// Returns the ascii string slice with the remaining characters.
+    pub fn into_str(self) -> &'a mut AsciiStr {
+        self.0.into_slice().into()
+    }
+}
+impl<'a> Iterator for CharsMut<'a> {
+    type Item = &'a mut AsciiChar;
+    #[inline]
+    fn next(&mut self) -> Option<&'a mut AsciiChar> {
+        self.0.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+impl<'a> DoubleEndedIterator for CharsMut<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a mut AsciiChar> {
+        self.0.next_back()
+    }
+}
+impl<'a> ExactSizeIterator for CharsMut<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+/// An immutable iterator over the characters of an `AsciiStr`.
+#[derive(Clone, Debug)]
+pub struct CharsRef<'a>(Iter<'a, AsciiChar>);
+impl<'a> CharsRef<'a> {
+    /// Returns the ascii string slice with the remaining characters.
+    pub fn as_str(&self) -> &'a AsciiStr {
+        self.0.as_slice().into()
+    }
+}
+impl<'a> Iterator for CharsRef<'a> {
+    type Item = &'a AsciiChar;
+    #[inline]
+    fn next(&mut self) -> Option<&'a AsciiChar> {
+        self.0.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+impl<'a> DoubleEndedIterator for CharsRef<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<&'a AsciiChar> {
+        self.0.next_back()
+    }
+}
 
 /// An iterator over parts of an `AsciiStr` separated by an `AsciiChar`.
 ///
@@ -508,9 +594,9 @@ impl<'a> Iterator for Split<'a> {
 
     fn next(&mut self) -> Option<&'a AsciiStr> {
         if !self.ended {
-            let start: &AsciiStr = self.chars.as_slice().into();
+            let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.position(|&c| c == split_on) {
+            if let Some(at) = self.chars.position(|c| c == split_on) {
                 Some(&start[..at])
             } else {
                 self.ended = true;
@@ -524,9 +610,9 @@ impl<'a> Iterator for Split<'a> {
 impl<'a> DoubleEndedIterator for Split<'a> {
     fn next_back(&mut self) -> Option<&'a AsciiStr> {
         if !self.ended {
-            let start: &AsciiStr = self.chars.as_slice().into();
+            let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.rposition(|&c| c == split_on) {
+            if let Some(at) = self.chars.rposition(|c| c == split_on) {
                 Some(&start[at+1..])
             } else {
                 self.ended = true;
@@ -549,7 +635,7 @@ impl<'a> Iterator for Lines<'a> {
     fn next(&mut self) -> Option<&'a AsciiStr> {
         if let Some(idx) = self.string
             .chars()
-            .position(|&chr| chr == AsciiChar::LineFeed)
+            .position(|chr| chr == AsciiChar::LineFeed)
         {
             let line = if idx > 0 && self.string[idx - 1] == AsciiChar::CarriageReturn {
                 &self.string[..idx - 1]
@@ -902,7 +988,7 @@ mod tests {
     fn chars_iter() {
         let chars = &[b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
         let ascii = AsciiStr::from_ascii(chars).unwrap();
-        for (achar, byte) in ascii.chars().zip(chars.iter()) {
+        for (achar, byte) in ascii.chars().zip(chars.iter().cloned()) {
             assert_eq!(achar, byte);
         }
     }
@@ -911,9 +997,7 @@ mod tests {
     fn chars_iter_mut() {
         let chars = &mut [b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0'];
         let ascii = chars.as_mut_ascii_str().unwrap();
-
         *ascii.chars_mut().next().unwrap() = AsciiChar::H;
-
         assert_eq!(ascii[0], b'H');
     }
 
