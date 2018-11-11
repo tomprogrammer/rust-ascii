@@ -1,7 +1,8 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 use core::fmt;
-use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
+use core::ops::{Index, IndexMut};
+use core::ops::{Range, RangeTo, RangeFrom, RangeFull, RangeInclusive, RangeToInclusive};
 use core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -453,6 +454,8 @@ impl_index! { Range<usize> }
 impl_index! { RangeTo<usize> }
 impl_index! { RangeFrom<usize> }
 impl_index! { RangeFull }
+impl_index! { RangeInclusive<usize> }
+impl_index! { RangeToInclusive<usize> }
 
 impl Index<usize> for AsciiStr {
     type Output = AsciiChar;
@@ -941,6 +944,26 @@ mod tests {
     fn default() {
         let default: &'static AsciiStr = Default::default();
         assert!(default.is_empty());
+    }
+
+    #[test]
+    fn index() {
+        let mut arr = [AsciiChar::A, AsciiChar::B, AsciiChar::C, AsciiChar::D];
+        let a: &AsciiStr = arr[..].into();
+        assert_eq!(a[..].as_slice(), &a.as_slice()[..]);
+        assert_eq!(a[..4].as_slice(), &a.as_slice()[..4]);
+        assert_eq!(a[4..].as_slice(), &a.as_slice()[4..]);
+        assert_eq!(a[2..3].as_slice(), &a.as_slice()[2..3]);
+        assert_eq!(a[..=3].as_slice(), &a.as_slice()[..=3]);
+        assert_eq!(a[1..=1].as_slice(), &a.as_slice()[1..=1]);
+        let mut copy = arr.clone();
+        let a_mut: &mut AsciiStr = {&mut arr[..]}.into();
+        assert_eq!(a_mut[..].as_mut_slice(), &mut copy[..]);
+        assert_eq!(a_mut[..2].as_mut_slice(), &mut copy[..2]);
+        assert_eq!(a_mut[3..].as_mut_slice(), &mut copy[3..]);
+        assert_eq!(a_mut[4..4].as_mut_slice(), &mut copy[4..4]);
+        assert_eq!(a_mut[..=0].as_mut_slice(), &mut copy[..=0]);
+        assert_eq!(a_mut[0..=2].as_mut_slice(), &mut copy[0..=2]);
     }
 
     #[test]
