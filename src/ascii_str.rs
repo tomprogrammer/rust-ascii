@@ -195,7 +195,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace", example.trim());
     /// ```
     pub fn trim(&self) -> &Self {
-        self.trim_right().trim_left()
+        self.trim_start().trim_end()
     }
 
     /// Returns an ASCII string slice with leading whitespace removed.
@@ -204,9 +204,9 @@ impl AsciiStr {
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_ascii("  \twhite \tspace  \t").unwrap();
-    /// assert_eq!("white \tspace  \t", example.trim_left());
+    /// assert_eq!("white \tspace  \t", example.trim_start());
     /// ```
-    pub fn trim_left(&self) -> &Self {
+    pub fn trim_start(&self) -> &Self {
         &self[self.chars().take_while(|a| a.is_whitespace()).count()..]
     }
 
@@ -216,9 +216,9 @@ impl AsciiStr {
     /// ```
     /// # use ascii::AsciiStr;
     /// let example = AsciiStr::from_ascii("  \twhite \tspace  \t").unwrap();
-    /// assert_eq!("  \twhite \tspace", example.trim_right());
+    /// assert_eq!("  \twhite \tspace", example.trim_end());
     /// ```
-    pub fn trim_right(&self) -> &Self {
+    pub fn trim_end(&self) -> &Self {
         let trimmed = self.chars()
             .rev()
             .take_while(|a| a.is_whitespace())
