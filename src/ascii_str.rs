@@ -250,6 +250,18 @@ impl AsciiStr {
         ascii_string.make_ascii_lowercase();
         ascii_string
     }
+
+    /// Returns the first character if the string is not empty.
+    #[inline]
+    pub fn first(&self) -> Option<AsciiChar> {
+        self.slice.first().cloned()
+    }
+
+    /// Returns the last character if the string is not empty.
+    #[inline]
+    pub fn last(&self) -> Option<AsciiChar> {
+        self.slice.last().cloned()
+    }
 }
 
 impl PartialEq<str> for AsciiStr {
