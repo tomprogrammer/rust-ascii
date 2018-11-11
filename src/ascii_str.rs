@@ -264,19 +264,26 @@ impl AsciiStr {
     }
 }
 
-impl PartialEq<str> for AsciiStr {
-    #[inline]
-    fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
-    }
+macro_rules! impl_partial_eq {
+    ($wider: ty) => {
+        impl PartialEq<$wider> for AsciiStr {
+            #[inline]
+            fn eq(&self, other: &$wider) -> bool {
+                <AsciiStr as AsRef<$wider>>::as_ref(self) == other
+            }
+        }
+        impl PartialEq<AsciiStr> for $wider {
+            #[inline]
+            fn eq(&self, other: &AsciiStr) -> bool {
+                self == <AsciiStr as AsRef<$wider>>::as_ref(other)
+            }
+        }
+    };
 }
 
-impl PartialEq<AsciiStr> for str {
-    #[inline]
-    fn eq(&self, other: &AsciiStr) -> bool {
-        other.as_str() == self
-    }
-}
+impl_partial_eq!{str}
+impl_partial_eq!{[u8]}
+impl_partial_eq!{[AsciiChar]}
 
 #[cfg(feature = "std")]
 impl ToOwned for AsciiStr {
