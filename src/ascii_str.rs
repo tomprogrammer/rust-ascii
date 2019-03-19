@@ -161,6 +161,25 @@ impl AsciiStr {
         self.slice.iter_mut()
     }
 
+    /// Returns an iterator over parts of the `AsciiStr` separated by a character.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::{AsciiStr, AsciiChar};
+    /// let words = AsciiStr::from_ascii("apple banana lemon").unwrap()
+    ///     .split(AsciiChar::Space)
+    ///     .map(|a| a.as_str())
+    ///     .collect::<Vec<_>>();
+    /// assert_eq!(words, ["apple", "banana", "lemon"]);
+    /// ```
+    pub fn split(&self,  on: AsciiChar) -> Split {
+        Split {
+            on: on,
+            ended: false,
+            chars: self.chars(),
+        }
+    }
+
     /// Returns an iterator over the lines of the `AsciiStr`, which are themselves `AsciiStr`s.
     ///
     /// Lines are ended with either `LineFeed` (`\n`), or `CarriageReturn` then `LineFeed` (`\r\n`).
@@ -500,6 +519,50 @@ pub type Chars<'a> = Iter<'a, AsciiChar>;
 
 /// A mutable iterator over the characters of an `AsciiStr`.
 pub type CharsMut<'a> = IterMut<'a, AsciiChar>;
+
+/// An iterator over parts of an `AsciiStr` separated by an `AsciiChar`.
+///
+/// This type is created by [`AsciiChar::split()`](struct.AsciiChar.html#method.split).
+#[derive(Clone, Debug)]
+pub struct Split<'a> {
+    on: AsciiChar,
+    ended: bool,
+    chars: Chars<'a>
+}
+impl<'a> Iterator for Split<'a> {
+    type Item = &'a AsciiStr;
+
+    fn next(&mut self) -> Option<&'a AsciiStr> {
+        if !self.ended {
+            let start: &AsciiStr = self.chars.as_slice().into();
+            let split_on = self.on;
+            if let Some(at) = self.chars.position(|&c| c == split_on) {
+                Some(&start[..at])
+            } else {
+                self.ended = true;
+                Some(start)
+            }
+        } else {
+            None
+        }
+    }
+}
+impl<'a> DoubleEndedIterator for Split<'a> {
+    fn next_back(&mut self) -> Option<&'a AsciiStr> {
+        if !self.ended {
+            let start: &AsciiStr = self.chars.as_slice().into();
+            let split_on = self.on;
+            if let Some(at) = self.chars.rposition(|&c| c == split_on) {
+                Some(&start[at+1..])
+            } else {
+                self.ended = true;
+                Some(start)
+            }
+        } else {
+            None
+        }
+    }
+}
 
 /// An iterator over the lines of the internal character array.
 #[derive(Clone, Debug)]
@@ -892,6 +955,62 @@ mod tests {
             assert!(line.is_empty());
         }
         assert_eq!(4, iter_count);
+    }
+
+    #[test]
+    fn split_str() {
+        fn split_equals_str(haystack: &str, needle: char) {
+            let mut strs = haystack.split(needle);
+            let mut asciis = haystack.as_ascii_str().unwrap()
+                .split(AsciiChar::from(needle).unwrap())
+                .map(|a| a.as_str());
+            loop {
+                assert_eq!(asciis.size_hint(), strs.size_hint());
+                let (a, s) = (asciis.next(), strs.next());
+                assert_eq!(a, s);
+                if a == None {
+                    break;
+                }
+            }
+            // test fusedness if str's version is fused
+            if strs.next() == None {
+                assert_eq!(asciis.next(), None);
+            }
+        }
+        split_equals_str("", '=');
+        split_equals_str("1,2,3", ',');
+        split_equals_str("foo;bar;baz;", ';');
+        split_equals_str("|||", '|');
+        split_equals_str(" a  b  c ", ' ');
+    }
+
+    #[test]
+    fn split_str_rev() {
+        let words = " foo  bar baz ";
+        let ascii = words.as_ascii_str().unwrap();
+        for (word, asciiword) in words.split(' ').rev().zip(ascii.split(AsciiChar::Space).rev()) {
+            assert_eq!(asciiword, word);
+        }
+        let mut iter = ascii.split(AsciiChar::Space);
+        assert_eq!(iter.next(), Some("".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), Some("".as_ascii_str().unwrap()));
+        assert_eq!(iter.next(), Some("foo".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), Some("baz".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), Some("bar".as_ascii_str().unwrap()));
+        assert_eq!(iter.next(), Some("".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), None);
+    }
+
+    #[test]
+    fn split_str_empty() {
+        let empty = <&AsciiStr>::default();
+        let mut iter = empty.split(AsciiChar::NAK);
+        assert_eq!(iter.next(), Some(empty));
+        assert_eq!(iter.next(), None);
+        let mut iter = empty.split(AsciiChar::NAK);
+        assert_eq!(iter.next_back(), Some(empty));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!("".split('s').next(), Some("")); // str.split() also produces one element
     }
 
     #[test]
