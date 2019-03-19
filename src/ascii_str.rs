@@ -368,6 +368,19 @@ impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     }
 }
 
+impl AsRef<AsciiStr> for [AsciiChar] {
+    #[inline]
+    fn as_ref(&self) -> &AsciiStr {
+        self.into()
+    }
+}
+impl AsMut<AsciiStr> for [AsciiChar] {
+    #[inline]
+    fn as_mut(&mut self) -> &mut AsciiStr {
+        self.into()
+    }
+}
+
 macro_rules! impl_into {
     ($wider: ty) => {
         impl<'a> From<&'a AsciiStr> for &'a$wider {
