@@ -1,3 +1,7 @@
+Unreleased
+==========
+* Implement the `std::ops::AddAssign` trait for `AsciiString`.
+
 Version 0.9.1 (2018-09-12)
 ==========================
 * Implement the `serde::Serialize` and `serde::Deserialize` traits for `AsciiChar`, `AsciiStr`, and `AsciiString`.
