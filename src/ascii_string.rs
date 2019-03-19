@@ -5,7 +5,7 @@ use std::borrow::Borrow;
 use std::error::Error;
 use std::any::Any;
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut, Add, Index, IndexMut};
+use std::ops::{Deref, DerefMut, Add, AddAssign, Index, IndexMut};
 use std::iter::FromIterator;
 
 #[cfg(feature = "quickcheck")]
@@ -559,6 +559,13 @@ impl<'a> Add<&'a AsciiStr> for AsciiString {
     fn add(mut self, other: &AsciiStr) -> AsciiString {
         self.push_str(other);
         self
+    }
+}
+
+impl<'a> AddAssign<&'a AsciiStr> for AsciiString {
+    #[inline]
+    fn add_assign(&mut self, other: &AsciiStr) {
+        self.push_str(other);
     }
 }
 
