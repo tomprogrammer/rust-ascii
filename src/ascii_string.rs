@@ -1,7 +1,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 use std::{fmt, mem};
-use std::borrow::Borrow;
+use std::borrow::{Borrow, Cow};
 use std::error::Error;
 use std::any::Any;
 use std::str::FromStr;
@@ -449,6 +449,24 @@ impl Into<String> for AsciiString {
     }
 }
 
+impl<'a> From<Cow<'a,AsciiStr>> for AsciiString {
+    fn from(cow: Cow<'a,AsciiStr>) -> AsciiString {
+        cow.into_owned()
+    }
+}
+
+impl From<AsciiString> for Cow<'static,AsciiStr> {
+    fn from(string: AsciiString) -> Cow<'static,AsciiStr> {
+        Cow::Owned(string)
+    }
+}
+
+impl<'a> From<&'a AsciiStr> for Cow<'a,AsciiStr> {
+    fn from(s: &'a AsciiStr) -> Cow<'a,AsciiStr> {
+        Cow::Borrowed(s)
+    }
+}
+
 impl AsRef<AsciiStr> for AsciiString {
     #[inline]
     fn as_ref(&self) -> &AsciiStr {
@@ -524,6 +542,14 @@ impl<'a> FromIterator<&'a AsciiStr> for AsciiString {
     }
 }
 
+impl<'a> FromIterator<Cow<'a, AsciiStr>> for AsciiString {
+    fn from_iter<I: IntoIterator<Item = Cow<'a, AsciiStr>>>(iter: I) -> AsciiString {
+        let mut buf = AsciiString::new();
+        buf.extend(iter);
+        buf
+    }
+}
+
 impl Extend<AsciiChar> for AsciiString {
     fn extend<I: IntoIterator<Item = AsciiChar>>(&mut self, iterable: I) {
         let iterator = iterable.into_iter();
@@ -548,6 +574,17 @@ impl<'a> Extend<&'a AsciiStr> for AsciiString {
         self.reserve(lower_bound);
         for s in iterator {
             self.push_str(s)
+        }
+    }
+}
+
+impl<'a> Extend<Cow<'a, AsciiStr>> for AsciiString {
+    fn extend<I: IntoIterator<Item = Cow<'a,AsciiStr>>>(&mut self, iterable: I) {
+        let iterator = iterable.into_iter();
+        let (lower_bound, _) = iterator.size_hint();
+        self.reserve(lower_bound);
+        for s in iterator {
+            self.push_str(&*s);
         }
     }
 }

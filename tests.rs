@@ -111,3 +111,31 @@ fn compare_ascii_string_slice() {
     assert_eq!(&b[..2], &c[..]);
     assert_eq!(c[1].as_char(), 'b');
 }
+
+#[test]
+#[cfg(feature = "std")]
+fn extend_from_iterator() {
+    use ::std::borrow::Cow;
+
+    let abc = "abc".as_ascii_str().unwrap();
+    let mut s = abc.chars().cloned().collect::<AsciiString>();
+    assert_eq!(s, abc);
+    s.extend(abc);
+    assert_eq!(s, "abcabc");
+
+    let lines = "one\ntwo\nthree".as_ascii_str().unwrap().lines();
+    s.extend(lines);
+    assert_eq!(s, "abcabconetwothree");
+
+    let cows = "ASCII Ascii ascii".as_ascii_str().unwrap()
+        .split(AsciiChar::Space)
+        .map(|case| {
+            if case.chars().all(|a| a.is_uppercase() ) {
+                Cow::from(case)
+            } else {
+                Cow::from(case.to_ascii_uppercase())
+            }
+        });
+    s.extend(cows);
+    assert_eq!(s, "abcabconetwothreeASCIIASCIIASCII");
+}
