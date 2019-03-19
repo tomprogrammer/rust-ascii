@@ -582,15 +582,10 @@ impl<'a> DoubleEndedIterator for Split<'a> {
 pub struct Lines<'a> {
     string: &'a AsciiStr,
 }
-
 impl<'a> Iterator for Lines<'a> {
     type Item = &'a AsciiStr;
 
     fn next(&mut self) -> Option<&'a AsciiStr> {
-        if self.string.is_empty() {
-            return None;
-        }
-
         if let Some(idx) = self.string
             .chars()
             .position(|&chr| chr == AsciiChar::LineFeed)
@@ -602,15 +597,34 @@ impl<'a> Iterator for Lines<'a> {
             };
             self.string = &self.string[idx + 1..];
             Some(line)
+        } else if self.string.is_empty() {
+            None
         } else {
-            if !self.string.is_empty() {
-                let line = self.string;
-                self.string = &self.string[..0];
-                Some(line)
-            } else {
-                None
+            let line = self.string;
+            self.string = &self.string[..0];
+            Some(line)
+        }
+    }
+}
+impl<'a> DoubleEndedIterator for Lines<'a> {
+    fn next_back(&mut self) -> Option<&'a AsciiStr> {
+        if self.string.is_empty() {
+            return None;
+        }
+        let mut i = self.string.len();
+        if self.string[i-1] == AsciiChar::LineFeed {
+            i -= 1;
+            if i > 0 && self.string[i-1] == AsciiChar::CarriageReturn {
+                i -= 1;
             }
         }
+        self.string = &self.string[..i];
+        while i > 0 && self.string[i-1] != AsciiChar::LineFeed {
+            i -= 1;
+        }
+        let line = &self.string[i..];
+        self.string = &self.string[..i];
+        Some(line)
     }
 }
 
@@ -946,6 +960,7 @@ mod tests {
         for (asciiline, line) in ascii.lines().zip(&lines) {
             assert_eq!(asciiline, *line);
         }
+        assert_eq!(ascii.lines().count(), lines.len());
 
         let lines: [&str; 4] = ["foo", "bar", "", "baz"];
         let joined = "foo\r\nbar\n\nbaz";
@@ -953,6 +968,7 @@ mod tests {
         for (asciiline, line) in ascii.lines().zip(&lines) {
             assert_eq!(asciiline, *line);
         }
+        assert_eq!(ascii.lines().count(), lines.len());
 
         let trailing_line_break = b"\n";
         let ascii = AsciiStr::from_ascii(&trailing_line_break).unwrap();
@@ -968,6 +984,29 @@ mod tests {
             assert!(line.is_empty());
         }
         assert_eq!(4, iter_count);
+    }
+
+    #[test]
+    fn lines_iter_rev() {
+        let joined = "foo\r\nbar\n\nbaz\n";
+        let ascii = AsciiStr::from_ascii(joined.as_bytes()).unwrap();
+        assert_eq!(ascii.lines().rev().count(), 4);
+        assert_eq!(ascii.lines().rev().count(), joined.lines().rev().count());
+        for (asciiline, line) in ascii.lines().rev().zip(joined.lines().rev()) {
+            assert_eq!(asciiline, line);
+        }
+        let mut iter = ascii.lines();
+        assert_eq!(iter.next(), Some("foo".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), Some("baz".as_ascii_str().unwrap()));
+        assert_eq!(iter.next_back(), Some("".as_ascii_str().unwrap()));
+        assert_eq!(iter.next(), Some("bar".as_ascii_str().unwrap()));
+    }
+
+    #[test]
+    fn lines_iter_empty() {
+        assert_eq!("".as_ascii_str().unwrap().lines().next(), None);
+        assert_eq!("".as_ascii_str().unwrap().lines().next_back(), None);
+        assert_eq!("".lines().next(), None);
     }
 
     #[test]
