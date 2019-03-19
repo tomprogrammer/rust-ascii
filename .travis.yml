@@ -14,10 +14,12 @@ before_script:
 
 script:
   - |
-    travis-cargo build &&
+    travis-cargo test -- --no-default-features &&
     travis-cargo test &&
-    travis-cargo build -- --no-default-features &&
-    travis-cargo test -- --no-default-features
+    travis-cargo test -- --all-features &&
+    rm Cargo.lock &&
+    # no version of quickcheck compiles with -Z minimal-versions, but serde does
+    travis-cargo --only nightly build -- -Z minimal-versions --features 'serde serde-test'
 
 after_success:
   - |
