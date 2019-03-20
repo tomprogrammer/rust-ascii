@@ -1,7 +1,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 use std::{fmt, mem};
-use std::borrow::{Borrow, Cow};
+use std::borrow::{Borrow, BorrowMut, Cow};
 use std::error::Error;
 use std::any::Any;
 use std::str::FromStr;
@@ -418,6 +418,13 @@ impl Borrow<AsciiStr> for AsciiString {
     }
 }
 
+impl BorrowMut<AsciiStr> for AsciiString {
+    #[inline]
+    fn borrow_mut(&mut self) -> &mut AsciiStr {
+        &mut*self
+    }
+}
+
 impl From<Vec<AsciiChar>> for AsciiString {
     #[inline]
     fn from(vec: Vec<AsciiChar>) -> Self {
@@ -474,6 +481,13 @@ impl AsRef<AsciiStr> for AsciiString {
     }
 }
 
+impl AsRef<[AsciiChar]> for AsciiString {
+    #[inline]
+    fn as_ref(&self) -> &[AsciiChar] {
+        &self.vec
+    }
+}
+
 impl AsRef<[u8]> for AsciiString {
     #[inline]
     fn as_ref(&self) -> &[u8] {
@@ -481,10 +495,24 @@ impl AsRef<[u8]> for AsciiString {
     }
 }
 
+impl AsRef<str> for AsciiString {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 impl AsMut<AsciiStr> for AsciiString {
     #[inline]
     fn as_mut(&mut self) -> &mut AsciiStr {
         &mut *self
+    }
+}
+
+impl AsMut<[AsciiChar]> for AsciiString {
+    #[inline]
+    fn as_mut(&mut self) -> &mut [AsciiChar] {
+        &mut self.vec
     }
 }
 
