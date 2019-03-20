@@ -576,6 +576,12 @@ impl AsciiExt for AsciiChar {
     }
 }
 
+impl Default for AsciiChar {
+    fn default() -> AsciiChar {
+        AsciiChar::Null
+    }
+}
+
 macro_rules! impl_into_partial_eq_ord {($wider:ty, $to_wider:expr) => {
     impl From<AsciiChar> for $wider {
         #[inline]
