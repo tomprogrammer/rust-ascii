@@ -4,7 +4,7 @@
 // which would call the inherent methods if AsciiExt wasn't in scope.
 #![cfg_attr(feature = "std", allow(deprecated))]
 
-use core::{fmt, mem};
+use core::fmt;
 use core::ops::{Index, IndexMut, Range, RangeTo, RangeFrom, RangeFull};
 use core::slice::{Iter, IterMut};
 #[cfg(feature = "std")]
@@ -36,15 +36,13 @@ impl AsciiStr {
     /// Converts `&self` to a `&str` slice.
     #[inline]
     pub fn as_str(&self) -> &str {
-        let ptr = self as *const AsciiStr as *const str;
-        unsafe { &*ptr }
+        From::from(self)
     }
 
     /// Converts `&self` into a byte slice.
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
-        let ptr = self as *const AsciiStr as *const [u8];
-        unsafe { &*ptr }
+        From::from(self)
     }
 
     /// Returns the entire string as slice of `AsciiChar`s.
@@ -342,7 +340,7 @@ impl AsMut<[AsciiChar]> for AsciiStr {
 impl Default for &'static AsciiStr {
     #[inline]
     fn default() -> &'static AsciiStr {
-        unsafe { "".as_ascii_str_unchecked() }
+        From::from(&[] as &[AsciiChar])
     }
 }
 impl<'a> From<&'a [AsciiChar]> for &'a AsciiStr {
@@ -432,16 +430,14 @@ macro_rules! impl_index {
 
             #[inline]
             fn index(&self, index: $idx) -> &AsciiStr {
-                let ptr = &self.slice[index] as *const [AsciiChar] as *const AsciiStr;
-                unsafe { &* ptr }
+                self.slice[index].as_ref()
             }
         }
 
         impl IndexMut<$idx> for AsciiStr {
             #[inline]
             fn index_mut(&mut self, index: $idx) -> &mut AsciiStr {
-                let ptr = &mut self.slice[index] as *mut [AsciiChar] as *mut AsciiStr;
-                unsafe { &mut *ptr }
+                self.slice[index].as_mut()
             }
         }
     }
@@ -457,14 +453,14 @@ impl Index<usize> for AsciiStr {
 
     #[inline]
     fn index(&self, index: usize) -> &AsciiChar {
-        unsafe { mem::transmute(&self.slice[index]) }
+        &self.slice[index]
     }
 }
 
 impl IndexMut<usize> for AsciiStr {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut AsciiChar {
-        unsafe { mem::transmute(&mut self.slice[index]) }
+        &mut self.slice[index]
     }
 }
 
