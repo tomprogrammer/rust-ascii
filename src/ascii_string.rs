@@ -360,16 +360,14 @@ impl Deref for AsciiString {
 
     #[inline]
     fn deref(&self) -> &AsciiStr {
-        let ptr = &*self.vec as *const [AsciiChar] as *const AsciiStr;
-        unsafe { &*ptr }
+        self.vec.as_slice().as_ref()
     }
 }
 
 impl DerefMut for AsciiString {
     #[inline]
     fn deref_mut(&mut self) -> &mut AsciiStr {
-        let ptr = &mut *self.vec as *mut [AsciiChar] as *mut AsciiStr;
-        unsafe { &mut *ptr }
+        self.vec.as_mut_slice().as_mut()
     }
 }
 
