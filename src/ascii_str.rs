@@ -840,6 +840,19 @@ mod tests {
         assert_eq!(generic(&mut "A"), Ok(ascii_str));
     }
 
+    #[cfg(feature = "std")]
+    #[test]
+    fn cstring_as_ascii_str() {
+        use std::ffi::{CStr, CString};
+        fn generic<C: AsAsciiStr + ?Sized>(c: &C) -> Result<&AsciiStr, AsAsciiStrError> {
+            c.as_ascii_str()
+        }
+        let arr = [AsciiChar::A];
+        let ascii_str: &AsciiStr = arr.as_ref().into();
+        let cstr = CString::new("A").unwrap();
+        assert_eq!(generic(&*cstr), Ok(ascii_str));
+    }
+
     #[test]
     fn generic_as_mut_ascii_str() {
         fn generic_mut<C: AsMutAsciiStr + ?Sized>(
