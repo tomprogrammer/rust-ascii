@@ -1,6 +1,8 @@
 Unreleased
 ==========
 * Implement the `std::ops::AddAssign` trait for `AsciiString`.
+* Implement the `IntoAsciiString` trait for `std::ffi::CStr` and `std::ffi::CString` types,
+  and implemented the `AsAsciiStr` trait for `std::ffi::CStr` type.
 
 Version 0.9.1 (2018-09-12)
 ==========================
