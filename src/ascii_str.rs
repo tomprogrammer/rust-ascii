@@ -843,7 +843,7 @@ mod tests {
     #[cfg(feature = "std")]
     #[test]
     fn cstring_as_ascii_str() {
-        use std::ffi::{CStr, CString};
+        use std::ffi::CString;
         fn generic<C: AsAsciiStr + ?Sized>(c: &C) -> Result<&AsciiStr, AsAsciiStrError> {
             c.as_ascii_str()
         }

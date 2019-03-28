@@ -904,10 +904,16 @@ mod tests {
     #[test]
     fn from_cstring() {
         let cstring = CString::new("baz").unwrap();
-        let ascii_str = cstring.into_ascii_string().unwrap();
+        let ascii_str = cstring.clone().into_ascii_string().unwrap();
         let expected_chars = &[AsciiChar::b, AsciiChar::a, AsciiChar::z];
         assert_eq!(ascii_str.len(), 3);
         assert_eq!(ascii_str.as_slice(), expected_chars);
+
+        let ascii_str_unchecked = unsafe {
+            cstring.into_ascii_string_unchecked()
+        };
+        assert_eq!(ascii_str_unchecked.len(), 3);
+        assert_eq!(ascii_str_unchecked.as_slice(), expected_chars);
 
         let sparkle_heart_bytes = vec![240u8, 159, 146, 150];
         let cstring = CString::new(sparkle_heart_bytes).unwrap();
