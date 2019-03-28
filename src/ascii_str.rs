@@ -819,21 +819,6 @@ impl AsAsciiStr for CStr {
     }
 }
 
-/// Note that the trailing null byte will be removed in the conversion.
-impl AsMutAsciiStr for CStr {
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        match self.to_bytes().iter().position(|&b| b > 127) {
-            Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe { Ok(self.as_mut_ascii_str_unchecked()) },
-        }
-    }
-    #[inline]
-    unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        let ptr = self as *mut CStr as *mut AsciiStr;
-        &mut *ptr
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use AsciiChar;
