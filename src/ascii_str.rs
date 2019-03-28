@@ -808,6 +808,7 @@ impl AsMutAsciiStr for str {
 }
 
 /// Note that the trailing null byte will be removed in the conversion.
+#[cfg(feature = "std")]
 impl AsAsciiStr for CStr {
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
