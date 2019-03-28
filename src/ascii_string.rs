@@ -743,7 +743,7 @@ impl IntoAsciiString for Vec<AsciiChar> {
 
 macro_rules! impl_into_ascii_string {
     ('a, $wider:ty) => {
-        impl<'a> IntoAsciiString for &'a $wider {
+        impl<'a> IntoAsciiString for $wider {
             #[inline]
             unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
                 AsciiString::from_ascii_unchecked(self)
@@ -772,9 +772,9 @@ macro_rules! impl_into_ascii_string {
 }
 
 impl_into_ascii_string!{Vec<u8>}
-impl_into_ascii_string!{'a, [u8]}
+impl_into_ascii_string!{'a, &'a [u8]}
 impl_into_ascii_string!{String}
-impl_into_ascii_string!{'a, str}
+impl_into_ascii_string!{'a, &'a str}
 
 /// Note that the trailing null byte will be removed in the conversion.
 impl IntoAsciiString for CString {
