@@ -1,6 +1,8 @@
 Unreleased
 ==========
 * Implement the `std::ops::AddAssign` trait for `AsciiString`.
+* Implement the `IntoAsciiString` for `std::borrow::Cow`, where the inner types themselves
+  implement `IntoAsciiString`.
 
 Version 0.9.1 (2018-09-12)
 ==========================
