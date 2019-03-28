@@ -880,7 +880,7 @@ mod tests {
         let cstring = CString::new("baz").unwrap();
         let ascii_str = cstring.into_ascii_string().unwrap();
         let expected_chars = &[AsciiChar::b, AsciiChar::a, AsciiChar::z];
-        assert!(ascii_str.len() == 3);
+        assert_eq!(ascii_str.len(), 3);
         assert_eq!(ascii_str.as_slice(), expected_chars);
 
         let sparkle_heart_bytes = vec![240u8, 159, 146, 150];
