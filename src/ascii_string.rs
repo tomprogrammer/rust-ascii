@@ -742,8 +742,8 @@ impl IntoAsciiString for Vec<AsciiChar> {
 }
 
 macro_rules! impl_into_ascii_string {
-    ($lt:lifetime, $wider:ty) => {
-        impl<$lt> IntoAsciiString for & $lt $wider {
+    ('a, $wider:ty) => {
+        impl<'a> IntoAsciiString for &'a $wider {
             #[inline]
             unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
                 AsciiString::from_ascii_unchecked(self)
@@ -792,7 +792,7 @@ impl IntoAsciiString for CString {
                         // `CString`, so this is safe.
                         CString::from_vec_unchecked(owner)
                     },
-                    error,
+                    error: error,
                 }
             })
             .map(|mut s| {
@@ -814,8 +814,10 @@ impl<'a> IntoAsciiString for &'a CStr {
         AsciiString::from_ascii(self.to_bytes_with_nul())
             .map_err(|FromAsciiError { error, owner }| {
                 FromAsciiError {
-                    owner: CStr::from_bytes_with_nul(owner).unwrap(),
-                    error,
+                    owner: unsafe {
+                        CStr::from_ptr(owner.as_ptr() as *const _)
+                    },
+                    error: error,
                 }
             })
             .map(|mut s| {
@@ -883,7 +885,7 @@ mod tests {
 
         let sparkle_heart_bytes = vec![240u8, 159, 146, 150];
         let cstring = CString::new(sparkle_heart_bytes).unwrap();
-        let cstr = cstring.as_c_str();
+        let cstr = &*cstring;
         let ascii_err = cstr.into_ascii_string().unwrap_err();
         assert_eq!(ascii_err.into_source(), &*cstring);
     }
