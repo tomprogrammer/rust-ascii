@@ -448,6 +448,20 @@ impl Into<Vec<u8>> for AsciiString {
     }
 }
 
+impl<'a> From<&'a AsciiStr> for AsciiString {
+    #[inline]
+    fn from(s: &'a AsciiStr) -> Self {
+        s.to_ascii_string()
+    }
+}
+
+impl<'a> From<&'a [AsciiChar]> for AsciiString {
+    #[inline]
+    fn from(s: &'a [AsciiChar]) -> AsciiString {
+        s.into_iter().map(|c| *c).collect()
+    }
+}
+
 impl Into<String> for AsciiString {
     #[inline]
     fn into(self) -> String {
@@ -719,18 +733,29 @@ pub trait IntoAsciiString: Sized {
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>>;
 }
 
-impl IntoAsciiString for AsciiString {
+impl IntoAsciiString for Vec<AsciiChar> {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        self
+        AsciiString::from(self)
     }
     #[inline]
-    fn into_ascii_string(self) -> Result<Self, FromAsciiError<Self>> {
-        Ok(self)
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+        Ok(AsciiString::from(self))
     }
 }
 
-impl IntoAsciiString for Vec<AsciiChar> {
+impl<'a> IntoAsciiString for &'a [AsciiChar] {
+    #[inline]
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        AsciiString::from(self)
+    }
+    #[inline]
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+        Ok(AsciiString::from(self))
+    }
+}
+
+impl<'a> IntoAsciiString for &'a AsciiStr {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
         AsciiString::from(self)
@@ -771,6 +796,7 @@ macro_rules! impl_into_ascii_string {
     };
 }
 
+impl_into_ascii_string!{AsciiString}
 impl_into_ascii_string!{Vec<u8>}
 impl_into_ascii_string!{'a, &'a [u8]}
 impl_into_ascii_string!{String}
