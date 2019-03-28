@@ -796,7 +796,8 @@ impl IntoAsciiString for CString {
                 }
             })
             .map(|mut s| {
-                s.pop();
+                let _nul = s.pop();
+                debug_assert_eq!(_nul, Some(AsciiChar::Null));
                 s
             })
     }
@@ -818,7 +819,8 @@ impl<'a> IntoAsciiString for &'a CStr {
                 }
             })
             .map(|mut s| {
-                s.pop();
+                let _nul = s.pop();
+                debug_assert_eq!(_nul, Some(AsciiChar::Null));
                 s
             })
     }
