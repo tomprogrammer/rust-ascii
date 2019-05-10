@@ -619,7 +619,7 @@ impl_into_partial_eq_ord!{char, AsciiChar::as_char}
 
 
 /// Error returned by `ToAsciiChar`.
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ToAsciiCharError(());
 
 const ERRORMSG_CHAR: &'static str = "not an ASCII character";
