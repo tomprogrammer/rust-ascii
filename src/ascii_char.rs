@@ -732,7 +732,7 @@ impl Arbitrary for AsciiChar {
             }
             40...99 => {
                 // Completely arbitrary characters
-                unsafe { AsciiChar::from_unchecked(g.gen_range(0, 0x7F) as u8) }
+                unsafe { AsciiChar::from_unchecked(g.gen_range(0, 0x80) as u8) }
             }
             _ => unreachable!(),
         }
