@@ -4,7 +4,7 @@ A library that provides ASCII-only string and character types, equivalent to the
 `char`, `str` and `String` types in the standard library.
 
 Types and conversion traits are described in the
-[Documentation](https://tomprogrammer.github.io/rust-ascii/ascii/index.html).
+[Documentation](https://docs.rs/ascii).
 
 You can include this crate in your cargo project by adding it to the
 dependencies section in `Cargo.toml`:
