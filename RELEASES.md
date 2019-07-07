@@ -1,10 +1,17 @@
 Unreleased
 ==========
-* Implement the `std::ops::AddAssign` trait for `AsciiString`.
 * Implement the `IntoAsciiString` trait for `std::ffi::CStr` and `std::ffi::CString` types,
   and implemented the `AsAsciiStr` trait for `std::ffi::CStr` type.
 * Implement the `IntoAsciiString` for `std::borrow::Cow`, where the inner types themselves
   implement `IntoAsciiString`.
+* Implement conversions between `AsciiString` and `Cow<'a, AsciiStr>`.
+* Implement the `std::ops::AddAssign` trait for `AsciiString`.
+* Implement `BorrowMut<AsciiStr>`, `AsRef<[AsciiChar]>`, `AsRef<str>`, `AsMut<[AsciiChar]>` for `AsciiString`.
+* Implement `PartialEq<[u8]>` and `PartialEq<[AsciiChar]>` for `AsciiStr`.
+* Add `AsciiStr::first()`, `AsciiStr::last()` and `AsciiStr::split()` methods.
+* Implement `DoubleEndedIterator` for `AsciiStr::lines()`.
+* Implement `AsRef<AsciiStr>` and `AsMut<AsciiStr` for `[AsciiChar]`.
+* Implement `Default` for `AsciiChar`.
 
 Version 0.9.1 (2018-09-12)
 ==========================
