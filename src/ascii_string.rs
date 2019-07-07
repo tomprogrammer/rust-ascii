@@ -854,6 +854,41 @@ impl<'a> IntoAsciiString for &'a CStr {
     }
 }
 
+impl<'a, B: ?Sized> IntoAsciiString for Cow<'a, B>
+where
+    B: 'a + ToOwned,
+    &'a B: IntoAsciiString,
+    <B as ToOwned>::Owned: IntoAsciiString,
+{
+    #[inline]
+    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+        IntoAsciiString::into_ascii_string_unchecked(self.into_owned())
+    }
+
+    fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+        match self {
+            Cow::Owned(b) => {
+                IntoAsciiString::into_ascii_string(b)
+                    .map_err(|FromAsciiError { error, owner }| {
+                        FromAsciiError {
+                            owner: Cow::Owned(owner),
+                            error: error,
+                        }
+                    })
+            }
+            Cow::Borrowed(b) => {
+                IntoAsciiString::into_ascii_string(b)
+                    .map_err(|FromAsciiError { error, owner }| {
+                        FromAsciiError {
+                            owner: Cow::Borrowed(owner),
+                            error: error,
+                        }
+                    })
+            }
+        }
+    }
+}
+
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for AsciiString {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
