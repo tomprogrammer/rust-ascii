@@ -3,6 +3,7 @@
 use std::{fmt, mem};
 use std::borrow::{Borrow, BorrowMut, Cow};
 use std::error::Error;
+use std::ffi::{CStr, CString};
 use std::any::Any;
 use std::str::FromStr;
 use std::ops::{Deref, DerefMut, Add, AddAssign, Index, IndexMut};
@@ -447,6 +448,20 @@ impl Into<Vec<u8>> for AsciiString {
     }
 }
 
+impl<'a> From<&'a AsciiStr> for AsciiString {
+    #[inline]
+    fn from(s: &'a AsciiStr) -> Self {
+        s.to_ascii_string()
+    }
+}
+
+impl<'a> From<&'a [AsciiChar]> for AsciiString {
+    #[inline]
+    fn from(s: &'a [AsciiChar]) -> AsciiString {
+        s.into_iter().map(|c| *c).collect()
+    }
+}
+
 impl Into<String> for AsciiString {
     #[inline]
     fn into(self) -> String {
@@ -718,17 +733,6 @@ pub trait IntoAsciiString: Sized {
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>>;
 }
 
-impl IntoAsciiString for AsciiString {
-    #[inline]
-    unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        self
-    }
-    #[inline]
-    fn into_ascii_string(self) -> Result<Self, FromAsciiError<Self>> {
-        Ok(self)
-    }
-}
-
 impl IntoAsciiString for Vec<AsciiChar> {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
@@ -740,47 +744,113 @@ impl IntoAsciiString for Vec<AsciiChar> {
     }
 }
 
-impl IntoAsciiString for Vec<u8> {
+impl<'a> IntoAsciiString for &'a [AsciiChar] {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self)
+        AsciiString::from(self)
     }
     #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
-        AsciiString::from_ascii(self)
+        Ok(AsciiString::from(self))
     }
 }
 
-impl<'a> IntoAsciiString for &'a [u8] {
+impl<'a> IntoAsciiString for &'a AsciiStr {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self)
+        AsciiString::from(self)
     }
     #[inline]
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
-        AsciiString::from_ascii(self)
+        Ok(AsciiString::from(self))
     }
 }
 
-impl IntoAsciiString for String {
+macro_rules! impl_into_ascii_string {
+    ('a, $wider:ty) => {
+        impl<'a> IntoAsciiString for $wider {
+            #[inline]
+            unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+                AsciiString::from_ascii_unchecked(self)
+            }
+
+            #[inline]
+            fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+                AsciiString::from_ascii(self)
+            }
+        }
+    };
+
+    ($wider:ty) => {
+        impl IntoAsciiString for $wider {
+            #[inline]
+            unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
+                AsciiString::from_ascii_unchecked(self)
+            }
+
+            #[inline]
+            fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
+                AsciiString::from_ascii(self)
+            }
+        }
+    };
+}
+
+impl_into_ascii_string!{AsciiString}
+impl_into_ascii_string!{Vec<u8>}
+impl_into_ascii_string!{'a, &'a [u8]}
+impl_into_ascii_string!{String}
+impl_into_ascii_string!{'a, &'a str}
+
+/// Note that the trailing null byte will be removed in the conversion.
+impl IntoAsciiString for CString {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self)
+        AsciiString::from_ascii_unchecked(self.into_bytes())
     }
-    #[inline]
+
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
-        AsciiString::from_ascii(self)
+        AsciiString::from_ascii(self.into_bytes_with_nul())
+            .map_err(|FromAsciiError { error, owner }| {
+                FromAsciiError {
+                    owner: unsafe {
+                        // The null byte is preserved from the original
+                        // `CString`, so this is safe.
+                        CString::from_vec_unchecked(owner)
+                    },
+                    error: error,
+                }
+            })
+            .map(|mut s| {
+                let _nul = s.pop();
+                debug_assert_eq!(_nul, Some(AsciiChar::Null));
+                s
+            })
     }
 }
 
-impl<'a> IntoAsciiString for &'a str {
+/// Note that the trailing null byte will be removed in the conversion.
+impl<'a> IntoAsciiString for &'a CStr {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self)
+        AsciiString::from_ascii_unchecked(self.to_bytes())
     }
-    #[inline]
+
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
-        AsciiString::from_ascii(self)
+        AsciiString::from_ascii(self.to_bytes_with_nul())
+            .map_err(|FromAsciiError { error, owner }| {
+                FromAsciiError {
+                    owner: unsafe {
+                        CStr::from_ptr(owner.as_ptr() as *const _)
+                    },
+                    error: error,
+                }
+            })
+            .map(|mut s| {
+                let _nul = s.pop();
+                debug_assert_eq!(_nul, Some(AsciiChar::Null));
+                s
+            })
     }
 }
 
@@ -844,6 +914,7 @@ impl Arbitrary for AsciiString {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use std::ffi::CString;
     use AsciiChar;
     use super::{AsciiString, IntoAsciiString};
 
@@ -863,6 +934,27 @@ mod tests {
     fn from_ascii_vec() {
         let vec = vec![AsciiChar::from('A').unwrap(), AsciiChar::from('B').unwrap()];
         assert_eq!(AsciiString::from(vec), AsciiString::from_str("AB").unwrap());
+    }
+
+    #[test]
+    fn from_cstring() {
+        let cstring = CString::new("baz").unwrap();
+        let ascii_str = cstring.clone().into_ascii_string().unwrap();
+        let expected_chars = &[AsciiChar::b, AsciiChar::a, AsciiChar::z];
+        assert_eq!(ascii_str.len(), 3);
+        assert_eq!(ascii_str.as_slice(), expected_chars);
+
+        let ascii_str_unchecked = unsafe {
+            cstring.into_ascii_string_unchecked()
+        };
+        assert_eq!(ascii_str_unchecked.len(), 3);
+        assert_eq!(ascii_str_unchecked.as_slice(), expected_chars);
+
+        let sparkle_heart_bytes = vec![240u8, 159, 146, 150];
+        let cstring = CString::new(sparkle_heart_bytes).unwrap();
+        let cstr = &*cstring;
+        let ascii_err = cstr.into_ascii_string().unwrap_err();
+        assert_eq!(ascii_err.into_source(), &*cstring);
     }
 
     #[test]

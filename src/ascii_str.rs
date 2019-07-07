@@ -11,6 +11,8 @@ use core::slice::{Iter, IterMut};
 use std::error::Error;
 #[cfg(feature = "std")]
 use std::ascii::AsciiExt;
+#[cfg(feature = "std")]
+use std::ffi::CStr;
 
 use ascii_char::AsciiChar;
 #[cfg(feature = "std")]
@@ -805,6 +807,18 @@ impl AsMutAsciiStr for str {
     }
 }
 
+/// Note that the trailing null byte will be removed in the conversion.
+#[cfg(feature = "std")]
+impl AsAsciiStr for CStr {
+    #[inline]
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        self.to_bytes().as_ascii_str()
+    }
+    #[inline]
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
+        self.to_bytes().as_ascii_str_unchecked()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -824,6 +838,19 @@ mod tests {
         assert_eq!(generic(&"A"), Ok(ascii_str));
         assert_eq!(generic(&ascii_str), Ok(ascii_str));
         assert_eq!(generic(&mut "A"), Ok(ascii_str));
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn cstring_as_ascii_str() {
+        use std::ffi::CString;
+        fn generic<C: AsAsciiStr + ?Sized>(c: &C) -> Result<&AsciiStr, AsAsciiStrError> {
+            c.as_ascii_str()
+        }
+        let arr = [AsciiChar::A];
+        let ascii_str: &AsciiStr = arr.as_ref().into();
+        let cstr = CString::new("A").unwrap();
+        assert_eq!(generic(&*cstr), Ok(ascii_str));
     }
 
     #[test]
