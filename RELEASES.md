@@ -1,5 +1,5 @@
-Unreleased
-==========
+Version 0.9.2 (2019-07-07)
+==========================
 * Implement the `IntoAsciiString` trait for `std::ffi::CStr` and `std::ffi::CString` types,
   and implemented the `AsAsciiStr` trait for `std::ffi::CStr` type.
 * Implement the `IntoAsciiString` for `std::borrow::Cow`, where the inner types themselves
