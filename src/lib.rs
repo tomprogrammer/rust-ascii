@@ -13,8 +13,6 @@
 //! A library that provides ASCII-only string and character types, equivalent to the `char`, `str`
 //! and `String` types in the standard library.
 //!
-#![cfg_attr(feature = "std", doc="[The documentation for the `core` mode is here](https://tomprogrammer.github.io/rust-ascii/core/ascii/index.html).")]
-#![cfg_attr(not(feature = "std"), doc="This is the documentation for `core` mode.")]
 //! Please refer to the readme file to learn about the different feature modes of this crate.
 //!
 //! # Requirements
