@@ -38,13 +38,13 @@ impl AsciiStr {
     /// Converts `&self` to a `&str` slice.
     #[inline]
     pub fn as_str(&self) -> &str {
-        From::from(self)
+        unsafe { &*(self as *const AsciiStr as *const str) }
     }
 
     /// Converts `&self` into a byte slice.
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
-        From::from(self)
+        unsafe { &*(self as *const AsciiStr as *const[u8]) }
     }
 
     /// Returns the entire string as slice of `AsciiChar`s.
@@ -381,22 +381,32 @@ impl AsMut<AsciiStr> for [AsciiChar] {
     }
 }
 
-macro_rules! impl_into {
+impl<'a> From<&'a AsciiStr> for &'a [AsciiChar] {
+    #[inline]
+    fn from(astr: &AsciiStr) -> &[AsciiChar] {
+        &astr.slice
+    }
+}
+impl<'a> From<&'a mut AsciiStr> for &'a mut [AsciiChar] {
+    #[inline]
+    fn from(astr: &mut AsciiStr) -> &mut [AsciiChar] {
+        &mut astr.slice
+    }
+}
+impl<'a> From<&'a AsciiStr> for &'a [u8] {
+    #[inline]
+    fn from(astr: &AsciiStr) -> &[u8] {
+        astr.as_bytes()
+    }
+}
+impl<'a> From<&'a AsciiStr> for &'a str {
+    #[inline]
+    fn from(astr: &AsciiStr) -> &str {
+        astr.as_str()
+    }
+}
+macro_rules! widen_box {
     ($wider: ty) => {
-        impl<'a> From<&'a AsciiStr> for &'a$wider {
-            #[inline]
-            fn from(slice: &AsciiStr) -> &$wider {
-                let ptr = slice as *const AsciiStr as *const $wider;
-                unsafe { &*ptr }
-            }
-        }
-        impl<'a> From<&'a mut AsciiStr> for &'a mut $wider {
-            #[inline]
-            fn from(slice: &mut AsciiStr) -> &mut $wider {
-                let ptr = slice as *mut AsciiStr as *mut $wider;
-                unsafe { &mut *ptr }
-            }
-        }
         #[cfg(feature = "std")]
         impl From<Box<AsciiStr>> for Box<$wider> {
             #[inline]
@@ -407,9 +417,9 @@ macro_rules! impl_into {
         }
     }
 }
-impl_into! {[AsciiChar]}
-impl_into! {[u8]}
-impl_into! {str}
+widen_box! {[AsciiChar]}
+widen_box! {[u8]}
+widen_box! {str}
 
 impl fmt::Display for AsciiStr {
     #[inline]
