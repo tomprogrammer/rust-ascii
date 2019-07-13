@@ -169,7 +169,7 @@ impl AsciiStr {
     /// ```
     pub fn split(&self,  on: AsciiChar) -> Split {
         Split {
-            on: on,
+            on,
             ended: false,
             chars: self.chars(),
         }
@@ -684,7 +684,7 @@ impl<'a> DoubleEndedIterator for Lines<'a> {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct AsAsciiStrError(usize);
 
-const ERRORMSG_STR: &'static str = "one or more bytes are not ASCII";
+const ERRORMSG_STR: &str = "one or more bytes are not ASCII";
 
 impl AsAsciiStrError {
     /// Returns the index of the first non-ASCII byte.

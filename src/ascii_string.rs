@@ -103,7 +103,7 @@ impl AsciiString {
             bytes.capacity(),
         );
         mem::forget(bytes);
-        AsciiString { vec: vec }
+        AsciiString { vec }
     }
 
     /// Converts anything that can represent a byte buffer into an `AsciiString`.
@@ -390,10 +390,6 @@ macro_rules! impl_eq {
             fn eq(&self, other: &$rhs) -> bool {
                 PartialEq::eq(&**self, &**other)
             }
-            #[inline]
-            fn ne(&self, other: &$rhs) -> bool {
-                PartialEq::ne(&**self, &**other)
-            }
         }
     }
 }
@@ -424,7 +420,7 @@ impl BorrowMut<AsciiStr> for AsciiString {
 impl From<Vec<AsciiChar>> for AsciiString {
     #[inline]
     fn from(vec: Vec<AsciiChar>) -> Self {
-        AsciiString { vec: vec }
+        AsciiString { vec }
     }
 }
 
@@ -455,7 +451,7 @@ impl<'a> From<&'a AsciiStr> for AsciiString {
 impl<'a> From<&'a [AsciiChar]> for AsciiString {
     #[inline]
     fn from(s: &'a [AsciiChar]) -> AsciiString {
-        s.into_iter().map(|c| *c).collect()
+        s.iter().copied().collect()
     }
 }
 
@@ -552,15 +548,21 @@ impl fmt::Debug for AsciiString {
 /// transmission of an error other than that an error occurred.
 impl fmt::Write for AsciiString {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let astr = try!(AsciiStr::from_ascii(s).map_err(|_| fmt::Error));
-        self.push_str(astr);
-        Ok(())
+        if let Ok(astr) = AsciiStr::from_ascii(s) {
+            self.push_str(astr);
+            Ok(())
+        } else {
+            Err(fmt::Error)
+        }
     }
 
     fn write_char(&mut self, c: char) -> fmt::Result {
-        let achar = try!(AsciiChar::from(c).map_err(|_| fmt::Error));
-        self.push(achar);
-        Ok(())
+        if let Ok(achar) = AsciiChar::from(c) {
+            self.push(achar);
+            Ok(())
+        } else {
+            Err(fmt::Error)
+        }
     }
 }
 
@@ -716,8 +718,8 @@ impl<O: Any> Error for FromAsciiError<O> {
         self.error.description()
     }
     /// Always returns an `AsAsciiStrError`
-    fn cause(&self) -> Option<&Error> {
-        Some(&self.error as &Error)
+    fn cause(&self) -> Option<&dyn Error> {
+        Some(&self.error as &dyn Error)
     }
 }
 
@@ -815,7 +817,7 @@ impl IntoAsciiString for CString {
                         // `CString`, so this is safe.
                         CString::from_vec_unchecked(owner)
                     },
-                    error: error,
+                    error,
                 }
             })
             .map(|mut s| {
@@ -840,7 +842,7 @@ impl<'a> IntoAsciiString for &'a CStr {
                     owner: unsafe {
                         CStr::from_ptr(owner.as_ptr() as *const _)
                     },
-                    error: error,
+                    error,
                 }
             })
             .map(|mut s| {
@@ -869,7 +871,7 @@ where
                     .map_err(|FromAsciiError { error, owner }| {
                         FromAsciiError {
                             owner: Cow::Owned(owner),
-                            error: error,
+                            error,
                         }
                     })
             }
@@ -878,7 +880,7 @@ where
                     .map_err(|FromAsciiError { error, owner }| {
                         FromAsciiError {
                             owner: Cow::Borrowed(owner),
-                            error: error,
+                            error,
                         }
                     })
             }
