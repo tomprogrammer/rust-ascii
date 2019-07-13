@@ -32,9 +32,6 @@
 #[cfg(feature = "std")]
 extern crate core;
 
-#[cfg(feature = "quickcheck")]
-extern crate quickcheck;
-
 #[cfg(feature = "serde")]
 extern crate serde;
 
