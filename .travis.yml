@@ -18,8 +18,7 @@ script:
     travis-cargo test &&
     travis-cargo test -- --all-features &&
     rm Cargo.lock &&
-    # no version of quickcheck compiles with -Z minimal-versions, but serde does
-    travis-cargo --only nightly build -- -Z minimal-versions --features 'serde serde-test'
+    travis-cargo --only nightly build -- -Z minimal-versions --all-features
 
 after_success:
   - |
