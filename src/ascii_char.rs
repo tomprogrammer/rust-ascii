@@ -466,7 +466,7 @@ impl AsciiChar {
     pub fn as_printable_char(self) -> char {
         unsafe {
             match self as u8 {
-                b' '...b'~' => self.as_char(),
+                b' '..=b'~' => self.as_char(),
                 127 => '␡',
                 _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
             }
@@ -488,7 +488,7 @@ impl AsciiChar {
     pub fn to_ascii_uppercase(&self) -> Self {
         unsafe {
             match *self as u8 {
-                b'a'...b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
+                b'a'..=b'z' => AsciiChar::from_unchecked(self.as_byte() - (b'a' - b'A')),
                 _ => *self,
             }
         }
@@ -499,7 +499,7 @@ impl AsciiChar {
     pub fn to_ascii_lowercase(&self) -> Self {
         unsafe {
             match *self as u8 {
-                b'A'...b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
+                b'A'..=b'Z' => AsciiChar::from_unchecked(self.as_byte() + (b'a' - b'A')),
                 _ => *self,
             }
         }
@@ -571,7 +571,7 @@ impl_into_partial_eq_ord!{char, AsciiChar::as_char}
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ToAsciiCharError(());
 
-const ERRORMSG_CHAR: &'static str = "not an ASCII character";
+const ERRORMSG_CHAR: &str = "not an ASCII character";
 
 #[cfg(not(feature = "std"))]
 impl ToAsciiCharError {
@@ -624,7 +624,7 @@ impl ToAsciiChar for AsciiChar {
 impl ToAsciiChar for u8 {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
@@ -671,7 +671,7 @@ impl ToAsciiChar for u32 {
 
 impl ToAsciiChar for u16 {
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {

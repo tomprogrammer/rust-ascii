@@ -10,6 +10,7 @@ rust:
 before_script:
   - |
     pip install 'travis-cargo<0.2' --user &&
+    rustup component add clippy &&
     export PATH=$HOME/.local/bin:$PATH
 
 script:
@@ -17,6 +18,7 @@ script:
     travis-cargo test -- --no-default-features &&
     travis-cargo test &&
     travis-cargo test -- --all-features &&
+    travis-cargo --only stable clippy -- --all-features &&
     rm Cargo.lock &&
     travis-cargo --only nightly build -- -Z minimal-versions --all-features
 

@@ -29,6 +29,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#![allow(clippy::trivially_copy_pass_by_ref)] // for compatibility with methods on char and u8
+
 #[cfg(feature = "std")]
 extern crate core;
 
