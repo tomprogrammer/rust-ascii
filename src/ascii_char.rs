@@ -288,11 +288,11 @@ impl AsciiChar {
     /// # Example
     /// ```
     /// # use ascii::AsciiChar;
-    /// let a = AsciiChar::from('g').unwrap();
+    /// let a = AsciiChar::from_ascii('g').unwrap();
     /// assert_eq!(a.as_char(), 'g');
     /// ```
     #[inline]
-    pub fn from<C: ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
+    pub fn from_ascii<C: ToAsciiChar>(ch: C) -> Result<Self, ToAsciiCharError> {
         ch.to_ascii_char()
     }
 
@@ -301,7 +301,7 @@ impl AsciiChar {
     /// This function is intended for creating `AsciiChar` values from
     /// hardcoded known-good character literals such as `'K'`, `'-'` or `'\0'`,
     /// and for use in `const` contexts.
-    /// Use [`from_ascii()`](#tymethod.from_ascii) instead when you're not
+    /// Use [`from_ascii()`](#method.from_ascii) instead when you're not
     /// certain the character is ASCII.
     ///
     /// # Examples
@@ -353,9 +353,21 @@ impl AsciiChar {
         ALL[ch as usize]
     }
 
-    /// Constructs an ASCII character from a `char` or `u8` without any checks.
+    /// Constructs an ASCII character from a `u8`, `char` or other character
+    /// type without any checks.
+    ///
+    /// # Safety
+    ///
+    /// This function is very unsafe as it can create invalid enum
+    /// discriminants, which instantly creates undefined behavior.
+    /// (`let _ = AsciiChar::from_ascii_unchecked(200);` alone is UB).
+    ///
+    /// The undefined behavior is not just theoretical either:
+    /// For example, `[0; 128][AsciiChar::from_ascii_unchecked(255) as u8 as usize] = 0`
+    /// might not panic, creating a buffer overflow,
+    /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
-    pub unsafe fn from_unchecked<C: ToAsciiChar>(ch: C) -> Self {
+    pub unsafe fn from_ascii_unchecked<C: ToAsciiChar>(ch: C) -> Self {
         ch.to_ascii_char_unchecked()
     }
 

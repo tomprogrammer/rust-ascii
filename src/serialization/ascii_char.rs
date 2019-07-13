@@ -23,7 +23,7 @@ impl<'de> Visitor<'de> for AsciiCharVisitor {
 
     #[inline]
     fn visit_char<E: Error>(self, v: char) -> Result<Self::Value, E> {
-        AsciiChar::from(v).map_err(|_| Error::invalid_value(Unexpected::Char(v), &self))
+        AsciiChar::from_ascii(v).map_err(|_| Error::invalid_value(Unexpected::Char(v), &self))
     }
 
     #[inline]
@@ -69,7 +69,7 @@ mod tests {
     #[cfg(feature = "serde_test")]
     fn serialize() {
         use serde_test::{assert_tokens, Token};
-        let ascii_char = AsciiChar::from(ASCII_CHAR).unwrap();
+        let ascii_char = AsciiChar::from_ascii(ASCII_CHAR).unwrap();
         assert_tokens(&ascii_char, &[Token::Char(ASCII_CHAR)]);
     }
 
@@ -77,7 +77,7 @@ mod tests {
     #[cfg(feature = "serde_test")]
     fn deserialize() {
         use serde_test::{assert_de_tokens, assert_de_tokens_error, Token};
-        let ascii_char = AsciiChar::from(ASCII_CHAR).unwrap();
+        let ascii_char = AsciiChar::from_ascii(ASCII_CHAR).unwrap();
         assert_de_tokens(&ascii_char, &[Token::String(ASCII_STR)]);
         assert_de_tokens(&ascii_char, &[Token::Str(ASCII_STR)]);
         assert_de_tokens(&ascii_char, &[Token::BorrowedStr(ASCII_STR)]);

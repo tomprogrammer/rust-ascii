@@ -225,9 +225,9 @@ impl AsciiString {
     /// ```
     /// # use ascii::{ AsciiChar, AsciiString};
     /// let mut s = AsciiString::from_ascii("abc").unwrap();
-    /// s.push(AsciiChar::from('1').unwrap());
-    /// s.push(AsciiChar::from('2').unwrap());
-    /// s.push(AsciiChar::from('3').unwrap());
+    /// s.push(AsciiChar::from_ascii('1').unwrap());
+    /// s.push(AsciiChar::from_ascii('2').unwrap());
+    /// s.push(AsciiChar::from_ascii('3').unwrap());
     /// assert_eq!(s, "abc123");
     /// ```
     #[inline]
@@ -330,7 +330,7 @@ impl AsciiString {
     /// # use ascii::{AsciiChar, AsciiString};
     /// let mut s = AsciiString::new();
     /// assert!(s.is_empty());
-    /// s.push(AsciiChar::from('a').unwrap());
+    /// s.push(AsciiChar::from_ascii('a').unwrap());
     /// assert!(!s.is_empty());
     /// ```
     #[inline]
@@ -557,7 +557,7 @@ impl fmt::Write for AsciiString {
     }
 
     fn write_char(&mut self, c: char) -> fmt::Result {
-        if let Ok(achar) = AsciiChar::from(c) {
+        if let Ok(achar) = AsciiChar::from_ascii(c) {
             self.push(achar);
             Ok(())
         } else {
@@ -909,7 +909,7 @@ mod tests {
 
     #[test]
     fn from_ascii_vec() {
-        let vec = vec![AsciiChar::from('A').unwrap(), AsciiChar::from('B').unwrap()];
+        let vec = vec![AsciiChar::from_ascii('A').unwrap(), AsciiChar::from_ascii('B').unwrap()];
         assert_eq!(AsciiString::from(vec), AsciiString::from_str("AB").unwrap());
     }
 
