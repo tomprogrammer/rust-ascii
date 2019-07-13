@@ -675,12 +675,18 @@ impl ToAsciiChar for AsciiChar {
 impl ToAsciiChar for u8 {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        unsafe {
-            if self <= 0x7F {
-                return Ok(self.to_ascii_char_unchecked());
-            }
-        }
-        Err(ToAsciiCharError(()))
+        (self as u32).to_ascii_char()
+    }
+    #[inline]
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
+        mem::transmute(self)
+    }
+}
+
+impl ToAsciiChar for i8 {
+    #[inline]
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
+        (self as u32).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
@@ -691,12 +697,32 @@ impl ToAsciiChar for u8 {
 impl ToAsciiChar for char {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
+        (self as u32).to_ascii_char()
+    }
+    #[inline]
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
+        (self as u32).to_ascii_char_unchecked()
+    }
+}
+
+impl ToAsciiChar for u32 {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         unsafe {
-            if self as u32 <= 0x7F {
-                return Ok(self.to_ascii_char_unchecked());
+            match self {
+                0..=127 => Ok(self.to_ascii_char_unchecked()),
+                _ => Err(ToAsciiCharError(()))
             }
         }
-        Err(ToAsciiCharError(()))
+    }
+    #[inline]
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
+        (self as u8).to_ascii_char_unchecked()
+    }
+}
+
+impl ToAsciiChar for u16 {
+    fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
+        (self as u32).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
@@ -758,7 +784,7 @@ mod tests {
         assert_eq!(generic(A), Ok(A));
         assert_eq!(generic(b'A'), Ok(A));
         assert_eq!(generic('A'), Ok(A));
-        assert!(generic(200).is_err());
+        assert!(generic(200u16).is_err());
         assert!(generic('λ').is_err());
     }
 
