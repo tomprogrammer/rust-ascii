@@ -1088,7 +1088,7 @@ mod tests {
         fn split_equals_str(haystack: &str, needle: char) {
             let mut strs = haystack.split(needle);
             let mut asciis = haystack.as_ascii_str().unwrap()
-                .split(AsciiChar::from(needle).unwrap())
+                .split(AsciiChar::from_ascii(needle).unwrap())
                 .map(|a| a.as_str());
             loop {
                 assert_eq!(asciis.size_hint(), strs.size_hint());

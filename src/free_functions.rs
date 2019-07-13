@@ -55,7 +55,7 @@ pub fn caret_decode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     unsafe {
         match c.into() {
-            b'?'..=b'_' => Some(AsciiChar::from_unchecked(c.into() ^ 0b0100_0000)),
+            b'?'..=b'_' => Some(AsciiChar::from_ascii_unchecked(c.into() ^ 0b0100_0000)),
             _ => None,
         }
     }
