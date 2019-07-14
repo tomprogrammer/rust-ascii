@@ -15,11 +15,14 @@
 //!
 //! Please refer to the readme file to learn about the different feature modes of this crate.
 //!
-//! # Requirements
+//! # Minimum supported Rust version
 //!
-//! - The minimum supported Rust version is 1.9.0
-//! - Enabling the quickcheck feature requires Rust 1.12.0
-//! - Enabling the serde feature requires Rust 1.13.0
+//! The minimum supported Rust version for 1.0.\* releases is 1.36.0.
+//! Later 1.y.0 releases might require newer Rust versions, but the three most
+//! recent stable releases at the time of publishing will always be supported.  
+//! For example this means that if the current stable Rust version is 1.44 when
+//! ascii 1.1.0 is released, then ascii 1.1.* will not require a newer
+//! Rust version than 1.42.
 //!
 //! # History
 //!
