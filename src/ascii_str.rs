@@ -3,7 +3,7 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
 use core::ops::{Range, RangeTo, RangeFrom, RangeFull, RangeInclusive, RangeToInclusive};
-use core::slice::{self, Iter, IterMut};
+use core::slice::{self, Iter, IterMut, SliceIndex};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
@@ -725,60 +725,123 @@ impl Error for AsAsciiStrError {
     }
 }
 
-/// Convert slices of bytes to `AsciiStr`.
+/// Convert slices of bytes or AsciiChar to `AsciiStr`.
+// Could nearly replace this trait with SliceIndex, but its methods isn't even
+// on a path for stabilization.
 pub trait AsAsciiStr {
-    /// Convert to an ASCII slice without checking for non-ASCII characters.
-    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
+    /// Used to constrain `SliceIndex`
+    #[doc(hidden)]
+    type Inner;
+    /// Convert a subslice to an ASCII slice.
+    ///
+    /// Returns `Err` if the range is out of bounds or if not all bytes in the
+    /// slice are ASCII. The value in the error will be the index of the first
+    /// non-ASCII byte or the end of the slice.
+    ///
+    /// # Examples
+    /// ```
+    /// use ascii::AsAsciiStr;
+    /// assert!("'zoä'".slice_ascii(..3).is_ok());
+    /// assert!("'zoä'".slice_ascii(0..4).is_err());
+    /// assert!("'zoä'".slice_ascii(5..=5).is_ok());
+    /// assert!("'zoä'".slice_ascii(4..).is_err());
+    /// assert!(b"\r\n".slice_ascii(..).is_ok());
+    /// ```
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[Self::Inner], Output=[Self::Inner]>;
     /// Convert to an ASCII slice.
-    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError>;
+    ///
+    /// # Example
+    /// ```
+    /// use ascii::{AsAsciiStr, AsciiChar};
+    /// assert!("ASCII".as_ascii_str().is_ok());
+    /// assert!(b"\r\n".as_ascii_str().is_ok());
+    /// assert!("'zoä'".as_ascii_str().is_err());
+    /// assert!(b"\xff".as_ascii_str().is_err());
+    /// assert!([AsciiChar::C][..].as_ascii_str().is_ok()); // infallible
+    /// ```
+    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        self.slice_ascii(..)
+    }
+    /// Get a single ASCII character from the slice.
+    ///
+    /// Returns `None` if the index is out of bounds or the byte is not ASCII.
+    ///
+    /// # Examples
+    /// ```
+    /// use ascii::{AsAsciiStr, AsciiChar};
+    /// assert_eq!("'zoä'".get_ascii(4), None);
+    /// assert_eq!("'zoä'".get_ascii(5), Some(AsciiChar::Apostrophe));
+    /// assert_eq!("'zoä'".get_ascii(6), None);
+    /// ```
+    fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
+        self.slice_ascii(index..=index).ok().and_then(|str| str.first())
+    }
+    /// Convert to an ASCII slice without checking for non-ASCII characters.
+    ///
+    /// # Examples
+    /// 
+    unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
 }
 
-/// Convert mutable slices of bytes to `AsciiStr`.
-pub trait AsMutAsciiStr {
+/// Convert mutable slices of bytes or AsciiChar to `AsciiStr`.
+pub trait AsMutAsciiStr: AsAsciiStr {
+    /// Convert a subslice to an ASCII slice.
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[Self::Inner], Output=[Self::Inner]>;
+    /// Convert to a mutable ASCII slice.
+    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
+        self.slice_ascii_mut(..)
+    }
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
-    /// Convert to a mutable ASCII slice.
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError>;
 }
 
 // These generic implementations mirror the generic implementations for AsRef<T> in core.
 impl<'a, T: ?Sized> AsAsciiStr for &'a T where T: AsAsciiStr {
-    #[inline]
-    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
-        <T as AsAsciiStr>::as_ascii_str(*self)
+    type Inner = <T as AsAsciiStr>::Inner;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[Self::Inner], Output=[Self::Inner]>
+    {
+        <T as AsAsciiStr>::slice_ascii(*self, range)
     }
-
-    #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
     }
 }
 
 impl<'a, T: ?Sized> AsAsciiStr for &'a mut T where T: AsAsciiStr {
-    #[inline]
-    fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
-        <T as AsAsciiStr>::as_ascii_str(*self)
+    type Inner = <T as AsAsciiStr>::Inner;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[Self::Inner], Output=[Self::Inner]>
+    {
+        <T as AsAsciiStr>::slice_ascii(*self, range)
     }
 
-    #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
     }
 }
 
 impl<'a, T: ?Sized> AsMutAsciiStr for &'a mut T where T: AsMutAsciiStr {
-    #[inline]
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        <T as AsMutAsciiStr>::as_mut_ascii_str(*self)
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[Self::Inner], Output=[Self::Inner]>
+    {
+        <T as AsMutAsciiStr>::slice_ascii_mut(*self, range)
     }
 
-    #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         <T as AsMutAsciiStr>::as_mut_ascii_str_unchecked(*self)
     }
 }
 
 impl AsAsciiStr for AsciiStr {
+    type Inner = AsciiChar;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[AsciiChar], Output=[AsciiChar]>
+    {
+        self.slice.slice_ascii(range)
+    }
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self)
@@ -787,11 +850,16 @@ impl AsAsciiStr for AsciiStr {
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         self
     }
+    #[inline]
+    fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
+        self.slice.get_ascii(index)
+    }
 }
 impl AsMutAsciiStr for AsciiStr {
-    #[inline]
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        Ok(self)
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[AsciiChar], Output=[AsciiChar]>
+    {
+        self.slice.slice_ascii_mut(range)
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
@@ -800,6 +868,15 @@ impl AsMutAsciiStr for AsciiStr {
 }
 
 impl AsAsciiStr for [AsciiChar] {
+    type Inner = AsciiChar;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[AsciiChar], Output=[AsciiChar]>
+    {
+        match self.get(range) {
+            Some(slice) => Ok(slice.into()),
+            None => Err(AsAsciiStrError(self.len())),
+        }
+    }
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self.into())
@@ -808,11 +885,20 @@ impl AsAsciiStr for [AsciiChar] {
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         self.into()
     }
+    #[inline]
+    fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
+        self.get(index).cloned()
+    }
 }
 impl AsMutAsciiStr for [AsciiChar] {
-    #[inline]
-    fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        Ok(self.into())
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[AsciiChar], Output=[AsciiChar]>
+    {
+        let len = self.len();
+        match self.get_mut(range) {
+            Some(slice) => Ok(slice.into()),
+            None => Err(AsAsciiStrError(len)),
+        }
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
@@ -821,10 +907,24 @@ impl AsMutAsciiStr for [AsciiChar] {
 }
 
 impl AsAsciiStr for [u8] {
+    type Inner = u8;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[u8], Output=[u8]>
+    {
+        if let Some(slice) = self.get(range) {
+            slice.as_ascii_str().map_err(|AsAsciiStrError(not_ascii)| {
+                let offset = slice.as_ptr() as usize - self.as_ptr() as usize;
+                AsAsciiStrError(offset + not_ascii)
+            })
+        } else {
+            Err(AsAsciiStrError(self.len()))
+        }
+    }
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
-        match self.iter().position(|&b| b > 127) {
-            Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe { Ok(self.as_ascii_str_unchecked()) },
+        if self.is_ascii() {// is_ascii is likely optimized
+            unsafe { Ok(self.as_ascii_str_unchecked()) }
+        } else {
+            Err(AsAsciiStrError(self.iter().take_while(|&b| b.is_ascii()).count()))
         }
     }
     #[inline]
@@ -834,10 +934,25 @@ impl AsAsciiStr for [u8] {
     }
 }
 impl AsMutAsciiStr for [u8] {
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[u8], Output=[u8]>
+    {
+        let (ptr, len) = (self.as_ptr(), self.len());
+        if let Some(slice) = self.get_mut(range) {
+            let slice_ptr = slice.as_ptr();
+            slice.as_mut_ascii_str().map_err(|AsAsciiStrError(not_ascii)| {
+                let offset = slice_ptr as usize - ptr as usize;
+                AsAsciiStrError(offset + not_ascii)
+            })
+        } else {
+            Err(AsAsciiStrError(len))
+        }
+    }
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        match self.iter().position(|&b| b > 127) {
-            Some(index) => Err(AsAsciiStrError(index)),
-            None => unsafe { Ok(self.as_mut_ascii_str_unchecked()) },
+        if self.is_ascii() {// is_ascii() is likely optimized
+            unsafe { Ok(self.as_mut_ascii_str_unchecked()) }
+        } else {
+            Err(AsAsciiStrError(self.iter().take_while(|&b| b.is_ascii()).count()))
         }
     }
     #[inline]
@@ -848,6 +963,12 @@ impl AsMutAsciiStr for [u8] {
 }
 
 impl AsAsciiStr for str {
+    type Inner = u8;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[u8], Output=[u8]>
+    {
+        self.as_bytes().slice_ascii(range)
+    }
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         self.as_bytes().as_ascii_str()
     }
@@ -857,6 +978,25 @@ impl AsAsciiStr for str {
     }
 }
 impl AsMutAsciiStr for str {
+    fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[u8], Output=[u8]>
+    {
+        let (ptr, len) = if let Some(slice) = self.as_bytes().get(range) {
+            if !slice.is_ascii() {
+                let offset = slice.as_ptr() as usize - self.as_ptr() as usize;
+                let not_ascii = slice.iter().take_while(|&b| b.is_ascii()).count();
+                return Err(AsAsciiStrError(offset+not_ascii));
+            }
+            (slice.as_ptr(), slice.len())
+        } else {
+            return Err(AsAsciiStrError(self.len()));
+        };
+        unsafe {
+            let ptr = ptr as *const AsciiChar as *mut AsciiChar;
+            let slice = core::slice::from_raw_parts_mut(ptr, len);
+            Ok(slice.into())
+        }
+    }
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         match self.bytes().position(|b| b > 127) {
             Some(index) => Err(AsAsciiStrError(index)),
@@ -873,6 +1013,12 @@ impl AsMutAsciiStr for str {
 /// Note that the trailing null byte will be removed in the conversion.
 #[cfg(feature = "std")]
 impl AsAsciiStr for CStr {
+    type Inner = u8;
+    fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
+        where R: SliceIndex<[u8], Output=[u8]>
+    {
+        self.to_bytes().slice_ascii(range)
+    }
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         self.to_bytes().as_ascii_str()
@@ -934,21 +1080,67 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std")]
     fn as_ascii_str() {
+        macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
+        let s = "abčd";
+        let b = s.as_bytes();
+        assert_eq!(s.as_ascii_str(), err!(2));
+        assert_eq!(b.as_ascii_str(), err!(2));
+        let a: &AsciiStr = [AsciiChar::a, AsciiChar::b][..].as_ref();
+        assert_eq!(s[..2].as_ascii_str(), Ok(a));
+        assert_eq!(b[..2].as_ascii_str(), Ok(a));
+        assert_eq!(s.slice_ascii(..2), Ok(a));
+        assert_eq!(b.slice_ascii(..2), Ok(a));
+        assert_eq!(s.slice_ascii(..=2), err!(2));
+        assert_eq!(b.slice_ascii(..=2), err!(2));
+        assert_eq!(s.get_ascii(4), Some(AsciiChar::d));
+        assert_eq!(b.get_ascii(4), Some(AsciiChar::d));
+        assert_eq!(s.get_ascii(3), None);
+        assert_eq!(b.get_ascii(3), None);
+        assert_eq!(s.get_ascii(b.len()), None);
+        assert_eq!(b.get_ascii(b.len()), None);
+        assert_eq!(a.get_ascii(0), Some(AsciiChar::a));
+        assert_eq!(a.get_ascii(a.len()), None);
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn cstr_as_ascii_str() {
+        use std::ffi::CStr;
+        macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
+        let cstr = CStr::from_bytes_with_nul(b"a\xbbcde\xffg\0").unwrap();
+        assert_eq!(cstr.as_ascii_str(), err!(1));
+        assert_eq!(cstr.slice_ascii(2..), err!(5));
+        assert_eq!(cstr.get_ascii(5), None);
+        assert_eq!(cstr.get_ascii(6), Some(AsciiChar::g));
+        assert_eq!(cstr.get_ascii(7), None);
+        let aslice = &[AsciiChar::X, AsciiChar::Y, AsciiChar::Z, AsciiChar::Null][..];
+        let astr: &AsciiStr = aslice.as_ref();
+        let cstr = CStr::from_bytes_with_nul(astr.as_bytes()).unwrap();
+        assert_eq!(cstr.slice_ascii(..2), Ok(&astr[..2]));
+        assert_eq!(cstr.as_ascii_str(), Ok(&astr[..3]));
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn as_mut_ascii_str() {
         macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
         let mut s: String = "abčd".to_string();
         let mut b: Vec<u8> = s.clone().into();
-        assert_eq!(s.as_str().as_ascii_str(), err!(2));
-        assert_eq!(s.as_mut_str().as_mut_ascii_str(), err!(2));
-        assert_eq!(b.as_slice().as_ascii_str(), err!(2));
-        assert_eq!(b.as_mut_slice().as_mut_ascii_str(), err!(2));
-        let mut a = [AsciiChar::a, AsciiChar::b];
-        assert_eq!((&s[..2]).as_ascii_str(), Ok((&a[..]).into()));
-        assert_eq!((&b[..2]).as_ascii_str(), Ok((&a[..]).into()));
-        let a = Ok((&mut a[..]).into());
-        assert_eq!((&mut s[..2]).as_mut_ascii_str(), a);
-        assert_eq!((&mut b[..2]).as_mut_ascii_str(), a);
+        let mut first = [AsciiChar::a, AsciiChar::b];
+        let mut second = [AsciiChar::d];
+        assert_eq!(s.as_mut_ascii_str(), err!(2));
+        assert_eq!(b.as_mut_ascii_str(), err!(2));
+        assert_eq!(s.slice_ascii_mut(..), err!(2));
+        assert_eq!(b.slice_ascii_mut(..), err!(2));
+        assert_eq!(s[..2].as_mut_ascii_str(), Ok((&mut first[..]).into()));
+        assert_eq!(b[..2].as_mut_ascii_str(), Ok((&mut first[..]).into()));
+        assert_eq!(s.slice_ascii_mut(0..2), Ok((&mut first[..]).into()));
+        assert_eq!(b.slice_ascii_mut(0..2), Ok((&mut first[..]).into()));
+        assert_eq!(s.slice_ascii_mut(4..), Ok((&mut second[..]).into()));
+        assert_eq!(b.slice_ascii_mut(4..), Ok((&mut second[..]).into()));
+        assert_eq!(s.slice_ascii_mut(4..=10), err!(5));
+        assert_eq!(b.slice_ascii_mut(4..=10), err!(5));
     }
 
     #[test]
