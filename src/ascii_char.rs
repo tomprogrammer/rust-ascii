@@ -367,7 +367,7 @@ impl AsciiChar {
     /// might not panic, creating a buffer overflow,
     /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
-    pub unsafe fn from_ascii_unchecked<C: ToAsciiChar>(ch: C) -> Self {
+    pub unsafe fn from_ascii_unchecked(ch: u8) -> Self {
         ch.to_ascii_char_unchecked()
     }
 
