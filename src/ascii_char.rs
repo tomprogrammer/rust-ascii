@@ -383,7 +383,12 @@ impl AsciiChar {
         self as u8 as char
     }
 
-    // the following methods are like ctype, and the implementation is inspired by musl
+    // the following methods are like ctype, and the implementation is inspired by musl.
+    // The ascii_ methods take self by reference for maximum compatibility
+    // with the corresponding methods on u8 and char.
+    // It is bad for both usability and performance, but marking those
+    // that doesn't have a non-ascii sibling #[inline] should
+    // make the compiler optimize away the indirection.
 
     /// Turns uppercase into lowercase, but also modifies '@' and '<'..='_'
     const fn to_not_upper(self) -> u8 {
@@ -396,28 +401,92 @@ impl AsciiChar {
         (self.to_not_upper() >= b'a') & (self.to_not_upper() <= b'z')
     }
 
+    /// Check if the character is a letter (a-z, A-Z).
+    ///
+    /// This method is identical to [`is_alphabetic()`](#method.is_alphabetic)
+    pub fn is_ascii_alphabetic(&self) -> bool {
+        self.is_alphabetic()
+    }
+
+    /// Check if the character is a digit in the given radix.
+    ///
+    /// If the radix is always 10 or 16,
+    /// [`is_ascii_digit()`](#method.is_ascii_digit) and
+    /// [`is_ascii_hexdigit()`](#method.is_ascii_hexdigit()) will be faster.
+    ///
+    /// # Panics
+    ///
+    /// Radixes greater than 36 are not supported and will result in a panic.
+    pub fn is_digit(self, radix: u32) -> bool {
+        match (self as u8, radix) {
+            (b'0'..=b'9', 0..=36) => u32::from(self as u8 - b'0') < radix,
+            (b'a'..=b'z', 11..=36) => u32::from(self as u8 - b'a') < radix - 10,
+            (b'A'..=b'Z', 11..=36) => u32::from(self as u8 - b'A') < radix - 10,
+            (_, 0..=36) => false,
+            (_, _) => panic!("radixes greater than 36 are not supported"),
+        }
+    }
+
     /// Check if the character is a number (0-9)
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiChar;
+    /// assert_eq!(AsciiChar::new('0').is_ascii_digit(), true);
+    /// assert_eq!(AsciiChar::new('9').is_ascii_digit(), true);
+    /// assert_eq!(AsciiChar::new('a').is_ascii_digit(), false);
+    /// assert_eq!(AsciiChar::new('A').is_ascii_digit(), false);
+    /// assert_eq!(AsciiChar::new('/').is_ascii_digit(), false);
+    /// ```
     #[inline]
-    pub const fn is_digit(self) -> bool {
-        (self as u8 >= b'0') & (self as u8 <= b'9')
+    pub const fn is_ascii_digit(&self) -> bool {
+        (*self as u8 >= b'0') & (*self as u8 <= b'9')
     }
 
     /// Check if the character is a letter or number
     #[inline]
     pub const fn is_alphanumeric(self) -> bool {
-        self.is_alphabetic() | self.is_digit()
+        self.is_alphabetic() | self.is_ascii_digit()
+    }
+
+    /// Check if the character is a letter or number
+    ///
+    /// This method is identical to [`is_alphanumeric()`](#method.is_alphanumeric)
+    pub fn is_ascii_alphanumeric(&self) -> bool {
+        self.is_alphanumeric()
     }
 
     /// Check if the character is a space or horizontal tab
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiChar;
+    /// assert!(AsciiChar::Space.is_ascii_blank());
+    /// assert!(AsciiChar::Tab.is_ascii_blank());
+    /// assert!(!AsciiChar::VT.is_ascii_blank());
+    /// assert!(!AsciiChar::LineFeed.is_ascii_blank());
+    /// assert!(!AsciiChar::CarriageReturn.is_ascii_blank());
+    /// assert!(!AsciiChar::FF.is_ascii_blank());
+    /// ```
     #[inline]
-    pub const fn is_blank(self) -> bool {
+    pub const fn is_ascii_blank(self) -> bool {
         (self as u8 == b' ') | (self as u8 == b'\t')
     }
 
-    /// Check if the character is a ' ', '\t', '\n' or '\r'
+    /// Check if the character one of ' ', '\t', '\n', '\r',
+    /// '\0xb' (vertical tab) or '\0xc' (form feed).
     #[inline]
     pub const fn is_whitespace(self) -> bool {
-        self.is_blank() | (self as u8 == b'\n') | (self as u8 == b'\r')
+        let b = self as u8;
+        self.is_ascii_blank() | (b == b'\n') | (b == b'\r') | (b == 0x0b) | (b == 0x0c)
+    }
+
+    /// Check if the character is a ' ', '\t', '\n', '\r' or '\0xc' (form feed).
+    ///
+    /// This method is NOT identical to `is_whitespace()`.
+    #[inline]
+    pub const fn is_ascii_whitespace(self) -> bool {
+        self.is_ascii_blank() | (self as u8 == b'\n') | (self as u8 == b'\r') | (self as u8 == 0x0c)
     }
 
     /// Check if the character is a control character
@@ -425,14 +494,16 @@ impl AsciiChar {
     /// # Examples
     /// ```
     /// # use ascii::AsciiChar;
-    /// assert_eq!(AsciiChar::new('\0').is_control(), true);
-    /// assert_eq!(AsciiChar::new('n').is_control(), false);
-    /// assert_eq!(AsciiChar::new(' ').is_control(), false);
-    /// assert_eq!(AsciiChar::new('\n').is_control(), true);
+    /// assert_eq!(AsciiChar::new('\0').is_ascii_control(), true);
+    /// assert_eq!(AsciiChar::new('n').is_ascii_control(), false);
+    /// assert_eq!(AsciiChar::new(' ').is_ascii_control(), false);
+    /// assert_eq!(AsciiChar::new('\n').is_ascii_control(), true);
+    /// assert_eq!(AsciiChar::new('\t').is_ascii_control(), true);
+    /// assert_eq!(AsciiChar::EOT.is_ascii_control(), true);
     /// ```
     #[inline]
-    pub const fn is_control(self) -> bool {
-        ((self as u8) < b' ') | (self as u8 == 127)
+    pub const fn is_ascii_control(&self) -> bool {
+        ((*self as u8) < b' ') | (*self as u8 == 127)
     }
 
     /// Checks if the character is printable (except space)
@@ -440,12 +511,12 @@ impl AsciiChar {
     /// # Examples
     /// ```
     /// # use ascii::AsciiChar;
-    /// assert_eq!(AsciiChar::new('n').is_graph(), true);
-    /// assert_eq!(AsciiChar::new(' ').is_graph(), false);
-    /// assert_eq!(AsciiChar::new('\n').is_graph(), false);
+    /// assert_eq!(AsciiChar::new('n').is_ascii_graphic(), true);
+    /// assert_eq!(AsciiChar::new(' ').is_ascii_graphic(), false);
+    /// assert_eq!(AsciiChar::new('\n').is_ascii_graphic(), false);
     /// ```
     #[inline]
-    pub const fn is_graph(self) -> bool {
+    pub const fn is_ascii_graphic(&self) -> bool {
         self.as_byte().wrapping_sub(b' ' + 1) < 0x5E
     }
 
@@ -454,16 +525,16 @@ impl AsciiChar {
     /// # Examples
     /// ```
     /// # use ascii::AsciiChar;
-    /// assert_eq!(AsciiChar::new('n').is_print(), true);
-    /// assert_eq!(AsciiChar::new(' ').is_print(), true);
-    /// assert_eq!(AsciiChar::new('\n').is_print(), false);
+    /// assert_eq!(AsciiChar::new('n').is_ascii_printable(), true);
+    /// assert_eq!(AsciiChar::new(' ').is_ascii_printable(), true);
+    /// assert_eq!(AsciiChar::new('\n').is_ascii_printable(), false);
     /// ```
     #[inline]
-    pub const fn is_print(self) -> bool {
+    pub const fn is_ascii_printable(&self) -> bool {
         self.as_byte().wrapping_sub(b' ') < 0x5F
     }
 
-    /// Checks if the character is alphabetic and lowercase
+    /// Checks if the character is alphabetic and lowercase (a-z).
     ///
     /// # Examples
     /// ```
@@ -477,7 +548,14 @@ impl AsciiChar {
         self.as_byte().wrapping_sub(b'a') < 26
     }
 
-    /// Checks if the character is alphabetic and uppercase
+    /// Checks if the character is alphabetic and lowercase (a-z).
+    ///
+    /// This method is identical to [`is_lowercase()`](#method.is_lowercase)
+    pub fn is_ascii_lowercase(&self) -> bool {
+        self.is_lowercase()
+    }
+
+    /// Checks if the character is alphabetic and uppercase (A-Z).
     ///
     /// # Examples
     /// ```
@@ -491,19 +569,26 @@ impl AsciiChar {
         self.as_byte().wrapping_sub(b'A') < 26
     }
 
+    /// Checks if the character is alphabetic and uppercase (A-Z).
+    ///
+    /// This method is identical to [`is_uppercase()`](#method.is_uppercase)
+    pub fn is_ascii_uppercase(&self) -> bool {
+        self.is_uppercase()
+    }
+
     /// Checks if the character is punctuation
     ///
     /// # Examples
     /// ```
     /// # use ascii::AsciiChar;
-    /// assert_eq!(AsciiChar::new('n').is_punctuation(), false);
-    /// assert_eq!(AsciiChar::new(' ').is_punctuation(), false);
-    /// assert_eq!(AsciiChar::new('_').is_punctuation(), true);
-    /// assert_eq!(AsciiChar::new('~').is_punctuation(), true);
+    /// assert_eq!(AsciiChar::new('n').is_ascii_punctuation(), false);
+    /// assert_eq!(AsciiChar::new(' ').is_ascii_punctuation(), false);
+    /// assert_eq!(AsciiChar::new('_').is_ascii_punctuation(), true);
+    /// assert_eq!(AsciiChar::new('~').is_ascii_punctuation(), true);
     /// ```
     #[inline]
-    pub const fn is_punctuation(self) -> bool {
-        self.is_graph() & !self.is_alphanumeric()
+    pub const fn is_ascii_punctuation(&self) -> bool {
+        self.is_ascii_graphic() & !self.is_alphanumeric()
     }
 
     /// Checks if the character is a valid hex digit
@@ -511,15 +596,15 @@ impl AsciiChar {
     /// # Examples
     /// ```
     /// # use ascii::AsciiChar;
-    /// assert_eq!(AsciiChar::new('5').is_hex(), true);
-    /// assert_eq!(AsciiChar::new('a').is_hex(), true);
-    /// assert_eq!(AsciiChar::new('F').is_hex(), true);
-    /// assert_eq!(AsciiChar::new('G').is_hex(), false);
-    /// assert_eq!(AsciiChar::new(' ').is_hex(), false);
+    /// assert_eq!(AsciiChar::new('5').is_ascii_hexdigit(), true);
+    /// assert_eq!(AsciiChar::new('a').is_ascii_hexdigit(), true);
+    /// assert_eq!(AsciiChar::new('F').is_ascii_hexdigit(), true);
+    /// assert_eq!(AsciiChar::new('G').is_ascii_hexdigit(), false);
+    /// assert_eq!(AsciiChar::new(' ').is_ascii_hexdigit(), false);
     /// ```
     #[inline]
-    pub const fn is_hex(self) -> bool {
-        self.is_digit() | ((self as u8 | 0x20u8).wrapping_sub(b'a') < 6)
+    pub const fn is_ascii_hexdigit(&self) -> bool {
+        self.is_ascii_digit() | ((*self as u8 | 0x20u8).wrapping_sub(b'a') < 6)
     }
 
     /// Unicode has printable versions of the ASCII control codes, like '␛'.
@@ -782,6 +867,12 @@ mod tests {
     }
 
     #[test]
+    fn as_byte_and_char() {
+        assert_eq!(A.as_byte(), b'A');
+        assert_eq!(A.as_char(), 'A');
+    }
+
+    #[test]
     fn new_array_is_correct() {
         for byte in 0..128u8 {
             assert_eq!(AsciiChar::new(byte as char).as_byte(), byte);
@@ -789,26 +880,46 @@ mod tests {
     }
 
     #[test]
-    fn as_byte_and_char() {
-        assert_eq!(A.as_byte(), b'A');
-        assert_eq!(A.as_char(), 'A');
+    fn is_all() {
+        for byte in 0..128u8 {
+            let ch = byte as char;
+            let ascii = AsciiChar::new(ch);
+            assert_eq!(ascii.is_alphabetic(), ch.is_alphabetic());
+            assert_eq!(ascii.is_ascii_alphabetic(), ch.is_ascii_alphabetic());
+            assert_eq!(ascii.is_alphanumeric(), ch.is_alphanumeric());
+            assert_eq!(ascii.is_ascii_alphanumeric(), ch.is_ascii_alphanumeric());
+            assert_eq!(ascii.is_digit(8), ch.is_digit(8), "is_digit(8) {:?}", ch);
+            assert_eq!(ascii.is_digit(10), ch.is_digit(10), "is_digit(10) {:?}", ch);
+            assert_eq!(ascii.is_digit(16), ch.is_digit(16), "is_digit(16) {:?}", ch);
+            assert_eq!(ascii.is_digit(36), ch.is_digit(36), "is_digit(36) {:?}", ch);
+            assert_eq!(ascii.is_ascii_digit(), ch.is_ascii_digit());
+            assert_eq!(ascii.is_ascii_hexdigit(), ch.is_ascii_hexdigit());
+            assert_eq!(ascii.is_ascii_control(), ch.is_ascii_control());
+            assert_eq!(ascii.is_ascii_graphic(), ch.is_ascii_graphic());
+            assert_eq!(ascii.is_ascii_punctuation(), ch.is_ascii_punctuation());
+            assert_eq!(ascii.is_whitespace(), ch.is_whitespace(), "{:?} ({:#04x})", ch, byte);
+            assert_eq!(ascii.is_ascii_whitespace(), ch.is_ascii_whitespace(), "{:?} ({:#04x})", ch, byte);
+            assert_eq!(ascii.is_uppercase(), ch.is_uppercase());
+            assert_eq!(ascii.is_ascii_uppercase(), ch.is_ascii_uppercase());
+            assert_eq!(ascii.is_lowercase(), ch.is_lowercase());
+            assert_eq!(ascii.is_ascii_lowercase(), ch.is_ascii_lowercase());
+            assert_eq!(ascii.to_ascii_uppercase(), ch.to_ascii_uppercase());
+            assert_eq!(ascii.to_ascii_lowercase(), ch.to_ascii_lowercase());
+        }
     }
 
     #[test]
-    fn is_digit() {
-        assert_eq!(_0.is_digit(), true);
-        assert_eq!(_9.is_digit(), true);
-        assert_eq!(O.is_digit(), false);
-        assert_eq!(o.is_digit(), false);
-        assert_eq!(Slash.is_digit(), false);
-        assert_eq!(Colon.is_digit(), false);
+    fn is_digit_strange_radixes() {
+        assert_eq!(AsciiChar::_0.is_digit(0), '0'.is_digit(0));
+        assert_eq!(AsciiChar::_0.is_digit(1), '0'.is_digit(1));
+        assert_eq!(AsciiChar::_5.is_digit(5), '5'.is_digit(5));
+        assert_eq!(AsciiChar::z.is_digit(35), 'z'.is_digit(35));
     }
 
     #[test]
-    fn is_control() {
-        assert_eq!(US.is_control(), true);
-        assert_eq!(DEL.is_control(), true);
-        assert_eq!(Space.is_control(), false);
+    #[should_panic]
+    fn is_digit_bad_radix() {
+        AsciiChar::_7.is_digit(37);
     }
 
     #[test]
