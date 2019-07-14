@@ -50,7 +50,7 @@ mod serialization;
 
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
-pub use ascii_str::{Chars, CharsMut, CharsRef, Lines, Split};
+pub use ascii_str::{Chars, CharsMut, CharsRef};
 #[cfg(feature = "std")]
 pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};
 pub use free_functions::{caret_encode, caret_decode};

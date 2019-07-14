@@ -25,11 +25,6 @@ pub struct AsciiStr {
 }
 
 impl AsciiStr {
-    /// Coerces into an `AsciiStr` slice.
-    pub fn new<S: AsRef<AsciiStr> + ?Sized>(s: &S) -> &AsciiStr {
-        s.as_ref()
-    }
-
     /// Converts `&self` to a `&str` slice.
     #[inline]
     pub fn as_str(&self) -> &str {
@@ -85,7 +80,7 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let foo = AsciiStr::from_ascii("foo");
+    /// let foo = AsciiStr::from_ascii(b"foo");
     /// let err = AsciiStr::from_ascii("Ŋ");
     /// assert_eq!(foo.unwrap().as_str(), "foo");
     /// assert_eq!(err.unwrap_err().valid_up_to(), 0);
@@ -104,15 +99,12 @@ impl AsciiStr {
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
-    /// let foo = unsafe{ AsciiStr::from_ascii_unchecked("foo") };
+    /// let foo = unsafe { AsciiStr::from_ascii_unchecked(&b"foo"[..]) };
     /// assert_eq!(foo.as_str(), "foo");
     /// ```
     #[inline]
-    pub unsafe fn from_ascii_unchecked<B: ?Sized>(bytes: &B) -> &AsciiStr
-    where
-        B: AsRef<[u8]>,
-    {
-        bytes.as_ref().as_ascii_str_unchecked()
+    pub unsafe fn from_ascii_unchecked(bytes: &[u8]) -> &AsciiStr {
+        bytes.as_ascii_str_unchecked()
     }
 
     /// Returns the number of characters / bytes in this ASCII sequence.
@@ -167,7 +159,7 @@ impl AsciiStr {
     ///     .collect::<Vec<_>>();
     /// assert_eq!(words, ["apple", "banana", "lemon"]);
     /// ```
-    pub fn split(&self,  on: AsciiChar) -> Split {
+    pub fn split(&self, on: AsciiChar) -> impl DoubleEndedIterator<Item=&AsciiStr> {
         Split {
             on,
             ended: false,
@@ -181,7 +173,7 @@ impl AsciiStr {
     ///
     /// The final line ending is optional.
     #[inline]
-    pub fn lines(&self) -> Lines {
+    pub fn lines(&self) -> impl DoubleEndedIterator<Item=&AsciiStr> {
         Lines {
             string: self,
         }
@@ -587,7 +579,7 @@ impl<'a> DoubleEndedIterator for CharsRef<'a> {
 ///
 /// This type is created by [`AsciiChar::split()`](struct.AsciiChar.html#method.split).
 #[derive(Clone, Debug)]
-pub struct Split<'a> {
+struct Split<'a> {
     on: AsciiChar,
     ended: bool,
     chars: Chars<'a>
@@ -629,7 +621,7 @@ impl<'a> DoubleEndedIterator for Split<'a> {
 
 /// An iterator over the lines of the internal character array.
 #[derive(Clone, Debug)]
-pub struct Lines<'a> {
+struct Lines<'a> {
     string: &'a AsciiStr,
 }
 impl<'a> Iterator for Lines<'a> {
