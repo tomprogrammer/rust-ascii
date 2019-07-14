@@ -137,5 +137,6 @@ fn extend_from_iterator() {
             }
         });
     s.extend(cows);
-    assert_eq!(s, "abcabconetwothreeASCIIASCIIASCII");
+    s.extend(&[AsciiChar::LineFeed]);
+    assert_eq!(s, "abcabconetwothreeASCIIASCIIASCII\n");
 }
