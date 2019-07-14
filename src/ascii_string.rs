@@ -566,65 +566,21 @@ impl fmt::Write for AsciiString {
     }
 }
 
-impl FromIterator<AsciiChar> for AsciiString {
-    fn from_iter<I: IntoIterator<Item = AsciiChar>>(iter: I) -> AsciiString {
+impl<A: AsRef<AsciiStr>> FromIterator<A> for AsciiString {
+    fn from_iter<I: IntoIterator<Item = A>>(iter: I) -> AsciiString {
         let mut buf = AsciiString::new();
         buf.extend(iter);
         buf
     }
 }
 
-impl<'a> FromIterator<&'a AsciiStr> for AsciiString {
-    fn from_iter<I: IntoIterator<Item = &'a AsciiStr>>(iter: I) -> AsciiString {
-        let mut buf = AsciiString::new();
-        buf.extend(iter);
-        buf
-    }
-}
-
-impl<'a> FromIterator<Cow<'a, AsciiStr>> for AsciiString {
-    fn from_iter<I: IntoIterator<Item = Cow<'a, AsciiStr>>>(iter: I) -> AsciiString {
-        let mut buf = AsciiString::new();
-        buf.extend(iter);
-        buf
-    }
-}
-
-impl Extend<AsciiChar> for AsciiString {
-    fn extend<I: IntoIterator<Item = AsciiChar>>(&mut self, iterable: I) {
+impl<A: AsRef<AsciiStr>> Extend<A> for AsciiString {
+    fn extend<I: IntoIterator<Item = A>>(&mut self, iterable: I) {
         let iterator = iterable.into_iter();
         let (lower_bound, _) = iterator.size_hint();
         self.reserve(lower_bound);
-        for ch in iterator {
-            self.push(ch)
-        }
-    }
-}
-
-impl<'a> Extend<&'a AsciiChar> for AsciiString {
-    fn extend<I: IntoIterator<Item = &'a AsciiChar>>(&mut self, iter: I) {
-        self.extend(iter.into_iter().cloned())
-    }
-}
-
-impl<'a> Extend<&'a AsciiStr> for AsciiString {
-    fn extend<I: IntoIterator<Item = &'a AsciiStr>>(&mut self, iterable: I) {
-        let iterator = iterable.into_iter();
-        let (lower_bound, _) = iterator.size_hint();
-        self.reserve(lower_bound);
-        for s in iterator {
-            self.push_str(s)
-        }
-    }
-}
-
-impl<'a> Extend<Cow<'a, AsciiStr>> for AsciiString {
-    fn extend<I: IntoIterator<Item = Cow<'a,AsciiStr>>>(&mut self, iterable: I) {
-        let iterator = iterable.into_iter();
-        let (lower_bound, _) = iterator.size_hint();
-        self.reserve(lower_bound);
-        for s in iterator {
-            self.push_str(&*s);
+        for item in iterator {
+            self.push_str(item.as_ref())
         }
     }
 }

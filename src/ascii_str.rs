@@ -3,7 +3,7 @@
 use core::fmt;
 use core::ops::{Index, IndexMut};
 use core::ops::{Range, RangeTo, RangeFrom, RangeFull, RangeInclusive, RangeToInclusive};
-use core::slice::{Iter, IterMut};
+use core::slice::{self, Iter, IterMut};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
@@ -355,6 +355,18 @@ impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     }
 }
 
+impl AsRef<AsciiStr> for AsciiStr {
+    #[inline]
+    fn as_ref(&self) -> &AsciiStr {
+        self
+    }
+}
+impl AsMut<AsciiStr> for AsciiStr {
+    #[inline]
+    fn as_mut(&mut self) -> &mut AsciiStr {
+        self
+    }
+}
 impl AsRef<AsciiStr> for [AsciiChar] {
     #[inline]
     fn as_ref(&self) -> &AsciiStr {
@@ -407,6 +419,13 @@ macro_rules! widen_box {
 widen_box! {[AsciiChar]}
 widen_box! {[u8]}
 widen_box! {str}
+
+// allows &AsciiChar to be used by generic AsciiString Extend and FromIterator
+impl AsRef<AsciiStr> for AsciiChar {
+    fn as_ref(&self) -> &AsciiStr {
+        slice::from_ref(self).into()
+    }
+}
 
 impl fmt::Display for AsciiStr {
     #[inline]
