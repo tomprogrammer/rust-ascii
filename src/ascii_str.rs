@@ -39,7 +39,7 @@ impl AsciiStr {
 
     /// Returns the entire string as slice of `AsciiChar`s.
     #[inline]
-    pub fn as_slice(&self) -> &[AsciiChar] {
+    pub const fn as_slice(&self) -> &[AsciiChar] {
         &self.slice
     }
 
@@ -55,7 +55,7 @@ impl AsciiStr {
     /// will end up pointing to garbage. Modifying the `AsciiStr` may cause it's buffer to be
     /// reallocated, which would also make any pointers to it invalid.
     #[inline]
-    pub fn as_ptr(&self) -> *const AsciiChar {
+    pub const fn as_ptr(&self) -> *const AsciiChar {
         self.as_slice().as_ptr()
     }
 
@@ -683,13 +683,13 @@ impl AsAsciiStrError {
     ///
     /// It is the maximum index such that `from_ascii(input[..index])` would return `Ok(_)`.
     #[inline]
-    pub fn valid_up_to(self) -> usize {
+    pub const fn valid_up_to(self) -> usize {
         self.0
     }
     #[cfg(not(feature = "std"))]
     /// Returns a description for this error, like `std::error::Error::description`.
     #[inline]
-    pub fn description(&self) -> &'static str {
+    pub const fn description(&self) -> &'static str {
         ERRORMSG_STR
     }
 }
