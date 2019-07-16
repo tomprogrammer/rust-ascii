@@ -451,7 +451,7 @@ impl<'a> From<&'a AsciiStr> for AsciiString {
 impl<'a> From<&'a [AsciiChar]> for AsciiString {
     #[inline]
     fn from(s: &'a [AsciiChar]) -> AsciiString {
-        s.iter().copied().collect()
+        s.iter().cloned().collect()
     }
 }
 

@@ -17,12 +17,12 @@
 //!
 //! # Minimum supported Rust version
 //!
-//! The minimum supported Rust version for 1.0.\* releases is 1.36.0.
+//! The minimum Rust version for 1.0.\* releases is 1.33.0.
 //! Later 1.y.0 releases might require newer Rust versions, but the three most
 //! recent stable releases at the time of publishing will always be supported.  
-//! For example this means that if the current stable Rust version is 1.44 when
+//! For example this means that if the current stable Rust version is 1.38 when
 //! ascii 1.1.0 is released, then ascii 1.1.* will not require a newer
-//! Rust version than 1.42.
+//! Rust version than 1.36.
 //!
 //! # History
 //!
