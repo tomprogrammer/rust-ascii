@@ -1152,14 +1152,16 @@ mod tests {
     #[test]
     fn index() {
         let mut arr = [AsciiChar::A, AsciiChar::B, AsciiChar::C, AsciiChar::D];
-        let a: &AsciiStr = arr[..].into();
-        assert_eq!(a[..].as_slice(), &a.as_slice()[..]);
-        assert_eq!(a[..4].as_slice(), &a.as_slice()[..4]);
-        assert_eq!(a[4..].as_slice(), &a.as_slice()[4..]);
-        assert_eq!(a[2..3].as_slice(), &a.as_slice()[2..3]);
-        assert_eq!(a[..=3].as_slice(), &a.as_slice()[..=3]);
-        assert_eq!(a[1..=1].as_slice(), &a.as_slice()[1..=1]);
-        let mut copy = arr.clone();
+        {
+            let a: &AsciiStr = arr[..].into();
+            assert_eq!(a[..].as_slice(), &a.as_slice()[..]);
+            assert_eq!(a[..4].as_slice(), &a.as_slice()[..4]);
+            assert_eq!(a[4..].as_slice(), &a.as_slice()[4..]);
+            assert_eq!(a[2..3].as_slice(), &a.as_slice()[2..3]);
+            assert_eq!(a[..=3].as_slice(), &a.as_slice()[..=3]);
+            assert_eq!(a[1..=1].as_slice(), &a.as_slice()[1..=1]);
+        }
+        let mut copy = arr;
         let a_mut: &mut AsciiStr = {&mut arr[..]}.into();
         assert_eq!(a_mut[..].as_mut_slice(), &mut copy[..]);
         assert_eq!(a_mut[..2].as_mut_slice(), &mut copy[..2]);
