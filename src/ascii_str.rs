@@ -20,6 +20,7 @@ use ascii_string::AsciiString;
 /// It can be created by a checked conversion from a `str` or `[u8]`, or borrowed from an
 /// `AsciiString`.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
 pub struct AsciiStr {
     slice: [AsciiChar],
 }

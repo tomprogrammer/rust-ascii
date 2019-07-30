@@ -14,6 +14,7 @@ use ascii_str::{AsciiStr, AsAsciiStr, AsAsciiStrError};
 
 /// A growable string stored as an ASCII encoded buffer.
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
 pub struct AsciiString {
     vec: Vec<AsciiChar>,
 }
