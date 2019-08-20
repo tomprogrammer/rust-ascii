@@ -404,7 +404,8 @@ impl AsciiChar {
     /// Check if the character is a letter (a-z, A-Z).
     ///
     /// This method is identical to [`is_alphabetic()`](#method.is_alphabetic)
-    pub fn is_ascii_alphabetic(&self) -> bool {
+    #[inline]
+    pub const fn is_ascii_alphabetic(&self) -> bool {
         self.is_alphabetic()
     }
 
@@ -452,7 +453,8 @@ impl AsciiChar {
     /// Check if the character is a letter or number
     ///
     /// This method is identical to [`is_alphanumeric()`](#method.is_alphanumeric)
-    pub fn is_ascii_alphanumeric(&self) -> bool {
+    #[inline]
+    pub const fn is_ascii_alphanumeric(&self) -> bool {
         self.is_alphanumeric()
     }
 
@@ -469,8 +471,8 @@ impl AsciiChar {
     /// assert!(!AsciiChar::FF.is_ascii_blank());
     /// ```
     #[inline]
-    pub const fn is_ascii_blank(self) -> bool {
-        (self as u8 == b' ') | (self as u8 == b'\t')
+    pub const fn is_ascii_blank(&self) -> bool {
+        (*self as u8 == b' ') | (*self as u8 == b'\t')
     }
 
     /// Check if the character one of ' ', '\t', '\n', '\r',
@@ -485,8 +487,10 @@ impl AsciiChar {
     ///
     /// This method is NOT identical to `is_whitespace()`.
     #[inline]
-    pub const fn is_ascii_whitespace(self) -> bool {
-        self.is_ascii_blank() | (self as u8 == b'\n') | (self as u8 == b'\r') | (self as u8 == 0x0c)
+    pub const fn is_ascii_whitespace(&self) -> bool {
+        self.is_ascii_blank()
+            | (*self as u8 == b'\n') | (*self as u8 == b'\r')
+            | (*self as u8 == 0x0c/*form feed*/)
     }
 
     /// Check if the character is a control character
@@ -551,7 +555,8 @@ impl AsciiChar {
     /// Checks if the character is alphabetic and lowercase (a-z).
     ///
     /// This method is identical to [`is_lowercase()`](#method.is_lowercase)
-    pub fn is_ascii_lowercase(&self) -> bool {
+    #[inline]
+    pub const fn is_ascii_lowercase(&self) -> bool {
         self.is_lowercase()
     }
 
@@ -572,7 +577,8 @@ impl AsciiChar {
     /// Checks if the character is alphabetic and uppercase (A-Z).
     ///
     /// This method is identical to [`is_uppercase()`](#method.is_uppercase)
-    pub fn is_ascii_uppercase(&self) -> bool {
+    #[inline]
+    pub const fn is_ascii_uppercase(&self) -> bool {
         self.is_uppercase()
     }
 
