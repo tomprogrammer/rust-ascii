@@ -9,8 +9,10 @@ rust:
 
 before_script:
   - |
-    pip install 'travis-cargo<0.2' --user &&
-    rustup component add clippy &&
+    pip install 'travis-cargo<0.2' --user || exit 1;
+    if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
+        rustup component add clippy || exit 1
+    fi
     export PATH=$HOME/.local/bin:$PATH
 
 script:
