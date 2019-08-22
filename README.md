@@ -18,8 +18,9 @@ ascii = "0.9"
 
 Most of `AsciiChar` and `AsciiStr` can be used without `std` by disabling the
 default features. The owned string type `AsciiString` and the conversion trait
-`IntoAsciiString` as well as all methods referring to these types are
-unavailable. The `Error` trait is also unavailable, but `description()` is made
+`IntoAsciiString` as well as all methods referring to these types and
+`CStr` and `CString` are unavailable.
+The `Error` trait is also unavailable, but `description()` is made
 available as an inherent method for `ToAsciiCharError` and `AsAsciiStrError`.
 
 To use the `ascii` crate in `core`-only mode in your cargo project just add the
