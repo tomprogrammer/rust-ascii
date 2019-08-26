@@ -1,3 +1,20 @@
+Version 0.9.3 (2019-08-26)
+==========================
+
+Soundness fix:
+
+**Remove** [unsound](https://github.com/tomprogrammer/rust-ascii/issues/64) impls of `From<&mut AsciiStr>` for `&mut [u8]` and `&mut str`.
+This is a breaking change, but theese impls can lead to undefined behavior in safe code.
+
+If you use this impl and know that non-ASCII values are never inserted into the `[u8]` or `str`,
+you can pin ascii to 0.9.2.
+
+Other changes:
+
+* Make quickcheck `Arbitrary` impl sometimes produce `AsciiChar::DEL`.
+* Implement `Clone`, `Copy` and `Eq` for `ToAsciiCharError`.
+* Implement `ToAsciiChar` for `u16`, `u32` and `i8`.
+
 Version 0.9.2 (2019-07-07)
 ==========================
 * Implement the `IntoAsciiString` trait for `std::ffi::CStr` and `std::ffi::CString` types,
