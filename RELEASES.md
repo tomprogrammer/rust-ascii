@@ -1,3 +1,32 @@
+Version 1.0.0 (2019-08-26)
+==========================
+
+Breaking changes:
+
+* Change `AsciiChar.is_whitespace()` to also return true for '\0xb' (vertical tab) and '\0xc' (form feed).
+* Remove quickcheck feature.
+* Remove `AsciiStr::new()`.
+* Rename `AsciiChar::from()` and `AsciiChar::from_unchecked()` to `from_ascii()` and `from_ascii_unchecked()`.
+* Rename several `AsciiChar.is_xxx()` methods to `is_ascii_xxx()` (for comsistency with std).
+* Rename `AsciiChar::Null` to `Nul` (for consistency with eg. `CStr::from_bytes_with_nul()`).
+* Rename `AsciiStr.trim_left()` and `AsciiStr.trim_right()` to `trim_start()` and `trim_end()`.
+* Remove impls of the deprecated `std::ascii::AsciiExt` trait.
+* Change iterators `Chars`, `CharsMut` and `CharsRef` from type aliases to newtypes.
+* Return `impl Trait` from `AsciiStr.lines()` and `AsciiStr.split()`, and remove iterator types `Lines` and `Split`.
+* Add `slice_ascii_str()`, `get_ascii()` and `unwrap_ascii()` to the `AsAsciiStr` trait.
+* Add `slice_mut_ascii_str()` and `unwrap_ascii_mut()` to the `AsMutAsciiStr` trait.
+* Require Rust 1.33.0 for 1.0.\*, and allow later semver-compatible 1.y.0 releases to increase it.
+
+Additions:
+
+* Add `const fn` `AsciiChar::new()` which panicks on invalid values.
+* Make most `AsciiChar` methods `const fn`.
+* Add multiple `AsciiChar::is_[ascii_]xxx()` methods.
+* Implement `AsRef<AsciiStr>` for `AsciiChar`.
+* Make `AsciiString`'s `Extend` and `FromIterator` impl generic over all `AsRef<AsciiStr>`.
+* Implement inclusive range indexing for `AsciiStr` (and thereby `AsciiString`).
+* Mark `AsciiStr` and `AsciiString` `#[repr(transparent)]` (to `[AsciiChar]` and `Vec<AsciiChar>` respectively).
+
 Version 0.9.3 (2019-08-26)
 ==========================
 

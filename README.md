@@ -3,15 +3,14 @@
 A library that provides ASCII-only string and character types, equivalent to the
 `char`, `str` and `String` types in the standard library.
 
-Types and conversion traits are described in the
-[Documentation](https://docs.rs/ascii).
+Types and conversion traits are described in the [Documentation](https://docs.rs/ascii).
 
 You can include this crate in your cargo project by adding it to the
 dependencies section in `Cargo.toml`:
 
 ```toml
 [dependencies]
-ascii = "0.9"
+ascii = "1.0"
 ```
 
 ## Using ascii without libstd
@@ -28,7 +27,7 @@ following dependency declaration in `Cargo.toml`:
 
 ```toml
 [dependencies]
-ascii = { version = "0.9", default-features = false }
+ascii = { version = "1.0", default-features = false }
 ```
 
 ## Minimum supported Rust version
@@ -37,7 +36,7 @@ The minimum Rust version for 1.0.\* releases is 1.33.0.
 Later 1.y.0 releases might require newer Rust versions, but the three most
 recent stable releases at the time of publishing will always be supported.  
 For example this means that if the current stable Rust version is 1.38 when
-ascii 1.1.0 is released, then ascii 1.1.* will not require a newer
+ascii 1.1.0 is released, then ascii 1.1.\* will not require a newer
 Rust version than 1.36.
 
 ## History
