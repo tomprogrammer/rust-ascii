@@ -209,7 +209,7 @@ pub enum AsciiChar {
     BackSlash = 92,
     /// `']'`
     BracketClose = 93,
-    /// `'_'`
+    /// `'^'`
     Caret = 94,
     /// `'_'`
     UnderScore = 95,
