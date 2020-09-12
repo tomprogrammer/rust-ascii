@@ -8,10 +8,10 @@ rust:
 
 jobs:
   include:
-    - if: env(TRAVIS_RUST_VERSION) = "nightly"
+    - rust: nightly
       name: "Test minimal dependency versions with Rust nightly"
       script: cargo test -Zminimal-versions --verbose --all-features
-    - if: env(TRAVIS_RUST_VERSION) = "stable"
+    - rust: stable
       name: "Lint with Clippy"
       install: rustup component add clippy
       script:
