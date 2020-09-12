@@ -1,40 +1,24 @@
-sudo: false
 language: rust
-
+cache: cargo
 rust:
-  - nightly
-  - beta
-  - stable
   - 1.33.0
+  - stable
+  - beta
+  - nightly
 
-before_script:
-  - |
-    pip install 'travis-cargo<0.2' --user || exit 1;
-    if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
-        rustup component add clippy || exit 1
-    fi
-    export PATH=$HOME/.local/bin:$PATH
+jobs:
+  include:
+    - if: env(TRAVIS_RUST_VERSION) = "nightly"
+      name: "Test minimal dependency versions with Rust nightly"
+      script: cargo test -Zminimal-versions --verbose --all-features
+    - if: env(TRAVIS_RUST_VERSION) = "stable"
+      name: "Lint with Clippy"
+      install: rustup component add clippy
+      script:
+        - cargo clippy --verbose --all-targets --no-default-features
+        - cargo clippy --verbose --all-targets --all-features
 
+install: skip
 script:
-  - |
-    travis-cargo test -- --no-default-features &&
-    travis-cargo test &&
-    travis-cargo test -- --all-features &&
-    travis-cargo --only stable clippy -- --all-features &&
-    rm Cargo.lock &&
-    travis-cargo --only nightly build -- -Z minimal-versions --all-features
-
-after_success:
-  - |
-    if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
-        travis-cargo doc -- --no-default-features &&
-        mv target/doc target/doc_core &&
-        travis-cargo doc &&
-        mv target/doc_core target/doc/core &&
-        travis-cargo doc-upload
-    fi
-
-env:
-  global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE="" # no unstable feature
-    - secure: ddcWXicVcCooC+Dy8guGruZY2bAU3oyGjrxdC3YNfBYdatEKzW1toAiQyN8SRyZyfoHsbb7lh4YeBfv1rpmTPM6nvHMz9CHMlvED8Y+/QuYoKN2qrNiQ7eQ9xSVhOVlha/GMPSZXxmEIuJVj0Dn1D/S4RWyNMKCJdj2YvybPzOU=
+  - cargo test --verbose --all-features
+  - cargo test --verbose --no-default-features
