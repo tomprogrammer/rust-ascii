@@ -1,8 +1,6 @@
-#![cfg_attr(rustfmt, rustfmt_skip)]
-
 extern crate ascii;
 
-use ascii::{AsciiChar, AsciiStr, AsAsciiStr};
+use ascii::{AsAsciiStr, AsciiChar, AsciiStr};
 #[cfg(feature = "std")]
 use ascii::{AsciiString, IntoAsciiString};
 
@@ -115,7 +113,7 @@ fn compare_ascii_string_slice() {
 #[test]
 #[cfg(feature = "std")]
 fn extend_from_iterator() {
-    use ::std::borrow::Cow;
+    use std::borrow::Cow;
 
     let abc = "abc".as_ascii_str().unwrap();
     let mut s = abc.chars().collect::<AsciiString>();
@@ -127,10 +125,12 @@ fn extend_from_iterator() {
     s.extend(lines);
     assert_eq!(s, "abcabconetwothree");
 
-    let cows = "ASCII Ascii ascii".as_ascii_str().unwrap()
+    let cows = "ASCII Ascii ascii"
+        .as_ascii_str()
+        .unwrap()
         .split(AsciiChar::Space)
         .map(|case| {
-            if case.chars().all(|a| a.is_uppercase() ) {
+            if case.chars().all(|a| a.is_uppercase()) {
                 Cow::from(case)
             } else {
                 Cow::from(case.to_ascii_uppercase())
