@@ -1,5 +1,3 @@
-#![cfg_attr(rustfmt, rustfmt_skip)]
-
 // Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
@@ -31,7 +29,6 @@
 //! API changed significantly since then.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
 #![allow(clippy::trivially_copy_pass_by_ref)] // for compatibility with methods on char and u8
 
 #[cfg(feature = "std")]
@@ -52,8 +49,8 @@ mod free_functions;
 mod serialization;
 
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
-pub use ascii_str::{AsciiStr, AsAsciiStr, AsMutAsciiStr, AsAsciiStrError};
+pub use ascii_str::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
 pub use ascii_str::{Chars, CharsMut, CharsRef};
 #[cfg(feature = "std")]
-pub use ascii_string::{AsciiString, IntoAsciiString, FromAsciiError};
-pub use free_functions::{caret_encode, caret_decode};
+pub use ascii_string::{AsciiString, FromAsciiError, IntoAsciiString};
+pub use free_functions::{caret_decode, caret_encode};

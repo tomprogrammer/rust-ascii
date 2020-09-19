@@ -1,8 +1,6 @@
-#![cfg_attr(rustfmt, rustfmt_skip)]
-
-use core::mem;
 use core::cmp::Ordering;
-use core::{fmt, char};
+use core::mem;
+use core::{char, fmt};
 #[cfg(feature = "std")]
 use std::error::Error;
 
@@ -332,6 +330,7 @@ impl AsciiChar {
     /// current limitations of `const fn`.
     pub const fn new(ch: char) -> AsciiChar {
         use AsciiChar::*;
+        #[rustfmt::skip]
         const ALL: [AsciiChar; 128] = [
             Null, SOH, SOX, ETX, EOT, ENQ, ACK, Bell,
             BackSpace, Tab, LineFeed, VT, FF, CarriageReturn, SI, SO,
@@ -489,7 +488,8 @@ impl AsciiChar {
     #[inline]
     pub const fn is_ascii_whitespace(&self) -> bool {
         self.is_ascii_blank()
-            | (*self as u8 == b'\n') | (*self as u8 == b'\r')
+            | (*self as u8 == b'\n')
+            | (*self as u8 == b'\r')
             | (*self as u8 == 0x0c/*form feed*/)
     }
 
@@ -682,8 +682,8 @@ impl AsciiChar {
     /// Compares two characters case-insensitively.
     #[inline]
     pub const fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        (self.as_byte() == other.as_byte()) |
-            (self.is_alphabetic() & (self.to_not_upper() == other.to_not_upper()))
+        (self.as_byte() == other.as_byte())
+            | (self.is_alphabetic() & (self.to_not_upper() == other.to_not_upper()))
     }
 }
 
@@ -707,41 +707,42 @@ impl Default for AsciiChar {
     }
 }
 
-macro_rules! impl_into_partial_eq_ord {($wider:ty, $to_wider:expr) => {
-    impl From<AsciiChar> for $wider {
-        #[inline]
-        fn from(a: AsciiChar) -> $wider {
-            $to_wider(a)
+macro_rules! impl_into_partial_eq_ord {
+    ($wider:ty, $to_wider:expr) => {
+        impl From<AsciiChar> for $wider {
+            #[inline]
+            fn from(a: AsciiChar) -> $wider {
+                $to_wider(a)
+            }
         }
-    }
-    impl PartialEq<$wider> for AsciiChar {
-        #[inline]
-        fn eq(&self, rhs: &$wider) -> bool {
-            $to_wider(*self) == *rhs
+        impl PartialEq<$wider> for AsciiChar {
+            #[inline]
+            fn eq(&self, rhs: &$wider) -> bool {
+                $to_wider(*self) == *rhs
+            }
         }
-    }
-    impl PartialEq<AsciiChar> for $wider {
-        #[inline]
-        fn eq(&self, rhs: &AsciiChar) -> bool {
-            *self == $to_wider(*rhs)
+        impl PartialEq<AsciiChar> for $wider {
+            #[inline]
+            fn eq(&self, rhs: &AsciiChar) -> bool {
+                *self == $to_wider(*rhs)
+            }
         }
-    }
-    impl PartialOrd<$wider> for AsciiChar {
-        #[inline]
-        fn partial_cmp(&self, rhs: &$wider) -> Option<Ordering> {
-            $to_wider(*self).partial_cmp(rhs)
+        impl PartialOrd<$wider> for AsciiChar {
+            #[inline]
+            fn partial_cmp(&self, rhs: &$wider) -> Option<Ordering> {
+                $to_wider(*self).partial_cmp(rhs)
+            }
         }
-    }
-    impl PartialOrd<AsciiChar> for $wider {
-        #[inline]
-        fn partial_cmp(&self, rhs: &AsciiChar) -> Option<Ordering> {
-            self.partial_cmp(&$to_wider(*rhs))
+        impl PartialOrd<AsciiChar> for $wider {
+            #[inline]
+            fn partial_cmp(&self, rhs: &AsciiChar) -> Option<Ordering> {
+                self.partial_cmp(&$to_wider(*rhs))
+            }
         }
-    }
-}}
-impl_into_partial_eq_ord!{u8, AsciiChar::as_byte}
-impl_into_partial_eq_ord!{char, AsciiChar::as_char}
-
+    };
+}
+impl_into_partial_eq_ord! {u8, AsciiChar::as_byte}
+impl_into_partial_eq_ord! {char, AsciiChar::as_char}
 
 /// Error returned by `ToAsciiChar`.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -835,7 +836,7 @@ impl ToAsciiChar for u32 {
         unsafe {
             match self {
                 0..=127 => Ok(self.to_ascii_char_unchecked()),
-                _ => Err(ToAsciiCharError(()))
+                _ => Err(ToAsciiCharError(())),
             }
         }
     }
@@ -903,8 +904,20 @@ mod tests {
             assert_eq!(ascii.is_ascii_control(), ch.is_ascii_control());
             assert_eq!(ascii.is_ascii_graphic(), ch.is_ascii_graphic());
             assert_eq!(ascii.is_ascii_punctuation(), ch.is_ascii_punctuation());
-            assert_eq!(ascii.is_whitespace(), ch.is_whitespace(), "{:?} ({:#04x})", ch, byte);
-            assert_eq!(ascii.is_ascii_whitespace(), ch.is_ascii_whitespace(), "{:?} ({:#04x})", ch, byte);
+            assert_eq!(
+                ascii.is_whitespace(),
+                ch.is_whitespace(),
+                "{:?} ({:#04x})",
+                ch,
+                byte
+            );
+            assert_eq!(
+                ascii.is_ascii_whitespace(),
+                ch.is_ascii_whitespace(),
+                "{:?} ({:#04x})",
+                ch,
+                byte
+            );
             assert_eq!(ascii.is_uppercase(), ch.is_uppercase());
             assert_eq!(ascii.is_ascii_uppercase(), ch.is_ascii_uppercase());
             assert_eq!(ascii.is_lowercase(), ch.is_lowercase());
@@ -944,7 +957,7 @@ mod tests {
         assert_eq!(a.to_ascii_lowercase(), a);
         assert_eq!(a.to_ascii_uppercase(), A);
 
-        let mut mutable = (A,a);
+        let mut mutable = (A, a);
         mutable.0.make_ascii_lowercase();
         mutable.1.make_ascii_uppercase();
         assert_eq!(mutable.0, a);

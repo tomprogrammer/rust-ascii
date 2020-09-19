@@ -1,5 +1,3 @@
-#![cfg_attr(rustfmt, rustfmt_skip)]
-
 use ascii_char::{AsciiChar, ToAsciiChar};
 
 /// Terminals use [caret notation](https://en.wikipedia.org/wiki/Caret_notation)
