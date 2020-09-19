@@ -17,17 +17,20 @@ ascii = "1.0"
 
 Most of `AsciiChar` and `AsciiStr` can be used without `std` by disabling the
 default features. The owned string type `AsciiString` and the conversion trait
-`IntoAsciiString` as well as all methods referring to these types and
-`CStr` and `CString` are unavailable.
-The `Error` trait is also unavailable, but `description()` is made
-available as an inherent method for `ToAsciiCharError` and `AsAsciiStrError`.
+`IntoAsciiString` as well as all methods referring to these types can be
+re-enabled by enabling the `alloc` feature.
 
-To use the `ascii` crate in `core`-only mode in your cargo project just add the
-following dependency declaration in `Cargo.toml`:
+Methods referring to `CStr` and `CString` are also unavailable.
+The `Error` trait also only exists in `std`, but `description()` is made
+available as an inherent method for `ToAsciiCharError` and `AsAsciiStrError`
+in `#![no_std]`-mode.
+
+To use the `ascii` crate in `#![no_std]` mode in your cargo project,
+just add the following dependency declaration in `Cargo.toml`:
 
 ```toml
 [dependencies]
-ascii = { version = "1.0", default-features = false }
+ascii = { version = "1.0", default-features = false, features = ["alloc"] }
 ```
 
 ## Minimum supported Rust version

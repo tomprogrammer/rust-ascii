@@ -31,6 +31,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::trivially_copy_pass_by_ref)] // for compatibility with methods on char and u8
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(test, macro_use)]
+extern crate alloc;
 #[cfg(feature = "std")]
 extern crate core;
 
@@ -42,7 +45,7 @@ extern crate serde_test;
 
 mod ascii_char;
 mod ascii_str;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 mod ascii_string;
 mod free_functions;
 #[cfg(feature = "serde")]
@@ -51,6 +54,6 @@ mod serialization;
 pub use ascii_char::{AsciiChar, ToAsciiChar, ToAsciiCharError};
 pub use ascii_str::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
 pub use ascii_str::{Chars, CharsMut, CharsRef};
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 pub use ascii_string::{AsciiString, FromAsciiError, IntoAsciiString};
 pub use free_functions::{caret_decode, caret_encode};

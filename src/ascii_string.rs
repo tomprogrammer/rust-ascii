@@ -1,11 +1,17 @@
-use std::any::Any;
-use std::borrow::{Borrow, BorrowMut, Cow};
+use alloc::borrow::{Borrow, BorrowMut, Cow, ToOwned};
+use alloc::fmt;
+use alloc::string::String;
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use core::any::Any;
+use core::iter::FromIterator;
+use core::mem;
+use core::ops::{Add, AddAssign, Deref, DerefMut, Index, IndexMut};
+use core::str::FromStr;
+#[cfg(feature = "std")]
 use std::error::Error;
+#[cfg(feature = "std")]
 use std::ffi::{CStr, CString};
-use std::iter::FromIterator;
-use std::ops::{Add, AddAssign, Deref, DerefMut, Index, IndexMut};
-use std::str::FromStr;
-use std::{fmt, mem};
 
 use ascii_char::AsciiChar;
 use ascii_str::{AsAsciiStr, AsAsciiStrError, AsciiStr};
@@ -670,6 +676,7 @@ impl<O> fmt::Display for FromAsciiError<O> {
         fmt::Display::fmt(&self.error, fmtr)
     }
 }
+#[cfg(feature = "std")]
 impl<O: Any> Error for FromAsciiError<O> {
     #[inline]
     fn description(&self) -> &str {
@@ -759,6 +766,7 @@ impl_into_ascii_string! {String}
 impl_into_ascii_string! {'a, &'a str}
 
 /// Note that the trailing null byte will be removed in the conversion.
+#[cfg(feature = "std")]
 impl IntoAsciiString for CString {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
@@ -786,6 +794,7 @@ impl IntoAsciiString for CString {
 }
 
 /// Note that the trailing null byte will be removed in the conversion.
+#[cfg(feature = "std")]
 impl<'a> IntoAsciiString for &'a CStr {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
@@ -841,9 +850,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{AsciiString, IntoAsciiString};
+    use super::AsciiString;
+    #[cfg(feature = "std")]
+    use super::IntoAsciiString;
+    use alloc::str::FromStr;
+    use alloc::string::{String, ToString};
+    use alloc::vec::Vec;
+    #[cfg(feature = "std")]
     use std::ffi::CString;
-    use std::str::FromStr;
     use AsciiChar;
 
     #[test]
@@ -868,6 +882,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn from_cstring() {
         let cstring = CString::new("baz").unwrap();
         let ascii_str = cstring.clone().into_ascii_string().unwrap();
@@ -887,6 +902,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn fmt_ascii_string() {
         let s = "abc".to_string().into_ascii_string().unwrap();
         assert_eq!(format!("{}", s), "abc".to_string());
@@ -895,7 +911,7 @@ mod tests {
 
     #[test]
     fn write_fmt() {
-        use std::{fmt, str};
+        use alloc::{fmt, str};
 
         let mut s0 = AsciiString::new();
         fmt::write(&mut s0, format_args!("Hello World")).unwrap();
