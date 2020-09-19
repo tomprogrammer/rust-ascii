@@ -411,7 +411,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_alphabetic(self) -> bool {
-        (self.to_not_upper() >= b'a') & (self.to_not_upper() <= b'z')
+        (self.to_not_upper() >= b'a') && (self.to_not_upper() <= b'z')
     }
 
     /// Check if the character is a letter (a-z, A-Z).
@@ -457,14 +457,14 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_digit(&self) -> bool {
-        (*self as u8 >= b'0') & (*self as u8 <= b'9')
+        (*self as u8 >= b'0') && (*self as u8 <= b'9')
     }
 
     /// Check if the character is a letter or number
     #[inline]
     #[must_use]
     pub const fn is_alphanumeric(self) -> bool {
-        self.is_alphabetic() | self.is_ascii_digit()
+        self.is_alphabetic() || self.is_ascii_digit()
     }
 
     /// Check if the character is a letter or number
@@ -491,7 +491,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_blank(&self) -> bool {
-        (*self as u8 == b' ') | (*self as u8 == b'\t')
+        (*self as u8 == b' ') || (*self as u8 == b'\t')
     }
 
     /// Check if the character one of ' ', '\t', '\n', '\r',
@@ -500,7 +500,7 @@ impl AsciiChar {
     #[must_use]
     pub const fn is_whitespace(self) -> bool {
         let b = self as u8;
-        self.is_ascii_blank() | (b == b'\n') | (b == b'\r') | (b == 0x0b) | (b == 0x0c)
+        self.is_ascii_blank() || (b == b'\n') || (b == b'\r') || (b == 0x0b) || (b == 0x0c)
     }
 
     /// Check if the character is a ' ', '\t', '\n', '\r' or '\0xc' (form feed).
@@ -510,9 +510,9 @@ impl AsciiChar {
     #[must_use]
     pub const fn is_ascii_whitespace(&self) -> bool {
         self.is_ascii_blank()
-            | (*self as u8 == b'\n')
-            | (*self as u8 == b'\r')
-            | (*self as u8 == 0x0c/*form feed*/)
+            || (*self as u8 == b'\n')
+            || (*self as u8 == b'\r')
+            || (*self as u8 == 0x0c/*form feed*/)
     }
 
     /// Check if the character is a control character
@@ -530,7 +530,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_control(&self) -> bool {
-        ((*self as u8) < b' ') | (*self as u8 == 127)
+        ((*self as u8) < b' ') || (*self as u8 == 127)
     }
 
     /// Checks if the character is printable (except space)
@@ -624,7 +624,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_punctuation(&self) -> bool {
-        self.is_ascii_graphic() & !self.is_alphanumeric()
+        self.is_ascii_graphic() && !self.is_alphanumeric()
     }
 
     /// Checks if the character is a valid hex digit
@@ -641,7 +641,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_hexdigit(&self) -> bool {
-        self.is_ascii_digit() | ((*self as u8 | 0x20_u8).wrapping_sub(b'a') < 6)
+        self.is_ascii_digit() || ((*self as u8 | 0x20u8).wrapping_sub(b'a') < 6)
     }
 
     /// Unicode has printable versions of the ASCII control codes, like '␛'.
@@ -728,7 +728,7 @@ impl AsciiChar {
     #[must_use]
     pub const fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         (self.as_byte() == other.as_byte())
-            | (self.is_alphabetic() & (self.to_not_upper() == other.to_not_upper()))
+            || (self.is_alphabetic() && (self.to_not_upper() == other.to_not_upper()))
     }
 }
 
