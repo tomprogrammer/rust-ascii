@@ -218,7 +218,7 @@ impl AsciiStr {
     pub fn trim_start(&self) -> &Self {
         let whitespace_len = self
             .chars()
-            .position(|ascii| !ascii.is_whitespace())
+            .position(|ch| !ch.is_whitespace())
             .unwrap_or_else(|| self.len());
 
         // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice.
@@ -239,7 +239,7 @@ impl AsciiStr {
         let whitespace_len = self
             .chars()
             .rev()
-            .position(|ascii| !ascii.is_whitespace())
+            .position(|ch| !ch.is_whitespace())
             .unwrap_or_else(|| self.len());
 
         // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice, and at least `0`, which is the whole slice.
@@ -655,7 +655,7 @@ impl<'a> Iterator for Split<'a> {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
 
-            if let Some(at) = self.chars.position(|ascii| ascii == split_on) {
+            if let Some(at) = self.chars.position(|ch| ch == split_on) {
                 // SAFETY: `at` is guaranteed to be in bounds, as `position` returns `Ok(0..len)`.
                 Some(unsafe { start.as_slice().get_unchecked(..at).into() })
             } else {
@@ -673,7 +673,7 @@ impl<'a> DoubleEndedIterator for Split<'a> {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
 
-            if let Some(at) = self.chars.rposition(|ascii| ascii == split_on) {
+            if let Some(at) = self.chars.rposition(|ch| ch == split_on) {
                 // SAFETY: `at` is guaranteed to be in bounds, as `rposition` returns `Ok(0..len)`, and slices `1..`, `2..`, etc... until `len..` inclusive, are valid.
                 Some(unsafe { start.as_slice().get_unchecked(at + 1..).into() })
             } else {
@@ -743,7 +743,7 @@ impl<'a> DoubleEndedIterator for Lines<'a> {
             .string
             .chars()
             .rev()
-            .position(|ascii| ascii == AsciiChar::LineFeed)
+            .position(|ch| ch == AsciiChar::LineFeed)
             .unwrap_or_else(|| self.string.len());
 
         // SAFETY: As per above, `self.len() - lf_rev_pos` will be in range `0..len - 1`, so both indexes are correct.
