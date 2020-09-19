@@ -29,7 +29,21 @@
 //! API changed significantly since then.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![allow(clippy::trivially_copy_pass_by_ref)] // for compatibility with methods on char and u8
+// Clippy lints
+#![warn(clippy::pedantic)]
+// Naming conventions sometimes go against this lint
+#![allow(clippy::module_name_repetitions)]
+// We need to get literal non-asciis for tests
+#![allow(clippy::non_ascii_literal)]
+// Sometimes it looks better to invert the order, such as when the `else` block is small
+#![allow(clippy::if_not_else)]
+// Shadowing is common and doesn't affect understanding
+// TODO: Consider removing `shadow_unrelated`, as it can show some actual logic errors
+#![allow(clippy::shadow_unrelated, clippy::shadow_reuse, clippy::shadow_same)]
+// for compatibility with methods on char and u8
+#![allow(clippy::trivially_copy_pass_by_ref)]
+// In preparation for feature `unsafe_block_in_unsafe_fn` (https://github.com/rust-lang/rust/issues/71668)
+#![allow(unused_unsafe)]
 
 #[cfg(feature = "std")]
 extern crate core;
