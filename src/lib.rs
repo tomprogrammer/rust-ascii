@@ -30,7 +30,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // Clippy lints
-#![warn(clippy::pedantic)]
+#![warn(
+    clippy::pedantic,
+    clippy::decimal_literal_representation,
+    clippy::get_unwrap,
+    clippy::indexing_slicing
+)]
 // Naming conventions sometimes go against this lint
 #![allow(clippy::module_name_repetitions)]
 // We need to get literal non-asciis for tests
@@ -40,6 +45,10 @@
 // Shadowing is common and doesn't affect understanding
 // TODO: Consider removing `shadow_unrelated`, as it can show some actual logic errors
 #![allow(clippy::shadow_unrelated, clippy::shadow_reuse, clippy::shadow_same)]
+// A `if let` / `else` sometimes looks better than using iterator adaptors
+#![allow(clippy::option_if_let_else)]
+// In tests, we're fine with indexing, since a panic is a failure.
+#![cfg_attr(test, allow(clippy::indexing_slicing))]
 // for compatibility with methods on char and u8
 #![allow(clippy::trivially_copy_pass_by_ref)]
 // In preparation for feature `unsafe_block_in_unsafe_fn` (https://github.com/rust-lang/rust/issues/71668)

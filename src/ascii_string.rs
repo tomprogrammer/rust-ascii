@@ -619,6 +619,7 @@ impl<'a> AddAssign<&'a AsciiStr> for AsciiString {
     }
 }
 
+#[allow(clippy::indexing_slicing)] // In `Index`, if it's out of bounds, panic is the default
 impl<T> Index<T> for AsciiString
 where
     AsciiStr: Index<T>,
@@ -631,6 +632,7 @@ where
     }
 }
 
+#[allow(clippy::indexing_slicing)] // In `IndexMut`, if it's out of bounds, panic is the default
 impl<T> IndexMut<T> for AsciiString
 where
     AsciiStr: IndexMut<T>,

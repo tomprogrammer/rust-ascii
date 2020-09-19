@@ -353,7 +353,10 @@ impl AsciiChar {
             h, i, j, k, l, m, n, o,
             p, q, r, s, t, u, v, w,
             x, y, z, CurlyBraceOpen, VerticalBar, CurlyBraceClose, Tilde, DEL,
-        ];
+		];
+
+        // We want to slice here and detect `const_err` from rustc if the slice is invalid
+        #[allow(clippy::indexing_slicing)]
         ALL[ch as usize]
     }
 
@@ -688,6 +691,7 @@ impl AsciiChar {
     /// ```
     #[inline]
     #[must_use]
+    #[allow(clippy::indexing_slicing)] // We're sure it'll either access one or the other, as `bool` is either `0` or `1`
     pub const fn to_ascii_uppercase(&self) -> Self {
         [*self, AsciiChar::new((*self as u8 & 0b101_1111) as char)][self.is_lowercase() as usize]
     }
@@ -705,6 +709,7 @@ impl AsciiChar {
     /// ```
     #[inline]
     #[must_use]
+    #[allow(clippy::indexing_slicing)] // We're sure it'll either access one or the other, as `bool` is either `0` or `1`
     pub const fn to_ascii_lowercase(&self) -> Self {
         [*self, AsciiChar::new(self.to_not_upper() as char)][self.is_uppercase() as usize]
     }
