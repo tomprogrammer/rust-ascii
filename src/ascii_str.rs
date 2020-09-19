@@ -216,10 +216,13 @@ impl AsciiStr {
     /// ```
     #[must_use]
     pub fn trim_start(&self) -> &Self {
-        &self[self
+        let whitespace_len = self
             .chars()
-            .take_while(|ascii| ascii.is_whitespace())
-            .count()..]
+            .position(|ascii| !ascii.is_whitespace())
+            .unwrap_or_else(|| self.len());
+
+        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice.
+        unsafe { self.as_slice().get_unchecked(whitespace_len..).into() }
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -232,12 +235,19 @@ impl AsciiStr {
     /// ```
     #[must_use]
     pub fn trim_end(&self) -> &Self {
-        let trimmed = self
+        // Number of whitespace characters counting from the end
+        let whitespace_len = self
             .chars()
             .rev()
-            .take_while(|ch| ch.is_whitespace())
-            .count();
-        &self[..self.len() - trimmed]
+            .position(|ascii| !ascii.is_whitespace())
+            .unwrap_or_else(|| self.len());
+
+        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice, and at least `0`, which is the whole slice.
+        unsafe {
+            self.as_slice()
+                .get_unchecked(..self.len() - whitespace_len)
+                .into()
+        }
     }
 
     /// Compares two strings case-insensitively.
@@ -470,6 +480,7 @@ impl fmt::Debug for AsciiStr {
 
 macro_rules! impl_index {
     ($idx:ty) => {
+        #[allow(clippy::indexing_slicing)] // In `Index`, if it's out of bounds, panic is the default
         impl Index<$idx> for AsciiStr {
             type Output = AsciiStr;
 
@@ -479,6 +490,7 @@ macro_rules! impl_index {
             }
         }
 
+        #[allow(clippy::indexing_slicing)] // In `IndexMut`, if it's out of bounds, panic is the default
         impl IndexMut<$idx> for AsciiStr {
             #[inline]
             fn index_mut(&mut self, index: $idx) -> &mut AsciiStr {
@@ -495,6 +507,7 @@ impl_index! { RangeFull }
 impl_index! { RangeInclusive<usize> }
 impl_index! { RangeToInclusive<usize> }
 
+#[allow(clippy::indexing_slicing)] // In `Index`, if it's out of bounds, panic is the default
 impl Index<usize> for AsciiStr {
     type Output = AsciiChar;
 
@@ -504,6 +517,7 @@ impl Index<usize> for AsciiStr {
     }
 }
 
+#[allow(clippy::indexing_slicing)] // In `IndexMut`, if it's out of bounds, panic is the default
 impl IndexMut<usize> for AsciiStr {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut AsciiChar {
@@ -636,13 +650,14 @@ struct Split<'a> {
 impl<'a> Iterator for Split<'a> {
     type Item = &'a AsciiStr;
 
-    #[allow(clippy::option_if_let_else)] // There are side effects with `else` so we don't use iterator adaptors
     fn next(&mut self) -> Option<&'a AsciiStr> {
         if !self.ended {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.position(|ch| ch == split_on) {
-                Some(&start[..at])
+
+            if let Some(at) = self.chars.position(|ascii| ascii == split_on) {
+                // SAFETY: `at` is guaranteed to be in bounds, as `position` returns `Ok(0..len)`.
+                Some(unsafe { start.as_slice().get_unchecked(..at).into() })
             } else {
                 self.ended = true;
                 Some(start)
@@ -653,13 +668,14 @@ impl<'a> Iterator for Split<'a> {
     }
 }
 impl<'a> DoubleEndedIterator for Split<'a> {
-    #[allow(clippy::option_if_let_else)] // There are side effects with `else` so we don't use iterator adaptors
     fn next_back(&mut self) -> Option<&'a AsciiStr> {
         if !self.ended {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.rposition(|ch| ch == split_on) {
-                Some(&start[at + 1..])
+
+            if let Some(at) = self.chars.rposition(|ascii| ascii == split_on) {
+                // SAFETY: `at` is guaranteed to be in bounds, as `rposition` returns `Ok(0..len)`, and slices `1..`, `2..`, etc... until `len..` inclusive, are valid.
+                Some(unsafe { start.as_slice().get_unchecked(at + 1..).into() })
             } else {
                 self.ended = true;
                 Some(start)
@@ -684,40 +700,65 @@ impl<'a> Iterator for Lines<'a> {
             .chars()
             .position(|chr| chr == AsciiChar::LineFeed)
         {
-            let line = if idx > 0 && self.string[idx - 1] == AsciiChar::CarriageReturn {
-                &self.string[..idx - 1]
+            // SAFETY: `idx` is guaranteed to be `1..len`, as we get it from `position` as `0..len` and make sure it's not `0`.
+            let line = if idx > 0
+                && *unsafe { self.string.as_slice().get_unchecked(idx - 1) }
+                    == AsciiChar::CarriageReturn
+            {
+                // SAFETY: As per above, `idx` is guaranteed to be `1..len`
+                unsafe { self.string.as_slice().get_unchecked(..idx - 1).into() }
             } else {
-                &self.string[..idx]
+                // SAFETY: As per above, `idx` is guaranteed to be `0..len`
+                unsafe { self.string.as_slice().get_unchecked(..idx).into() }
             };
-            self.string = &self.string[idx + 1..];
+            // SAFETY: As per above, `idx` is guaranteed to be `0..len`, so at the extreme, slicing `len..` is a valid empty slice.
+            self.string = unsafe { self.string.as_slice().get_unchecked(idx + 1..).into() };
             Some(line)
         } else if self.string.is_empty() {
             None
         } else {
             let line = self.string;
-            self.string = &self.string[..0];
+            // SAFETY: Slicing `..0` is always valid and yields an empty slice
+            self.string = unsafe { self.string.as_slice().get_unchecked(..0).into() };
             Some(line)
         }
     }
 }
+
 impl<'a> DoubleEndedIterator for Lines<'a> {
     fn next_back(&mut self) -> Option<&'a AsciiStr> {
         if self.string.is_empty() {
             return None;
         }
-        let mut i = self.string.len();
-        if self.string[i - 1] == AsciiChar::LineFeed {
-            i -= 1;
-            if i > 0 && self.string[i - 1] == AsciiChar::CarriageReturn {
-                i -= 1;
-            }
+
+        // If we end with `LF` / `CR/LF`, remove them
+        if let [slice @ .., AsciiChar::CarriageReturn, AsciiChar::LineFeed]
+        | [slice @ .., AsciiChar::LineFeed] = self.string.as_slice()
+        {
+            self.string = slice.into();
         }
-        self.string = &self.string[..i];
-        while i > 0 && self.string[i - 1] != AsciiChar::LineFeed {
-            i -= 1;
-        }
-        let line = &self.string[i..];
-        self.string = &self.string[..i];
+
+        // SAFETY: This will never be `0`, as we remove any `LF` from the end, it is `1..len`
+        let lf_rev_pos = self
+            .string
+            .chars()
+            .rev()
+            .position(|ascii| ascii == AsciiChar::LineFeed)
+            .unwrap_or_else(|| self.string.len());
+
+        // SAFETY: As per above, `self.len() - lf_rev_pos` will be in range `0..len - 1`, so both indexes are correct.
+        let line = unsafe {
+            self.string
+                .as_slice()
+                .get_unchecked(self.string.len() - lf_rev_pos..)
+                .into()
+        };
+        self.string = unsafe {
+            self.string
+                .as_slice()
+                .get_unchecked(..self.string.len() - lf_rev_pos)
+                .into()
+        };
         Some(line)
     }
 }
@@ -975,7 +1016,6 @@ impl AsMutAsciiStr for [AsciiChar] {
 impl AsAsciiStr for [u8] {
     type Inner = u8;
 
-    #[allow(clippy::option_if_let_else)] // `if` needs to use past results, so it's more expressive like this
     fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
     where
         R: SliceIndex<[u8], Output = [u8]>,
@@ -1006,7 +1046,6 @@ impl AsAsciiStr for [u8] {
     }
 }
 impl AsMutAsciiStr for [u8] {
-    #[allow(clippy::option_if_let_else)] // `if` needs to use past results, so it's more expressive like this
     fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
     where
         R: SliceIndex<[u8], Output = [u8]>,
