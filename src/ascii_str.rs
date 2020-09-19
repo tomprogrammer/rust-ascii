@@ -197,7 +197,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_start());
     /// ```
     pub fn trim_start(&self) -> &Self {
-        &self[self.chars().take_while(|a| a.is_whitespace()).count()..]
+        &self[self.chars().take_while(|ch| ch.is_whitespace()).count()..]
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -209,7 +209,11 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_end());
     /// ```
     pub fn trim_end(&self) -> &Self {
-        let trimmed = self.chars().rev().take_while(|a| a.is_whitespace()).count();
+        let trimmed = self
+            .chars()
+            .rev()
+            .take_while(|ch| ch.is_whitespace())
+            .count();
         &self[..self.len() - trimmed]
     }
 
@@ -219,20 +223,20 @@ impl AsciiStr {
             && self
                 .chars()
                 .zip(other.chars())
-                .all(|(a, b)| a.eq_ignore_ascii_case(&b))
+                .all(|(ch, other_ch)| ch.eq_ignore_ascii_case(&other_ch))
     }
 
     /// Replaces lowercase letters with their uppercase equivalent.
     pub fn make_ascii_uppercase(&mut self) {
-        for a in self.chars_mut() {
-            *a = a.to_ascii_uppercase();
+        for ch in self.chars_mut() {
+            *ch = ch.to_ascii_uppercase();
         }
     }
 
     /// Replaces uppercase letters with their lowercase equivalent.
     pub fn make_ascii_lowercase(&mut self) {
-        for a in self.chars_mut() {
-            *a = a.to_ascii_lowercase();
+        for ch in self.chars_mut() {
+            *ch = ch.to_ascii_lowercase();
         }
     }
 
@@ -605,7 +609,7 @@ impl<'a> Iterator for Split<'a> {
         if !self.ended {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.position(|c| c == split_on) {
+            if let Some(at) = self.chars.position(|ch| ch == split_on) {
                 Some(&start[..at])
             } else {
                 self.ended = true;
@@ -621,7 +625,7 @@ impl<'a> DoubleEndedIterator for Split<'a> {
         if !self.ended {
             let start: &AsciiStr = self.chars.as_str();
             let split_on = self.on;
-            if let Some(at) = self.chars.rposition(|c| c == split_on) {
+            if let Some(at) = self.chars.rposition(|ch| ch == split_on) {
                 Some(&start[at + 1..])
             } else {
                 self.ended = true;
