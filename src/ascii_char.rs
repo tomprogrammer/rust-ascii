@@ -360,6 +360,32 @@ impl AsciiChar {
         ALL[ch as usize]
     }
 
+    /// Create an `AsciiChar` from a `char`, in a `const fn` way.
+    ///
+    /// Within non-`const fn` functions the more general
+    /// [`from_ascii()`](#method.from_ascii) should be used instead.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiChar;
+    /// assert!(AsciiChar::try_new('-').is_ok());
+    /// assert!(AsciiChar::try_new('—').is_err());
+    /// assert_eq!(AsciiChar::try_new('\x7f'), Ok(AsciiChar::DEL));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Fails for non-ASCII characters.
+    #[inline]
+    pub const fn try_new(ch: char) -> Result<Self, ToAsciiCharError> {
+        unsafe {
+            match ch as u32 {
+                0..=127 => Ok(mem::transmute(ch as u8)),
+                _ => Err(ToAsciiCharError(())),
+            }
+        }
+    }
+
     /// Constructs an ASCII character from a `u8`, `char` or other character
     /// type without any checks.
     ///
