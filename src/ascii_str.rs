@@ -139,7 +139,7 @@ impl AsciiStr {
     /// ```
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.slice.len()
     }
 
@@ -155,7 +155,7 @@ impl AsciiStr {
     /// ```
     #[inline]
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
