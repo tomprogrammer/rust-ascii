@@ -672,6 +672,7 @@ impl<O> fmt::Display for FromAsciiError<O> {
 }
 impl<O: Any> Error for FromAsciiError<O> {
     #[inline]
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         self.error.description()
     }
