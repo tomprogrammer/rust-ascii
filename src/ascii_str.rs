@@ -2,7 +2,7 @@
 use alloc::borrow::ToOwned;
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
-use core::fmt;
+use core::{fmt, mem};
 use core::ops::{Index, IndexMut};
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use core::slice::{self, Iter, IterMut, SliceIndex};
@@ -28,6 +28,23 @@ pub struct AsciiStr {
 }
 
 impl AsciiStr {
+    /// Coerces into an `AsciiStr` slice.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::{AsciiChar, AsciiStr};
+    /// const HELLO: &AsciiStr = AsciiStr::new(
+    ///     &[AsciiChar::H, AsciiChar::e, AsciiChar::l, AsciiChar::l, AsciiChar::o]
+    /// );
+    ///
+    /// assert_eq!(HELLO.as_str(), "Hello");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn new(s: &[AsciiChar]) -> &Self {
+        unsafe { mem::transmute(s) }
+    }
+
     /// Converts `&self` to a `&str` slice.
     #[inline]
     #[must_use]
