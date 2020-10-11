@@ -1186,7 +1186,7 @@ mod tests {
         let mut_ascii_str = mut_arr.as_mut().into();
 		let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
 		let mut string_bytes = [b'A'];
-        let string_mut = unsafe { std::str::from_utf8_unchecked_mut(&mut string_bytes) }; // SAFETY: 'A' is a valid string.
+        let string_mut = unsafe { core::str::from_utf8_unchecked_mut(&mut string_bytes) }; // SAFETY: 'A' is a valid string.
         let string_mut_bytes: &mut [u8] = &mut [b'A'];
 
         // Note: This is a trick because `rustfmt` doesn't support
