@@ -719,7 +719,7 @@ impl<'a> Iterator for Lines<'a> {
         } else {
             let line = self.string;
             // SAFETY: Slicing `..0` is always valid and yields an empty slice
-            self.string = unsafe { self.string.as_slice().get_unchecked(..0).into() };
+            self.string = unsafe { AsciiStr::from_ascii_unchecked(b"") };
             Some(line)
         }
     }
