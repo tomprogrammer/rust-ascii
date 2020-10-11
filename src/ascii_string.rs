@@ -26,6 +26,7 @@ impl AsciiString {
     /// let mut s = AsciiString::new();
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new() -> Self {
         AsciiString { vec: Vec::new() }
     }
