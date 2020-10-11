@@ -718,7 +718,7 @@ impl<'a> Iterator for Lines<'a> {
             None
         } else {
             let line = self.string;
-            // SAFETY: Slicing `..0` is always valid and yields an empty slice
+            // SAFETY: An empty string is a valid string.
             self.string = unsafe { AsciiStr::from_ascii_unchecked(b"") };
             Some(line)
         }
@@ -732,13 +732,27 @@ impl<'a> DoubleEndedIterator for Lines<'a> {
         }
 
         // If we end with `LF` / `CR/LF`, remove them
-        if let [slice @ .., AsciiChar::CarriageReturn, AsciiChar::LineFeed]
-        | [slice @ .., AsciiChar::LineFeed] = self.string.as_slice()
-        {
-            self.string = slice.into();
+        if let Some(AsciiChar::LineFeed) = self.string.last() {
+            // SAFETY: `last()` returned `Some`, so our len is at least 1.
+            self.string = unsafe {
+                self.string
+                    .as_slice()
+                    .get_unchecked(..self.string.len() - 1)
+                    .into()
+            };
+
+            if let Some(AsciiChar::CarriageReturn) = self.string.last() {
+                // SAFETY: `last()` returned `Some`, so our len is at least 1.
+                self.string = unsafe {
+                    self.string
+                        .as_slice()
+                        .get_unchecked(..self.string.len() - 1)
+                        .into()
+                };
+            }
         }
 
-        // SAFETY: This will never be `0`, as we remove any `LF` from the end, it is `1..len`
+        // Get the position of the first `LF` from the end.
         let lf_rev_pos = self
             .string
             .chars()
@@ -746,7 +760,9 @@ impl<'a> DoubleEndedIterator for Lines<'a> {
             .position(|ch| ch == AsciiChar::LineFeed)
             .unwrap_or_else(|| self.string.len());
 
-        // SAFETY: As per above, `self.len() - lf_rev_pos` will be in range `0..len - 1`, so both indexes are correct.
+        // SAFETY: `lf_rev_pos` will be in range `0..=len`, so `len - lf_rev_pos`
+        //         will be within `0..=len`, making it correct as a start and end
+        //         point for the strings.
         let line = unsafe {
             self.string
                 .as_slice()
@@ -1171,7 +1187,7 @@ mod tests {
         let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
         let mut string = "A".to_string();
         let mut string2 = "A".to_string();
-        let string_mut = string.as_mut();
+        let string_mut = string.as_mut_str();
         let string_mut_bytes = unsafe { string2.as_bytes_mut() }; // SAFETY: We don't modify it
 
         // Note: This is a trick because `rustfmt` doesn't support
@@ -1427,6 +1443,15 @@ mod tests {
         assert_eq!(iter.next_back(), Some("baz".as_ascii_str().unwrap()));
         assert_eq!(iter.next_back(), Some("".as_ascii_str().unwrap()));
         assert_eq!(iter.next(), Some("bar".as_ascii_str().unwrap()));
+
+        let empty_lines = b"\n\r\n\n\r\n";
+        let mut iter_count = 0;
+        let ascii = AsciiStr::from_ascii(&empty_lines).unwrap();
+        for line in ascii.lines().rev() {
+            iter_count += 1;
+            assert!(line.is_empty());
+        }
+        assert_eq!(4, iter_count);
     }
 
     #[test]
