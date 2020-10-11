@@ -17,12 +17,11 @@ use ascii_char::{AsciiChar, ToAsciiChar};
 pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     let c = c.into() ^ 0b0100_0000;
-    unsafe {
-        if c >= b'?' && c <= b'_' {
-            Some(c.to_ascii_char_unchecked())
-        } else {
-            None
-        }
+    if c >= b'?' && c <= b'_' {
+        // SAFETY: All bytes between '?' (0x3F) and '_' (0x5f) are valid ascii characters.
+        Some(unsafe { c.to_ascii_char_unchecked() })
+    } else {
+        None
     }
 }
 
@@ -51,10 +50,10 @@ pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
 /// ```
 pub fn caret_decode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
-    unsafe {
-        match c.into() {
-            b'?'..=b'_' => Some(AsciiChar::from_ascii_unchecked(c.into() ^ 0b0100_0000)),
-            _ => None,
-        }
+    match c.into() {
+        // SAFETY: All bytes between '?' (0x3F) and '_' (0x5f) after `xoring` with `0b0100_0000` are
+        //         valid bytes, as they represent characters between '␀' (0x0) and '␠' (0x1f) + '␡' (0x7f)
+        b'?'..=b'_' => Some(unsafe { AsciiChar::from_ascii_unchecked(c.into() ^ 0b0100_0000) }),
+        _ => None,
     }
 }
