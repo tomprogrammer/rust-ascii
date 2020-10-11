@@ -1155,20 +1155,42 @@ mod tests {
     use super::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
     use AsciiChar;
 
+    /// Ensures that common types, `str`, `[u8]`, `AsciiStr` and their
+    /// references, shared and mutable implement `AsAsciiStr`.
     #[test]
     fn generic_as_ascii_str() {
+        // Generic function to ensure `C` implements `AsAsciiStr`
         fn generic<C: AsAsciiStr + ?Sized>(c: &C) -> Result<&AsciiStr, AsAsciiStrError> {
             c.as_ascii_str()
         }
+
         let arr = [AsciiChar::A];
-        let ascii_str: &AsciiStr = arr.as_ref().into();
-        assert_eq!(generic("A"), Ok(ascii_str));
-        assert_eq!(generic(&b"A"[..]), Ok(ascii_str));
-        assert_eq!(generic(ascii_str), Ok(ascii_str));
-        assert_eq!(generic(&"A"), Ok(ascii_str));
-        assert_eq!(generic(&ascii_str), Ok(ascii_str));
-        // Note: Not sure what this is supposed to be testing, as `generic` can only accept shared references
-        //assert_eq!(generic(&mut "A"), Ok(ascii_str));
+        let ascii_str = arr.as_ref().into();
+        let mut mut_arr = arr; // Note: We need a second copy to prevent overlapping mutable borrows.
+        let mut_ascii_str = mut_arr.as_mut().into();
+        let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
+        let mut string = "A".to_string();
+        let mut string2 = "A".to_string();
+        let string_mut = string.as_mut();
+        let string_mut_bytes = unsafe { string2.as_bytes_mut() }; // SAFETY: We don't modify it
+
+        // Note: This is a trick because `rustfmt` doesn't support
+        //       attributes on blocks yet.
+        #[rustfmt::skip]
+        let _ = [
+            assert_eq!(generic::<str             >("A"              ), Ok(ascii_str)),
+            assert_eq!(generic::<[u8]            >(&b"A"[..]        ), Ok(ascii_str)),
+            assert_eq!(generic::<AsciiStr        >(ascii_str        ), Ok(ascii_str)),
+            assert_eq!(generic::<[AsciiChar]     >(&arr             ), Ok(ascii_str)),
+            assert_eq!(generic::<&str            >(&"A"             ), Ok(ascii_str)),
+            assert_eq!(generic::<&[u8]           >(&&b"A"[..]       ), Ok(ascii_str)),
+            assert_eq!(generic::<&AsciiStr       >(&ascii_str       ), Ok(ascii_str)),
+            assert_eq!(generic::<&[AsciiChar]    >(&&arr[..]        ), Ok(ascii_str)),
+            assert_eq!(generic::<&mut str        >(&string_mut      ), Ok(ascii_str)),
+            assert_eq!(generic::<&mut [u8]       >(&string_mut_bytes), Ok(ascii_str)),
+            assert_eq!(generic::<&mut AsciiStr   >(&mut_ascii_str   ), Ok(ascii_str)),
+            assert_eq!(generic::<&mut [AsciiChar]>(&mut_arr_mut_ref ), Ok(ascii_str)),
+        ];
     }
 
     #[cfg(feature = "std")]
