@@ -29,7 +29,10 @@
 //! API changed significantly since then.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![allow(clippy::trivially_copy_pass_by_ref)] // for compatibility with methods on char and u8
+// for compatibility with methods on char and u8
+#![allow(clippy::trivially_copy_pass_by_ref)]
+// In preparation for feature `unsafe_block_in_unsafe_fn` (https://github.com/rust-lang/rust/issues/71668)
+#![allow(unused_unsafe)]
 
 #[cfg(feature = "std")]
 extern crate core;

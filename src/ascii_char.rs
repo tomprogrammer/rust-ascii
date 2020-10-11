@@ -367,7 +367,8 @@ impl AsciiChar {
     /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
     pub unsafe fn from_ascii_unchecked(ch: u8) -> Self {
-        ch.to_ascii_char_unchecked()
+        // SAFETY: Caller guarantees `ch` is within bounds of ascii.
+        unsafe { ch.to_ascii_char_unchecked() }
     }
 
     /// Converts an ASCII character into a `u8`.
@@ -628,12 +629,20 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('p').as_printable_char(), 'p');
     /// ```
     pub fn as_printable_char(self) -> char {
-        unsafe {
-            match self as u8 {
-                b' '..=b'~' => self.as_char(),
-                127 => '␡',
-                _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
-            }
+        match self as u8 {
+            // Non printable characters
+            // SAFETY: From codepoint 0x2400 ('␀') to 0x241f (`␟`), there are characters representing
+            //         the unprintable characters from 0x0 to 0x1f, ordered correctly.
+            //         As `b` is guaranteed to be within 0x0 to 0x1f, the conversion represents a
+            //         valid character.
+            b @ 0x0..=0x1f => unsafe { char::from_u32_unchecked(u32::from('␀') + u32::from(b)) },
+
+            // 0x7f (delete) has it's own character at codepoint 0x2420, not 0x247f, so it is special
+            // cased to return it's character
+            0x7f => '␡',
+
+            // All other characters are printable, and per function contract use `Self::as_char`
+            _ => self.as_char(),
         }
     }
 
@@ -781,10 +790,19 @@ impl Error for ToAsciiCharError {
 
 /// Convert `char`, `u8` and other character types to `AsciiChar`.
 pub trait ToAsciiChar {
-    /// Convert to `AsciiChar` without checking that it is an ASCII character.
-    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
     /// Convert to `AsciiChar`.
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
+
+    /// Convert to `AsciiChar` without checking that it is an ASCII character.
+    ///
+    /// # Safety
+    /// Calling this function with a value outside of the ascii range, `0x0` to `0x7f` inclusive,
+    /// is undefined behavior.
+    // TODO: Make sure this is the contract we want to express in this function.
+    //       It is ambigous if numbers such as `0xffffff20_u32` are valid ascii characters,
+    //       as this function returns `Ascii::Space` due to the cast to `u8`, even though
+    //       `to_ascii_char` returns `Err()`.
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
 }
 
 impl ToAsciiChar for AsciiChar {
@@ -792,6 +810,7 @@ impl ToAsciiChar for AsciiChar {
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         Ok(self)
     }
+
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         self
@@ -805,44 +824,56 @@ impl ToAsciiChar for u8 {
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        mem::transmute(self)
+        // SAFETY: Caller guarantees `self` is within bounds of the enum
+        //         variants, so this cast successfully produces a valid ascii
+        //         variant
+        unsafe { mem::transmute::<u8, AsciiChar>(self) }
     }
 }
 
+// Note: Casts to `u8` here does not cause problems, as the negative
+//       range is mapped outside of ascii bounds.
 impl ToAsciiChar for i8 {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self as u8).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        mem::transmute(self)
+        // SAFETY: Caller guarantees `self` is within bounds of the enum
+        //         variants, so this cast successfully produces a valid ascii
+        //         variant
+        unsafe { mem::transmute::<u8, AsciiChar>(self as u8) }
     }
 }
 
 impl ToAsciiChar for char {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u32).to_ascii_char_unchecked()
+        // SAFETY: Caller guarantees we're within ascii range.
+        unsafe { u32::from(self).to_ascii_char_unchecked() }
     }
 }
 
 impl ToAsciiChar for u32 {
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        unsafe {
-            match self {
-                0..=127 => Ok(self.to_ascii_char_unchecked()),
-                _ => Err(ToAsciiCharError(())),
-            }
+        match self {
+            // SAFETY: We're within the valid ascii range in this branch.
+            0x0..=0x7f => Ok(unsafe { self.to_ascii_char_unchecked() }),
+            _ => Err(ToAsciiCharError(())),
         }
     }
+
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u8).to_ascii_char_unchecked()
+        // Note: This cast discards the top bytes, this may cause problems, see
+        //       the TODO on this method's documentation in the trait.
+        // SAFETY: Caller guarantees we're within ascii range.
+        unsafe { (self as u8).to_ascii_char_unchecked() }
     }
 }
 
@@ -852,7 +883,10 @@ impl ToAsciiChar for u16 {
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u8).to_ascii_char_unchecked()
+        // Note: This cast discards the top bytes, this may cause problems, see
+        //       the TODO on this method's documentation in the trait.
+        // SAFETY: Caller guarantees we're within ascii range.
+        unsafe { (self as u8).to_ascii_char_unchecked() }
     }
 }
 
