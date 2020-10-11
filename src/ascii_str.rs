@@ -1069,6 +1069,7 @@ impl AsAsciiStr for CStr {
 #[cfg(test)]
 mod tests {
     use super::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
+    #[cfg(feature = "alloc")]
     use alloc::string::{String, ToString};
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
