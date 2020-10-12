@@ -1,3 +1,7 @@
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
 use core::fmt;
 use core::ops::{Index, IndexMut};
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
@@ -8,7 +12,7 @@ use std::error::Error;
 use std::ffi::CStr;
 
 use ascii_char::AsciiChar;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 use ascii_string::AsciiString;
 
 /// [`AsciiStr`] represents a byte or string slice that only contains ASCII characters.
@@ -77,7 +81,7 @@ impl AsciiStr {
     }
 
     /// Copies the content of this `AsciiStr` into an owned `AsciiString`.
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[must_use]
     pub fn to_ascii_string(&self) -> AsciiString {
         AsciiString::from(self.slice.to_vec())
@@ -283,7 +287,7 @@ impl AsciiStr {
     }
 
     /// Returns a copy of this string where letters 'a' to 'z' are mapped to 'A' to 'Z'.
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[must_use]
     pub fn to_ascii_uppercase(&self) -> AsciiString {
         let mut ascii_string = self.to_ascii_string();
@@ -292,7 +296,7 @@ impl AsciiStr {
     }
 
     /// Returns a copy of this string where letters 'A' to 'Z' are mapped to 'a' to 'z'.
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[must_use]
     pub fn to_ascii_lowercase(&self) -> AsciiString {
         let mut ascii_string = self.to_ascii_string();
@@ -336,7 +340,7 @@ impl_partial_eq! {str}
 impl_partial_eq! {[u8]}
 impl_partial_eq! {[AsciiChar]}
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 impl ToOwned for AsciiStr {
     type Owned = AsciiString;
 
@@ -391,7 +395,7 @@ impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
         unsafe { &mut *ptr }
     }
 }
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     #[inline]
     fn from(owned: Box<[AsciiChar]>) -> Box<AsciiStr> {
@@ -451,7 +455,7 @@ impl<'a> From<&'a AsciiStr> for &'a str {
 }
 macro_rules! widen_box {
     ($wider: ty) => {
-        #[cfg(feature = "std")]
+        #[cfg(feature = "alloc")]
         impl From<Box<AsciiStr>> for Box<$wider> {
             #[inline]
             fn from(owned: Box<AsciiStr>) -> Box<$wider> {
@@ -1218,6 +1222,10 @@ impl AsAsciiStr for CStr {
 #[cfg(test)]
 mod tests {
     use super::{AsAsciiStr, AsAsciiStrError, AsMutAsciiStr, AsciiStr};
+    #[cfg(feature = "alloc")]
+    use alloc::string::{String, ToString};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
     use AsciiChar;
 
     /// Ensures that common types, `str`, `[u8]`, `AsciiStr` and their
@@ -1330,7 +1338,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     fn as_mut_ascii_str() {
         macro_rules! err {{$i:expr} => {Err(AsAsciiStrError($i))}}
         let mut s: String = "abčd".to_string();
@@ -1409,7 +1417,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     fn to_ascii_case() {
         let bytes = ([b'a', b'@', b'A'], [b'A', b'@', b'a']);
         let a = bytes.0.as_ascii_str().unwrap();

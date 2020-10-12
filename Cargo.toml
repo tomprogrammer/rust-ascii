@@ -14,7 +14,8 @@ serde_test = { version = "1.0", optional = true }
 
 [features]
 default = ["std"]
-std = []
+std = ["alloc"]
+alloc = []
 
 [[test]]
 name = "tests"
