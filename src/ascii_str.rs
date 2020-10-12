@@ -28,6 +28,7 @@ impl AsciiStr {
     #[inline]
     #[must_use]
     pub fn as_str(&self) -> &str {
+        // SAFETY: All variants of `AsciiChar` are valid bytes for a `str`.
         unsafe { &*(self as *const AsciiStr as *const str) }
     }
 
@@ -35,6 +36,7 @@ impl AsciiStr {
     #[inline]
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
+        // SAFETY: All variants of `AsciiChar` are valid `u8`, given they're `repr(u8)`.
         unsafe { &*(self as *const AsciiStr as *const [u8]) }
     }
 
@@ -105,6 +107,10 @@ impl AsciiStr {
     /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking
     /// for non-ASCII characters..
     ///
+    /// # Safety
+    /// If any of the bytes in `bytes` do not represent valid ascii characters, calling
+    /// this function is undefined behavior.
+    ///
     /// # Examples
     /// ```
     /// # use ascii::AsciiStr;
@@ -114,7 +120,9 @@ impl AsciiStr {
     #[inline]
     #[must_use]
     pub unsafe fn from_ascii_unchecked(bytes: &[u8]) -> &AsciiStr {
-        bytes.as_ascii_str_unchecked()
+        // SAFETY: Caller guarantees all bytes in `bytes` are valid
+        //         ascii characters.
+        unsafe { bytes.as_ascii_str_unchecked() }
     }
 
     /// Returns the number of characters / bytes in this ASCII sequence.
@@ -878,6 +886,10 @@ pub trait AsAsciiStr {
     }
     /// Convert to an ASCII slice without checking for non-ASCII characters.
     ///
+    /// # Safety
+    /// Calling this function when `self` contains non-ascii characters is
+    /// undefined behavior.
+    ///
     /// # Examples
     ///
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr;
@@ -893,6 +905,7 @@ pub trait AsMutAsciiStr: AsAsciiStr {
     fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
     where
         R: SliceIndex<[Self::Inner], Output = [Self::Inner]>;
+
     /// Convert to a mutable ASCII slice.
     ///
     /// # Errors
@@ -900,7 +913,12 @@ pub trait AsMutAsciiStr: AsAsciiStr {
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
         self.slice_ascii_mut(..)
     }
+
     /// Convert to a mutable ASCII slice without checking for non-ASCII characters.
+    ///
+    /// # Safety
+    /// Calling this function when `self` contains non-ascii characters is
+    /// undefined behavior.
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr;
 }
 
@@ -916,8 +934,10 @@ where
     {
         <T as AsAsciiStr>::slice_ascii(*self, range)
     }
+
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { <T as AsAsciiStr>::as_ascii_str_unchecked(*self) }
     }
 }
 
@@ -934,7 +954,8 @@ where
     }
 
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        <T as AsAsciiStr>::as_ascii_str_unchecked(*self)
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { <T as AsAsciiStr>::as_ascii_str_unchecked(*self) }
     }
 }
 
@@ -950,26 +971,31 @@ where
     }
 
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        <T as AsMutAsciiStr>::as_mut_ascii_str_unchecked(*self)
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { <T as AsMutAsciiStr>::as_mut_ascii_str_unchecked(*self) }
     }
 }
 
 impl AsAsciiStr for AsciiStr {
     type Inner = AsciiChar;
+
     fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
     where
         R: SliceIndex<[AsciiChar], Output = [AsciiChar]>,
     {
         self.slice.slice_ascii(range)
     }
+
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self)
     }
+
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
         self
     }
+
     #[inline]
     fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
         self.slice.get_ascii(index)
@@ -982,6 +1008,7 @@ impl AsMutAsciiStr for AsciiStr {
     {
         self.slice.slice_ascii_mut(range)
     }
+
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
         self
@@ -999,14 +1026,17 @@ impl AsAsciiStr for [AsciiChar] {
             None => Err(AsAsciiStrError(self.len())),
         }
     }
+
     #[inline]
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
         Ok(self.into())
     }
+
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        self.into()
+        <&AsciiStr>::from(self)
     }
+
     #[inline]
     fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
         self.get(index).cloned()
@@ -1025,7 +1055,7 @@ impl AsMutAsciiStr for [AsciiChar] {
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        self.into()
+        <&mut AsciiStr>::from(self)
     }
 }
 
@@ -1045,9 +1075,11 @@ impl AsAsciiStr for [u8] {
             Err(AsAsciiStrError(self.len()))
         }
     }
+
     fn as_ascii_str(&self) -> Result<&AsciiStr, AsAsciiStrError> {
+        // is_ascii is likely optimized
         if self.is_ascii() {
-            // is_ascii is likely optimized
+            // SAFETY: `is_ascii` guarantees all bytes are within ascii range.
             unsafe { Ok(self.as_ascii_str_unchecked()) }
         } else {
             Err(AsAsciiStrError(
@@ -1055,10 +1087,11 @@ impl AsAsciiStr for [u8] {
             ))
         }
     }
+
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        let ptr = self as *const [u8] as *const AsciiStr;
-        &*ptr
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { &*(self as *const [u8] as *const AsciiStr) }
     }
 }
 impl AsMutAsciiStr for [u8] {
@@ -1079,9 +1112,11 @@ impl AsMutAsciiStr for [u8] {
             Err(AsAsciiStrError(len))
         }
     }
+
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
+        // is_ascii() is likely optimized
         if self.is_ascii() {
-            // is_ascii() is likely optimized
+            // SAFETY: `is_ascii` guarantees all bytes are within ascii range.
             unsafe { Ok(self.as_mut_ascii_str_unchecked()) }
         } else {
             Err(AsAsciiStrError(
@@ -1089,10 +1124,11 @@ impl AsMutAsciiStr for [u8] {
             ))
         }
     }
+
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        let ptr = self as *mut [u8] as *mut AsciiStr;
-        &mut *ptr
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { &mut *(self as *mut [u8] as *mut AsciiStr) }
     }
 }
 
@@ -1109,7 +1145,8 @@ impl AsAsciiStr for str {
     }
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        self.as_bytes().as_ascii_str_unchecked()
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { self.as_bytes().as_ascii_str_unchecked() }
     }
 }
 impl AsMutAsciiStr for str {
@@ -1117,32 +1154,43 @@ impl AsMutAsciiStr for str {
     where
         R: SliceIndex<[u8], Output = [u8]>,
     {
-        let (ptr, len) = if let Some(slice) = self.as_bytes().get(range) {
-            if !slice.is_ascii() {
-                let offset = slice.as_ptr() as usize - self.as_ptr() as usize;
-                let not_ascii = slice.iter().take_while(|&b| b.is_ascii()).count();
-                return Err(AsAsciiStrError(offset + not_ascii));
+        // SAFETY: We don't modify the reference in this function, and the caller may
+        //         only modify it to include valid ascii characters.
+        let bytes = unsafe { self.as_bytes_mut() };
+        match bytes.get_mut(range) {
+            // Valid ascii slice
+            Some(slice) if slice.is_ascii() => {
+                // SAFETY: All bytes are ascii, so this cast is valid
+                let ptr = slice.as_mut_ptr() as *mut AsciiChar;
+                let len = slice.len();
+
+                // SAFETY: The pointer is valid for `len` elements, as it came
+                //         from a slice.
+                unsafe {
+                    let slice = core::slice::from_raw_parts_mut(ptr, len);
+                    Ok(<&mut AsciiStr>::from(slice))
+                }
             }
-            (slice.as_ptr(), slice.len())
-        } else {
-            return Err(AsAsciiStrError(self.len()));
-        };
-        unsafe {
-            let ptr = ptr as *const AsciiChar as *mut AsciiChar;
-            let slice = core::slice::from_raw_parts_mut(ptr, len);
-            Ok(slice.into())
+            Some(slice) => {
+                let not_ascii_len = slice.iter().copied().take_while(u8::is_ascii).count();
+                let offset = slice.as_ptr() as usize - self.as_ptr() as usize;
+
+                Err(AsAsciiStrError(offset + not_ascii_len))
+            }
+            None => Err(AsAsciiStrError(self.len())),
         }
     }
     fn as_mut_ascii_str(&mut self) -> Result<&mut AsciiStr, AsAsciiStrError> {
-        match self.bytes().position(|b| b > 127) {
+        match self.bytes().position(|b| !b.is_ascii()) {
             Some(index) => Err(AsAsciiStrError(index)),
+            // SAFETY: All bytes were iterated, and all were ascii
             None => unsafe { Ok(self.as_mut_ascii_str_unchecked()) },
         }
     }
     #[inline]
     unsafe fn as_mut_ascii_str_unchecked(&mut self) -> &mut AsciiStr {
-        let ptr = self as *mut str as *mut AsciiStr;
-        &mut *ptr
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        &mut *(self as *mut str as *mut AsciiStr)
     }
 }
 
@@ -1162,7 +1210,8 @@ impl AsAsciiStr for CStr {
     }
     #[inline]
     unsafe fn as_ascii_str_unchecked(&self) -> &AsciiStr {
-        self.to_bytes().as_ascii_str_unchecked()
+        // SAFETY: Caller guarantees `self` does not contain non-ascii characters
+        unsafe { self.to_bytes().as_ascii_str_unchecked() }
     }
 }
 
