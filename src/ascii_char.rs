@@ -280,7 +280,7 @@ pub enum AsciiChar {
 impl AsciiChar {
     /// Constructs an ASCII character from a `u8`, `char` or other character type.
     ///
-    /// # Failure
+    /// # Errors
     /// Returns `Err(())` if the character can't be ASCII encoded.
     ///
     /// # Example
@@ -328,8 +328,13 @@ impl AsciiChar {
     ///
     /// The panic message might not be the most descriptive due to the
     /// current limitations of `const fn`.
+    #[must_use]
     pub const fn new(ch: char) -> AsciiChar {
+        // It's restricted to this function, and without it
+        // we'd need to specify `AsciiChar::` or `Self::` 128 times.
+        #[allow(clippy::enum_glob_use)]
         use AsciiChar::*;
+
         #[rustfmt::skip]
         const ALL: [AsciiChar; 128] = [
             Null, SOH, SOX, ETX, EOT, ENQ, ACK, Bell,
@@ -348,7 +353,10 @@ impl AsciiChar {
             h, i, j, k, l, m, n, o,
             p, q, r, s, t, u, v, w,
             x, y, z, CurlyBraceOpen, VerticalBar, CurlyBraceClose, Tilde, DEL,
-        ];
+		];
+
+        // We want to slice here and detect `const_err` from rustc if the slice is invalid
+        #[allow(clippy::indexing_slicing)]
         ALL[ch as usize]
     }
 
@@ -366,18 +374,22 @@ impl AsciiChar {
     /// might not panic, creating a buffer overflow,
     /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
+    #[must_use]
     pub unsafe fn from_ascii_unchecked(ch: u8) -> Self {
-        ch.to_ascii_char_unchecked()
+        // SAFETY: Caller guarantees `ch` is within bounds of ascii.
+        unsafe { ch.to_ascii_char_unchecked() }
     }
 
     /// Converts an ASCII character into a `u8`.
     #[inline]
+    #[must_use]
     pub const fn as_byte(self) -> u8 {
         self as u8
     }
 
     /// Converts an ASCII character into a `char`.
     #[inline]
+    #[must_use]
     pub const fn as_char(self) -> char {
         self as u8 as char
     }
@@ -390,12 +402,14 @@ impl AsciiChar {
     // make the compiler optimize away the indirection.
 
     /// Turns uppercase into lowercase, but also modifies '@' and '<'..='_'
+    #[must_use]
     const fn to_not_upper(self) -> u8 {
         self as u8 | 0b010_0000
     }
 
     /// Check if the character is a letter (a-z, A-Z)
     #[inline]
+    #[must_use]
     pub const fn is_alphabetic(self) -> bool {
         (self.to_not_upper() >= b'a') & (self.to_not_upper() <= b'z')
     }
@@ -404,6 +418,7 @@ impl AsciiChar {
     ///
     /// This method is identical to [`is_alphabetic()`](#method.is_alphabetic)
     #[inline]
+    #[must_use]
     pub const fn is_ascii_alphabetic(&self) -> bool {
         self.is_alphabetic()
     }
@@ -417,6 +432,7 @@ impl AsciiChar {
     /// # Panics
     ///
     /// Radixes greater than 36 are not supported and will result in a panic.
+    #[must_use]
     pub fn is_digit(self, radix: u32) -> bool {
         match (self as u8, radix) {
             (b'0'..=b'9', 0..=36) => u32::from(self as u8 - b'0') < radix,
@@ -439,12 +455,14 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('/').is_ascii_digit(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_digit(&self) -> bool {
         (*self as u8 >= b'0') & (*self as u8 <= b'9')
     }
 
     /// Check if the character is a letter or number
     #[inline]
+    #[must_use]
     pub const fn is_alphanumeric(self) -> bool {
         self.is_alphabetic() | self.is_ascii_digit()
     }
@@ -453,6 +471,7 @@ impl AsciiChar {
     ///
     /// This method is identical to [`is_alphanumeric()`](#method.is_alphanumeric)
     #[inline]
+    #[must_use]
     pub const fn is_ascii_alphanumeric(&self) -> bool {
         self.is_alphanumeric()
     }
@@ -470,6 +489,7 @@ impl AsciiChar {
     /// assert!(!AsciiChar::FF.is_ascii_blank());
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_blank(&self) -> bool {
         (*self as u8 == b' ') | (*self as u8 == b'\t')
     }
@@ -477,6 +497,7 @@ impl AsciiChar {
     /// Check if the character one of ' ', '\t', '\n', '\r',
     /// '\0xb' (vertical tab) or '\0xc' (form feed).
     #[inline]
+    #[must_use]
     pub const fn is_whitespace(self) -> bool {
         let b = self as u8;
         self.is_ascii_blank() | (b == b'\n') | (b == b'\r') | (b == 0x0b) | (b == 0x0c)
@@ -486,6 +507,7 @@ impl AsciiChar {
     ///
     /// This method is NOT identical to `is_whitespace()`.
     #[inline]
+    #[must_use]
     pub const fn is_ascii_whitespace(&self) -> bool {
         self.is_ascii_blank()
             | (*self as u8 == b'\n')
@@ -506,6 +528,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::EOT.is_ascii_control(), true);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_control(&self) -> bool {
         ((*self as u8) < b' ') | (*self as u8 == 127)
     }
@@ -520,6 +543,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('\n').is_ascii_graphic(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_graphic(&self) -> bool {
         self.as_byte().wrapping_sub(b' ' + 1) < 0x5E
     }
@@ -534,6 +558,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('\n').is_ascii_printable(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_printable(&self) -> bool {
         self.as_byte().wrapping_sub(b' ') < 0x5F
     }
@@ -548,6 +573,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('@').is_lowercase(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_lowercase(self) -> bool {
         self.as_byte().wrapping_sub(b'a') < 26
     }
@@ -556,6 +582,7 @@ impl AsciiChar {
     ///
     /// This method is identical to [`is_lowercase()`](#method.is_lowercase)
     #[inline]
+    #[must_use]
     pub const fn is_ascii_lowercase(&self) -> bool {
         self.is_lowercase()
     }
@@ -570,6 +597,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('@').is_uppercase(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_uppercase(self) -> bool {
         self.as_byte().wrapping_sub(b'A') < 26
     }
@@ -578,6 +606,7 @@ impl AsciiChar {
     ///
     /// This method is identical to [`is_uppercase()`](#method.is_uppercase)
     #[inline]
+    #[must_use]
     pub const fn is_ascii_uppercase(&self) -> bool {
         self.is_uppercase()
     }
@@ -593,6 +622,7 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('~').is_ascii_punctuation(), true);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_punctuation(&self) -> bool {
         self.is_ascii_graphic() & !self.is_alphanumeric()
     }
@@ -609,8 +639,9 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new(' ').is_ascii_hexdigit(), false);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_ascii_hexdigit(&self) -> bool {
-        self.is_ascii_digit() | ((*self as u8 | 0x20u8).wrapping_sub(b'a') < 6)
+        self.is_ascii_digit() | ((*self as u8 | 0x20_u8).wrapping_sub(b'a') < 6)
     }
 
     /// Unicode has printable versions of the ASCII control codes, like '␛'.
@@ -627,13 +658,22 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new(' ').as_printable_char(), ' ');
     /// assert_eq!(AsciiChar::new('p').as_printable_char(), 'p');
     /// ```
+    #[must_use]
     pub fn as_printable_char(self) -> char {
-        unsafe {
-            match self as u8 {
-                b' '..=b'~' => self.as_char(),
-                127 => '␡',
-                _ => char::from_u32_unchecked(self as u32 + '␀' as u32),
-            }
+        match self as u8 {
+            // Non printable characters
+            // SAFETY: From codepoint 0x2400 ('␀') to 0x241f (`␟`), there are characters representing
+            //         the unprintable characters from 0x0 to 0x1f, ordered correctly.
+            //         As `b` is guaranteed to be within 0x0 to 0x1f, the conversion represents a
+            //         valid character.
+            b @ 0x0..=0x1f => unsafe { char::from_u32_unchecked(u32::from('␀') + u32::from(b)) },
+
+            // 0x7f (delete) has it's own character at codepoint 0x2420, not 0x247f, so it is special
+            // cased to return it's character
+            0x7f => '␡',
+
+            // All other characters are printable, and per function contract use `Self::as_char`
+            _ => self.as_char(),
         }
     }
 
@@ -659,6 +699,8 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('[').to_ascii_uppercase().as_char(), '[');
     /// ```
     #[inline]
+    #[must_use]
+    #[allow(clippy::indexing_slicing)] // We're sure it'll either access one or the other, as `bool` is either `0` or `1`
     pub const fn to_ascii_uppercase(&self) -> Self {
         [*self, AsciiChar::new((*self as u8 & 0b101_1111) as char)][self.is_lowercase() as usize]
     }
@@ -675,12 +717,15 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('\x7f').to_ascii_lowercase().as_char(), '\x7f');
     /// ```
     #[inline]
+    #[must_use]
+    #[allow(clippy::indexing_slicing)] // We're sure it'll either access one or the other, as `bool` is either `0` or `1`
     pub const fn to_ascii_lowercase(&self) -> Self {
         [*self, AsciiChar::new(self.to_not_upper() as char)][self.is_uppercase() as usize]
     }
 
     /// Compares two characters case-insensitively.
     #[inline]
+    #[must_use]
     pub const fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         (self.as_byte() == other.as_byte())
             | (self.is_alphabetic() & (self.to_not_upper() == other.to_not_upper()))
@@ -754,6 +799,7 @@ const ERRORMSG_CHAR: &str = "not an ASCII character";
 impl ToAsciiCharError {
     /// Returns a description for this error, like `std::error::Error::description`.
     #[inline]
+    #[must_use]
     pub const fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }
@@ -781,10 +827,22 @@ impl Error for ToAsciiCharError {
 
 /// Convert `char`, `u8` and other character types to `AsciiChar`.
 pub trait ToAsciiChar {
-    /// Convert to `AsciiChar` without checking that it is an ASCII character.
-    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
     /// Convert to `AsciiChar`.
+    ///
+    /// # Errors
+    /// If `self` is outside the valid ascii range, this returns `Err`
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError>;
+
+    /// Convert to `AsciiChar` without checking that it is an ASCII character.
+    ///
+    /// # Safety
+    /// Calling this function with a value outside of the ascii range, `0x0` to `0x7f` inclusive,
+    /// is undefined behavior.
+    // TODO: Make sure this is the contract we want to express in this function.
+    //       It is ambigous if numbers such as `0xffffff20_u32` are valid ascii characters,
+    //       as this function returns `Ascii::Space` due to the cast to `u8`, even though
+    //       `to_ascii_char` returns `Err()`.
+    unsafe fn to_ascii_char_unchecked(self) -> AsciiChar;
 }
 
 impl ToAsciiChar for AsciiChar {
@@ -792,6 +850,7 @@ impl ToAsciiChar for AsciiChar {
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
         Ok(self)
     }
+
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
         self
@@ -805,44 +864,61 @@ impl ToAsciiChar for u8 {
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        mem::transmute(self)
+        // SAFETY: Caller guarantees `self` is within bounds of the enum
+        //         variants, so this cast successfully produces a valid ascii
+        //         variant
+        unsafe { mem::transmute::<u8, AsciiChar>(self) }
     }
 }
 
+// Note: Casts to `u8` here does not cause problems, as the negative
+//       range is mapped outside of ascii bounds and we don't mind losing
+//       the sign, as long as negative numbers are mapped outside ascii range.
+#[allow(clippy::cast_sign_loss)]
 impl ToAsciiChar for i8 {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self as u8).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        mem::transmute(self)
+        // SAFETY: Caller guarantees `self` is within bounds of the enum
+        //         variants, so this cast successfully produces a valid ascii
+        //         variant
+        unsafe { mem::transmute::<u8, AsciiChar>(self as u8) }
     }
 }
 
 impl ToAsciiChar for char {
     #[inline]
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        (self as u32).to_ascii_char()
+        u32::from(self).to_ascii_char()
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u32).to_ascii_char_unchecked()
+        // SAFETY: Caller guarantees we're within ascii range.
+        unsafe { u32::from(self).to_ascii_char_unchecked() }
     }
 }
 
 impl ToAsciiChar for u32 {
     fn to_ascii_char(self) -> Result<AsciiChar, ToAsciiCharError> {
-        unsafe {
-            match self {
-                0..=127 => Ok(self.to_ascii_char_unchecked()),
-                _ => Err(ToAsciiCharError(())),
-            }
+        match self {
+            // SAFETY: We're within the valid ascii range in this branch.
+            0x0..=0x7f => Ok(unsafe { self.to_ascii_char_unchecked() }),
+            _ => Err(ToAsciiCharError(())),
         }
     }
+
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u8).to_ascii_char_unchecked()
+        // Note: This cast discards the top bytes, this may cause problems, see
+        //       the TODO on this method's documentation in the trait.
+        // SAFETY: Caller guarantees we're within ascii range.
+        #[allow(clippy::cast_possible_truncation)] // We want to truncate it
+        unsafe {
+            (self as u8).to_ascii_char_unchecked()
+        }
     }
 }
 
@@ -852,43 +928,48 @@ impl ToAsciiChar for u16 {
     }
     #[inline]
     unsafe fn to_ascii_char_unchecked(self) -> AsciiChar {
-        (self as u8).to_ascii_char_unchecked()
+        // Note: This cast discards the top bytes, this may cause problems, see
+        //       the TODO on this method's documentation in the trait.
+        // SAFETY: Caller guarantees we're within ascii range.
+        #[allow(clippy::cast_possible_truncation)] // We want to truncate it
+        unsafe {
+            (self as u8).to_ascii_char_unchecked()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{AsciiChar, ToAsciiChar, ToAsciiCharError};
-    use AsciiChar::*;
 
     #[test]
     fn to_ascii_char() {
         fn generic<C: ToAsciiChar>(ch: C) -> Result<AsciiChar, ToAsciiCharError> {
             ch.to_ascii_char()
         }
-        assert_eq!(generic(A), Ok(A));
-        assert_eq!(generic(b'A'), Ok(A));
-        assert_eq!(generic('A'), Ok(A));
-        assert!(generic(200u16).is_err());
+        assert_eq!(generic(AsciiChar::A), Ok(AsciiChar::A));
+        assert_eq!(generic(b'A'), Ok(AsciiChar::A));
+        assert_eq!(generic('A'), Ok(AsciiChar::A));
+        assert!(generic(200_u16).is_err());
         assert!(generic('λ').is_err());
     }
 
     #[test]
     fn as_byte_and_char() {
-        assert_eq!(A.as_byte(), b'A');
-        assert_eq!(A.as_char(), 'A');
+        assert_eq!(AsciiChar::A.as_byte(), b'A');
+        assert_eq!(AsciiChar::A.as_char(), 'A');
     }
 
     #[test]
     fn new_array_is_correct() {
-        for byte in 0..128u8 {
+        for byte in 0..128_u8 {
             assert_eq!(AsciiChar::new(byte as char).as_byte(), byte);
         }
     }
 
     #[test]
     fn is_all() {
-        for byte in 0..128u8 {
+        for byte in 0..128_u8 {
             let ch = byte as char;
             let ascii = AsciiChar::new(ch);
             assert_eq!(ascii.is_alphabetic(), ch.is_alphabetic());
@@ -938,49 +1019,49 @@ mod tests {
     #[test]
     #[should_panic]
     fn is_digit_bad_radix() {
-        AsciiChar::_7.is_digit(37);
+        let _ = AsciiChar::_7.is_digit(37);
     }
 
     #[test]
     fn cmp_wider() {
-        assert_eq!(A, 'A');
-        assert_eq!(b'b', b);
-        assert!(a < 'z');
+        assert_eq!(AsciiChar::A, 'A');
+        assert_eq!(b'b', AsciiChar::b);
+        assert!(AsciiChar::a < 'z');
     }
 
     #[test]
     fn ascii_case() {
-        assert_eq!(At.to_ascii_lowercase(), At);
-        assert_eq!(At.to_ascii_uppercase(), At);
-        assert_eq!(A.to_ascii_lowercase(), a);
-        assert_eq!(A.to_ascii_uppercase(), A);
-        assert_eq!(a.to_ascii_lowercase(), a);
-        assert_eq!(a.to_ascii_uppercase(), A);
+        assert_eq!(AsciiChar::At.to_ascii_lowercase(), AsciiChar::At);
+        assert_eq!(AsciiChar::At.to_ascii_uppercase(), AsciiChar::At);
+        assert_eq!(AsciiChar::A.to_ascii_lowercase(), AsciiChar::a);
+        assert_eq!(AsciiChar::A.to_ascii_uppercase(), AsciiChar::A);
+        assert_eq!(AsciiChar::a.to_ascii_lowercase(), AsciiChar::a);
+        assert_eq!(AsciiChar::a.to_ascii_uppercase(), AsciiChar::A);
 
-        let mut mutable = (A, a);
+        let mut mutable = (AsciiChar::A, AsciiChar::a);
         mutable.0.make_ascii_lowercase();
         mutable.1.make_ascii_uppercase();
-        assert_eq!(mutable.0, a);
-        assert_eq!(mutable.1, A);
+        assert_eq!(mutable.0, AsciiChar::a);
+        assert_eq!(mutable.1, AsciiChar::A);
 
-        assert!(LineFeed.eq_ignore_ascii_case(&LineFeed));
-        assert!(!LineFeed.eq_ignore_ascii_case(&CarriageReturn));
-        assert!(z.eq_ignore_ascii_case(&Z));
-        assert!(Z.eq_ignore_ascii_case(&z));
-        assert!(A.eq_ignore_ascii_case(&a));
-        assert!(!K.eq_ignore_ascii_case(&C));
-        assert!(!Z.eq_ignore_ascii_case(&DEL));
-        assert!(!BracketOpen.eq_ignore_ascii_case(&CurlyBraceOpen));
-        assert!(!Grave.eq_ignore_ascii_case(&At));
-        assert!(!Grave.eq_ignore_ascii_case(&DEL));
+        assert!(AsciiChar::LineFeed.eq_ignore_ascii_case(&AsciiChar::LineFeed));
+        assert!(!AsciiChar::LineFeed.eq_ignore_ascii_case(&AsciiChar::CarriageReturn));
+        assert!(AsciiChar::z.eq_ignore_ascii_case(&AsciiChar::Z));
+        assert!(AsciiChar::Z.eq_ignore_ascii_case(&AsciiChar::z));
+        assert!(AsciiChar::A.eq_ignore_ascii_case(&AsciiChar::a));
+        assert!(!AsciiChar::K.eq_ignore_ascii_case(&AsciiChar::C));
+        assert!(!AsciiChar::Z.eq_ignore_ascii_case(&AsciiChar::DEL));
+        assert!(!AsciiChar::BracketOpen.eq_ignore_ascii_case(&AsciiChar::CurlyBraceOpen));
+        assert!(!AsciiChar::Grave.eq_ignore_ascii_case(&AsciiChar::At));
+        assert!(!AsciiChar::Grave.eq_ignore_ascii_case(&AsciiChar::DEL));
     }
 
     #[test]
     #[cfg(feature = "std")]
     fn fmt_ascii() {
-        assert_eq!(format!("{}", t), "t");
-        assert_eq!(format!("{:?}", t), "'t'");
-        assert_eq!(format!("{}", LineFeed), "\n");
-        assert_eq!(format!("{:?}", LineFeed), "'\\n'");
+        assert_eq!(format!("{}", AsciiChar::t), "t");
+        assert_eq!(format!("{:?}", AsciiChar::t), "'t'");
+        assert_eq!(format!("{}", AsciiChar::LineFeed), "\n");
+        assert_eq!(format!("{:?}", AsciiChar::LineFeed), "'\\n'");
     }
 }

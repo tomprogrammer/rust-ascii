@@ -130,7 +130,7 @@ fn extend_from_iterator() {
         .unwrap()
         .split(AsciiChar::Space)
         .map(|case| {
-            if case.chars().all(|ch| ch.is_uppercase()) {
+            if case.chars().all(AsciiChar::is_uppercase) {
                 Cow::from(case)
             } else {
                 Cow::from(case.to_ascii_uppercase())

@@ -32,7 +32,8 @@ impl AsciiString {
     /// let mut s = AsciiString::new();
     /// ```
     #[inline]
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         AsciiString { vec: Vec::new() }
     }
 
@@ -46,6 +47,7 @@ impl AsciiString {
     /// let mut s = AsciiString::with_capacity(10);
     /// ```
     #[inline]
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         AsciiString {
             vec: Vec::with_capacity(capacity),
@@ -58,10 +60,12 @@ impl AsciiString {
     ///
     /// This is highly unsafe, due to the number of invariants that aren't checked:
     ///
-    /// * The memory at `ptr` need to have been previously allocated by the same allocator this
+    /// * The memory at `buf` need to have been previously allocated by the same allocator this
     ///   library uses.
     /// * `length` needs to be less than or equal to `capacity`.
     /// * `capacity` needs to be the correct value.
+    /// * `buf` must have `length` valid ascii elements and contain a total of `capacity` total,
+    ///   possibly, uninitialized, elements.
     ///
     /// Violating these may cause problems like corrupting the allocator's internal datastructures.
     ///
@@ -87,9 +91,13 @@ impl AsciiString {
     /// }
     /// ```
     #[inline]
+    #[must_use]
     pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
         AsciiString {
-            vec: Vec::from_raw_parts(buf, length, capacity),
+            // SAFETY: Caller guarantees `buf` was previously allocated by this library,
+            //         that `buf` contains `length` valid ascii elements and has a total
+            //         capacity of `capacity` elements.
+            vec: unsafe { Vec::from_raw_parts(buf, length, capacity) },
         }
     }
 
@@ -101,23 +109,30 @@ impl AsciiString {
     /// future of the `AsciiString`, as the rest of this library assumes that `AsciiString`s are
     /// ASCII encoded.
     #[inline]
+    #[must_use]
     pub unsafe fn from_ascii_unchecked<B>(bytes: B) -> Self
     where
         B: Into<Vec<u8>>,
     {
         let mut bytes = bytes.into();
-        let vec = Vec::from_raw_parts(
-            bytes.as_mut_ptr() as *mut AsciiChar,
-            bytes.len(),
-            bytes.capacity(),
-        );
+        // SAFETY: The caller guarantees all bytes are valid ascii bytes.
+        let ptr = bytes.as_mut_ptr() as *mut AsciiChar;
+        let length = bytes.len();
+        let capacity = bytes.capacity();
         mem::forget(bytes);
-        AsciiString { vec }
+
+        // SAFETY: We guarantee all invariants, as we got the
+        //         pointer, length and capacity from a `Vec`,
+        //         and we also guarantee the pointer is valid per
+        //         the `SAFETY` notice above.
+        let vec = Vec::from_raw_parts(ptr, length, capacity);
+
+        Self { vec }
     }
 
     /// Converts anything that can represent a byte buffer into an `AsciiString`.
     ///
-    /// # Failure
+    /// # Errors
     /// Returns the byte buffer if not all of the bytes are ASCII characters.
     ///
     /// # Examples
@@ -132,14 +147,13 @@ impl AsciiString {
     where
         B: Into<Vec<u8>> + AsRef<[u8]>,
     {
-        unsafe {
-            match bytes.as_ref().as_ascii_str() {
-                Ok(_) => Ok(AsciiString::from_ascii_unchecked(bytes)),
-                Err(e) => Err(FromAsciiError {
-                    error: e,
-                    owner: bytes,
-                }),
-            }
+        match bytes.as_ref().as_ascii_str() {
+            // SAFETY: `as_ascii_str` guarantees all bytes are valid ascii bytes.
+            Ok(_) => Ok(unsafe { AsciiString::from_ascii_unchecked(bytes) }),
+            Err(e) => Err(FromAsciiError {
+                error: e,
+                owner: bytes,
+            }),
         }
     }
 
@@ -167,6 +181,7 @@ impl AsciiString {
     /// assert!(s.capacity() >= 10);
     /// ```
     #[inline]
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.vec.capacity()
     }
@@ -207,6 +222,7 @@ impl AsciiString {
     /// assert!(s.capacity() >= 10);
     /// ```
     #[inline]
+
     pub fn reserve_exact(&mut self, additional: usize) {
         self.vec.reserve_exact(additional)
     }
@@ -224,6 +240,7 @@ impl AsciiString {
     /// assert_eq!(s.capacity(), 3);
     /// ```
     #[inline]
+
     pub fn shrink_to_fit(&mut self) {
         self.vec.shrink_to_fit()
     }
@@ -240,6 +257,7 @@ impl AsciiString {
     /// assert_eq!(s, "abc123");
     /// ```
     #[inline]
+
     pub fn push(&mut self, ch: AsciiChar) {
         self.vec.push(ch)
     }
@@ -257,6 +275,7 @@ impl AsciiString {
     /// assert_eq!(s, "he");
     /// ```
     #[inline]
+
     pub fn truncate(&mut self, new_len: usize) {
         self.vec.truncate(new_len)
     }
@@ -274,6 +293,7 @@ impl AsciiString {
     /// assert_eq!(s.pop(), None);
     /// ```
     #[inline]
+    #[must_use]
     pub fn pop(&mut self) -> Option<AsciiChar> {
         self.vec.pop()
     }
@@ -295,6 +315,7 @@ impl AsciiString {
     /// assert_eq!(s.remove(0).as_char(), 'o');
     /// ```
     #[inline]
+    #[must_use]
     pub fn remove(&mut self, idx: usize) -> AsciiChar {
         self.vec.remove(idx)
     }
@@ -315,6 +336,7 @@ impl AsciiString {
     /// assert_eq!(s, "fobo");
     /// ```
     #[inline]
+
     pub fn insert(&mut self, idx: usize, ch: AsciiChar) {
         self.vec.insert(idx, ch)
     }
@@ -328,6 +350,7 @@ impl AsciiString {
     /// assert_eq!(s.len(), 3);
     /// ```
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.vec.len()
     }
@@ -343,6 +366,7 @@ impl AsciiString {
     /// assert!(!s.is_empty());
     /// ```
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -357,6 +381,7 @@ impl AsciiString {
     /// assert!(s.is_empty());
     /// ```
     #[inline]
+
     pub fn clear(&mut self) {
         self.vec.clear()
     }
@@ -434,19 +459,18 @@ impl From<Vec<AsciiChar>> for AsciiString {
 }
 
 impl Into<Vec<u8>> for AsciiString {
-    fn into(self) -> Vec<u8> {
-        unsafe {
-            let v = Vec::from_raw_parts(
-                self.vec.as_ptr() as *mut u8,
-                self.vec.len(),
-                self.vec.capacity(),
-            );
+    fn into(mut self) -> Vec<u8> {
+        // SAFETY: All ascii bytes are valid `u8`, as we are `repr(u8)`.
+        // Note: We forget `self` to avoid `self.vec` from being deallocated.
+        let ptr = self.vec.as_mut_ptr() as *mut u8;
+        let length = self.vec.len();
+        let capacity = self.vec.capacity();
+        mem::forget(self);
 
-            // We forget `self` to avoid freeing it at the end of the scope.
-            // Otherwise, the returned `Vec` would point to freed memory.
-            mem::forget(self);
-            v
-        }
+        // SAFETY: We guarantee all invariants due to getting `ptr`, `length`
+        //         and `capacity` from a `Vec`. We also guarantee `ptr` is valid
+        //         due to the `SAFETY` block above.
+        unsafe { Vec::from_raw_parts(ptr, length, capacity) }
     }
 }
 
@@ -467,6 +491,7 @@ impl<'a> From<&'a [AsciiChar]> for AsciiString {
 impl Into<String> for AsciiString {
     #[inline]
     fn into(self) -> String {
+        // SAFETY: All ascii bytes are `utf8`.
         unsafe { String::from_utf8_unchecked(self.into()) }
     }
 }
@@ -611,6 +636,7 @@ impl<'a> AddAssign<&'a AsciiStr> for AsciiString {
     }
 }
 
+#[allow(clippy::indexing_slicing)] // In `Index`, if it's out of bounds, panic is the default
 impl<T> Index<T> for AsciiString
 where
     AsciiStr: Index<T>,
@@ -623,6 +649,7 @@ where
     }
 }
 
+#[allow(clippy::indexing_slicing)] // In `IndexMut`, if it's out of bounds, panic is the default
 impl<T> IndexMut<T> for AsciiString
 where
     AsciiStr: IndexMut<T>,
@@ -655,11 +682,13 @@ pub struct FromAsciiError<O> {
 impl<O> FromAsciiError<O> {
     /// Get the position of the first non-ASCII byte or character.
     #[inline]
+    #[must_use]
     pub fn ascii_error(&self) -> AsAsciiStrError {
         self.error
     }
     /// Get back the original, unmodified type.
     #[inline]
+    #[must_use]
     pub fn into_source(self) -> O {
         self.owner
     }
@@ -679,6 +708,7 @@ impl<O> fmt::Display for FromAsciiError<O> {
 #[cfg(feature = "std")]
 impl<O: Any> Error for FromAsciiError<O> {
     #[inline]
+    #[allow(deprecated)] // TODO: Remove deprecation once the earliest version we support deprecates this method.
     fn description(&self) -> &str {
         self.error.description()
     }
@@ -691,8 +721,16 @@ impl<O: Any> Error for FromAsciiError<O> {
 /// Convert vectors into `AsciiString`.
 pub trait IntoAsciiString: Sized {
     /// Convert to `AsciiString` without checking for non-ASCII characters.
+    ///
+    /// # Safety
+    /// If `self` contains non-ascii characters, calling this function is
+    /// undefined behavior.
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString;
+
     /// Convert to `AsciiString`.
+    ///
+    /// # Errors
+    /// If `self` contains non-ascii characters, this will return `Err`
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>>;
 }
 
@@ -734,7 +772,8 @@ macro_rules! impl_into_ascii_string {
         impl<'a> IntoAsciiString for $wider {
             #[inline]
             unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-                AsciiString::from_ascii_unchecked(self)
+                // SAFETY: Caller guarantees `self` only has valid ascii bytes
+                unsafe { AsciiString::from_ascii_unchecked(self) }
             }
 
             #[inline]
@@ -748,7 +787,8 @@ macro_rules! impl_into_ascii_string {
         impl IntoAsciiString for $wider {
             #[inline]
             unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-                AsciiString::from_ascii_unchecked(self)
+                // SAFETY: Caller guarantees `self` only has valid ascii bytes
+                unsafe { AsciiString::from_ascii_unchecked(self) }
             }
 
             #[inline]
@@ -765,29 +805,29 @@ impl_into_ascii_string! {'a, &'a [u8]}
 impl_into_ascii_string! {String}
 impl_into_ascii_string! {'a, &'a str}
 
-/// Note that the trailing null byte will be removed in the conversion.
+/// # Notes
+/// The trailing null byte `CString` has will be removed during this conversion.
 #[cfg(feature = "std")]
 impl IntoAsciiString for CString {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self.into_bytes())
+        // SAFETY: Caller guarantees `self` only has valid ascii bytes
+        unsafe { AsciiString::from_ascii_unchecked(self.into_bytes()) }
     }
 
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self.into_bytes_with_nul())
             .map_err(|FromAsciiError { error, owner }| {
                 FromAsciiError {
-                    owner: unsafe {
-                        // The null byte is preserved from the original
-                        // `CString`, so this is safe.
-                        CString::from_vec_unchecked(owner)
-                    },
+                    // SAFETY: We don't discard the NULL byte from the original
+                    //         string, so we ensure that it's null terminated
+                    owner: unsafe { CString::from_vec_unchecked(owner) },
                     error,
                 }
             })
             .map(|mut s| {
-                let _nul = s.pop();
-                debug_assert_eq!(_nul, Some(AsciiChar::Null));
+                let nul = s.pop();
+                debug_assert_eq!(nul, Some(AsciiChar::Null));
                 s
             })
     }
@@ -798,18 +838,21 @@ impl IntoAsciiString for CString {
 impl<'a> IntoAsciiString for &'a CStr {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        AsciiString::from_ascii_unchecked(self.to_bytes())
+        // SAFETY: Caller guarantees `self` only has valid ascii bytes
+        unsafe { AsciiString::from_ascii_unchecked(self.to_bytes()) }
     }
 
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
         AsciiString::from_ascii(self.to_bytes_with_nul())
             .map_err(|FromAsciiError { error, owner }| FromAsciiError {
+                // SAFETY: We don't discard the NULL byte from the original
+                //         string, so we ensure that it's null terminated
                 owner: unsafe { CStr::from_ptr(owner.as_ptr() as *const _) },
                 error,
             })
             .map(|mut s| {
-                let _nul = s.pop();
-                debug_assert_eq!(_nul, Some(AsciiChar::Null));
+                let nul = s.pop();
+                debug_assert_eq!(nul, Some(AsciiChar::Null));
                 s
             })
     }
@@ -823,7 +866,8 @@ where
 {
     #[inline]
     unsafe fn into_ascii_string_unchecked(self) -> AsciiString {
-        IntoAsciiString::into_ascii_string_unchecked(self.into_owned())
+        // SAFETY: Caller guarantees `self` only has valid ascii bytes
+        unsafe { IntoAsciiString::into_ascii_string_unchecked(self.into_owned()) }
     }
 
     fn into_ascii_string(self) -> Result<AsciiString, FromAsciiError<Self>> {
@@ -890,11 +934,12 @@ mod tests {
         assert_eq!(ascii_str.len(), 3);
         assert_eq!(ascii_str.as_slice(), expected_chars);
 
+        // SAFETY: "baz" only contains valid ascii characters.
         let ascii_str_unchecked = unsafe { cstring.into_ascii_string_unchecked() };
         assert_eq!(ascii_str_unchecked.len(), 3);
         assert_eq!(ascii_str_unchecked.as_slice(), expected_chars);
 
-        let sparkle_heart_bytes = vec![240u8, 159, 146, 150];
+        let sparkle_heart_bytes = vec![240_u8, 159, 146, 150];
         let cstring = CString::new(sparkle_heart_bytes).unwrap();
         let cstr = &*cstring;
         let ascii_err = cstr.into_ascii_string().unwrap_err();
