@@ -458,6 +458,13 @@ impl From<Vec<AsciiChar>> for AsciiString {
     }
 }
 
+impl From<AsciiChar> for AsciiString {
+    #[inline]
+    fn from(ch: AsciiChar) -> Self {
+        AsciiString {vec: vec![ch]}
+    }
+}
+
 impl Into<Vec<u8>> for AsciiString {
     fn into(mut self) -> Vec<u8> {
         // SAFETY: All ascii bytes are valid `u8`, as we are `repr(u8)`.
