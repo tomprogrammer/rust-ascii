@@ -385,6 +385,16 @@ impl AsciiString {
     pub fn clear(&mut self) {
         self.vec.clear()
     }
+
+    /// Converts this [`AsciiString`] into a [`Box`]`<`[`AsciiStr`]`>`.
+    ///
+    /// This will drop any excess capacity
+    #[cfg(feature = "alloc")]
+    #[inline]
+    pub fn into_boxed_ascii_str(self) -> Box<AsciiStr> {
+        let slice = self.vec.into_boxed_slice();
+        Box::from(slice)
+    }
 }
 
 impl Deref for AsciiString {
@@ -493,6 +503,22 @@ impl Into<String> for AsciiString {
     fn into(self) -> String {
         // SAFETY: All ascii bytes are `utf8`.
         unsafe { String::from_utf8_unchecked(self.into()) }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<Box<AsciiStr>> for AsciiString {
+    #[inline]
+    fn from(boxed: Box<AsciiStr>) -> Self {
+        boxed.into_ascii_string()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<AsciiString> for Box<AsciiStr> {
+    #[inline]
+    fn from(string: AsciiString) -> Self {
+        string.into_boxed_ascii_str()
     }
 }
 
@@ -902,7 +928,7 @@ mod tests {
     use alloc::vec::Vec;
     #[cfg(feature = "std")]
     use std::ffi::CString;
-    use AsciiChar;
+    use ::{AsciiChar, AsciiStr};
 
     #[test]
     fn into_string() {
@@ -970,5 +996,14 @@ mod tests {
         let sparkle_heart_bytes = [240, 159, 146, 150];
         let sparkle_heart = str::from_utf8(&sparkle_heart_bytes).unwrap();
         assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn to_and_from_box() {
+        let string = "abc".into_ascii_string().unwrap();
+        let converted: Box<AsciiStr> = Box::from(string.clone());
+        let converted: AsciiString = converted.into();
+        assert_eq!(string, converted);
     }
 }

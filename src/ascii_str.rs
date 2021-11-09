@@ -317,6 +317,14 @@ impl AsciiStr {
     pub fn last(&self) -> Option<AsciiChar> {
         self.slice.last().cloned()
     }
+
+    /// Converts a [`Box<AsciiStr>`] into a [`AsciiString`] without copying or allocating.
+    #[cfg(feature = "alloc")]
+    #[inline]
+    pub fn into_ascii_string(self: Box<Self>) -> AsciiString {
+        let slice = Box::<[AsciiChar]>::from(self);
+        AsciiString::from(slice.into_vec())
+    }
 }
 
 macro_rules! impl_partial_eq {
