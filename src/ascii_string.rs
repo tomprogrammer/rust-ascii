@@ -172,6 +172,25 @@ impl AsciiString {
         self.vec.extend(string.chars())
     }
 
+    /// Inserts the given ASCII string at the given place in this ASCII string buffer.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `idx` is larger than the `AsciiString`'s length.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::{AsciiString, AsAsciiStr};
+    /// use std::str::FromStr;
+    /// let mut s = AsciiString::from_str("abc").unwrap();
+    /// s.insert_str(1, "def".as_ascii_str().unwrap());
+    /// assert_eq!(&*s, "adefbc");
+    #[inline]
+    pub fn insert_str(&mut self, idx: usize, string: &AsciiStr) {
+        self.vec.reserve(string.len());
+        self.vec.splice(idx..idx, string.into_iter().copied());
+    }
+
     /// Returns the number of bytes that this ASCII string buffer can hold without reallocating.
     ///
     /// # Examples
