@@ -188,7 +188,7 @@ impl AsciiString {
     #[inline]
     pub fn insert_str(&mut self, idx: usize, string: &AsciiStr) {
         self.vec.reserve(string.len());
-        self.vec.splice(idx..idx, string);
+        self.vec.splice(idx..idx, string.into_iter().copied());
     }
 
     /// Returns the number of bytes that this ASCII string buffer can hold without reallocating.
