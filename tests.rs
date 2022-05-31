@@ -94,6 +94,7 @@ fn compare_ascii_str_str() {
 }
 
 #[test]
+#[allow(clippy::redundant_slicing)]
 fn compare_ascii_str_slice() {
     let b = b"abc".as_ascii_str().unwrap();
     let c = b"ab".as_ascii_str().unwrap();
