@@ -174,6 +174,10 @@ impl AsciiString {
 
     /// Inserts the given ASCII string at the given place in this ASCII string buffer.
     ///
+    /// # Panics
+    ///
+    /// Panics if `idx` is larger than the `AsciiString`'s length.
+    ///
     /// # Examples
     /// ```
     /// # use ascii::{AsciiString, AsAsciiStr};
