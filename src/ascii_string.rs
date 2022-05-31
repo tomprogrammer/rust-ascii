@@ -116,7 +116,7 @@ impl AsciiString {
     {
         let mut bytes = bytes.into();
         // SAFETY: The caller guarantees all bytes are valid ascii bytes.
-        let ptr = bytes.as_mut_ptr() as *mut AsciiChar;
+        let ptr = bytes.as_mut_ptr().cast::<AsciiChar>();
         let length = bytes.len();
         let capacity = bytes.capacity();
         mem::forget(bytes);
@@ -169,7 +169,7 @@ impl AsciiString {
     /// ```
     #[inline]
     pub fn push_str(&mut self, string: &AsciiStr) {
-        self.vec.extend(string.chars())
+        self.vec.extend(string.chars());
     }
 
     /// Inserts the given ASCII string at the given place in this ASCII string buffer.
@@ -220,7 +220,7 @@ impl AsciiString {
     /// ```
     #[inline]
     pub fn reserve(&mut self, additional: usize) {
-        self.vec.reserve(additional)
+        self.vec.reserve(additional);
     }
 
     /// Reserves the minimum capacity for exactly `additional` more bytes to be inserted in the
@@ -243,7 +243,7 @@ impl AsciiString {
     #[inline]
 
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.vec.reserve_exact(additional)
+        self.vec.reserve_exact(additional);
     }
 
     /// Shrinks the capacity of this ASCII string buffer to match it's length.
@@ -261,7 +261,7 @@ impl AsciiString {
     #[inline]
 
     pub fn shrink_to_fit(&mut self) {
-        self.vec.shrink_to_fit()
+        self.vec.shrink_to_fit();
     }
 
     /// Adds the given ASCII character to the end of the ASCII string.
@@ -278,7 +278,7 @@ impl AsciiString {
     #[inline]
 
     pub fn push(&mut self, ch: AsciiChar) {
-        self.vec.push(ch)
+        self.vec.push(ch);
     }
 
     /// Shortens a ASCII string to the specified length.
@@ -296,7 +296,7 @@ impl AsciiString {
     #[inline]
 
     pub fn truncate(&mut self, new_len: usize) {
-        self.vec.truncate(new_len)
+        self.vec.truncate(new_len);
     }
 
     /// Removes the last character from the ASCII string buffer and returns it.
@@ -357,7 +357,7 @@ impl AsciiString {
     #[inline]
 
     pub fn insert(&mut self, idx: usize, ch: AsciiChar) {
-        self.vec.insert(idx, ch)
+        self.vec.insert(idx, ch);
     }
 
     /// Returns the number of bytes in this ASCII string.
@@ -402,7 +402,7 @@ impl AsciiString {
     #[inline]
 
     pub fn clear(&mut self) {
-        self.vec.clear()
+        self.vec.clear();
     }
 
     /// Converts this [`AsciiString`] into a [`Box`]`<`[`AsciiStr`]`>`.
@@ -410,6 +410,7 @@ impl AsciiString {
     /// This will drop any excess capacity
     #[cfg(feature = "alloc")]
     #[inline]
+    #[must_use]
     pub fn into_boxed_ascii_str(self) -> Box<AsciiStr> {
         let slice = self.vec.into_boxed_slice();
         Box::from(slice)
@@ -490,15 +491,17 @@ impl From<Vec<AsciiChar>> for AsciiString {
 impl From<AsciiChar> for AsciiString {
     #[inline]
     fn from(ch: AsciiChar) -> Self {
-        AsciiString {vec: vec![ch]}
+        AsciiString { vec: vec![ch] }
     }
 }
 
+// FIXME? Turn this into a `From` impl
+#[allow(clippy::from_over_into)]
 impl Into<Vec<u8>> for AsciiString {
     fn into(mut self) -> Vec<u8> {
         // SAFETY: All ascii bytes are valid `u8`, as we are `repr(u8)`.
         // Note: We forget `self` to avoid `self.vec` from being deallocated.
-        let ptr = self.vec.as_mut_ptr() as *mut u8;
+        let ptr = self.vec.as_mut_ptr().cast::<u8>();
         let length = self.vec.len();
         let capacity = self.vec.capacity();
         mem::forget(self);
@@ -520,10 +523,12 @@ impl<'a> From<&'a AsciiStr> for AsciiString {
 impl<'a> From<&'a [AsciiChar]> for AsciiString {
     #[inline]
     fn from(s: &'a [AsciiChar]) -> AsciiString {
-        s.iter().cloned().collect()
+        s.iter().copied().collect()
     }
 }
 
+// FIXME? Turn this into a `From` impl
+#[allow(clippy::from_over_into)]
 impl Into<String> for AsciiString {
     #[inline]
     fn into(self) -> String {
@@ -666,7 +671,7 @@ impl<A: AsRef<AsciiStr>> Extend<A> for AsciiString {
         let (lower_bound, _) = iterator.size_hint();
         self.reserve(lower_bound);
         for item in iterator {
-            self.push_str(item.as_ref())
+            self.push_str(item.as_ref());
         }
     }
 }
@@ -899,7 +904,7 @@ impl<'a> IntoAsciiString for &'a CStr {
             .map_err(|FromAsciiError { error, owner }| FromAsciiError {
                 // SAFETY: We don't discard the NULL byte from the original
                 //         string, so we ensure that it's null terminated
-                owner: unsafe { CStr::from_ptr(owner.as_ptr() as *const _) },
+                owner: unsafe { CStr::from_ptr(owner.as_ptr().cast()) },
                 error,
             })
             .map(|mut s| {
@@ -954,7 +959,7 @@ mod tests {
     use alloc::vec::Vec;
     #[cfg(feature = "std")]
     use std::ffi::CString;
-    use ::{AsciiChar, AsciiStr};
+    use {AsciiChar, AsciiStr};
 
     #[test]
     fn into_string() {
@@ -965,7 +970,7 @@ mod tests {
     #[test]
     fn into_bytes() {
         let v = AsciiString::from_ascii(&[40_u8, 32, 59][..]).unwrap();
-        assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59])
+        assert_eq!(Into::<Vec<u8>>::into(v), vec![40_u8, 32, 59]);
     }
 
     #[test]

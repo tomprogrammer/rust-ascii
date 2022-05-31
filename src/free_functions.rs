@@ -17,7 +17,7 @@ use ascii_char::{AsciiChar, ToAsciiChar};
 pub fn caret_encode<C: Copy + Into<u8>>(c: C) -> Option<AsciiChar> {
     // The formula is explained in the Wikipedia article.
     let c = c.into() ^ 0b0100_0000;
-    if c >= b'?' && c <= b'_' {
+    if (b'?'..=b'_').contains(&c) {
         // SAFETY: All bytes between '?' (0x3F) and '_' (0x5f) are valid ascii characters.
         Some(unsafe { c.to_ascii_char_unchecked() })
     } else {

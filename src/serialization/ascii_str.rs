@@ -52,8 +52,8 @@ mod tests {
     #[test]
     fn basic() {
         fn assert_serialize<T: Serialize>() {}
-        assert_serialize::<&AsciiStr>();
         fn assert_deserialize<'de, T: Deserialize<'de>>() {}
+        assert_serialize::<&AsciiStr>();
         assert_deserialize::<&AsciiStr>();
     }
 
