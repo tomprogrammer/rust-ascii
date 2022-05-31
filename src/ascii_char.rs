@@ -679,12 +679,12 @@ impl AsciiChar {
 
     /// Replaces letters `a` to `z` with `A` to `Z`
     pub fn make_ascii_uppercase(&mut self) {
-        *self = self.to_ascii_uppercase()
+        *self = self.to_ascii_uppercase();
     }
 
     /// Replaces letters `A` to `Z` with `a` to `z`
     pub fn make_ascii_lowercase(&mut self) {
-        *self = self.to_ascii_lowercase()
+        *self = self.to_ascii_lowercase();
     }
 
     /// Maps letters a-z to A-Z and returns any other character unchanged.
@@ -800,6 +800,7 @@ impl ToAsciiCharError {
     /// Returns a description for this error, like `std::error::Error::description`.
     #[inline]
     #[must_use]
+    #[allow(clippy::unused_self)]
     pub const fn description(&self) -> &'static str {
         ERRORMSG_CHAR
     }

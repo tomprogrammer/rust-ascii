@@ -308,14 +308,14 @@ impl AsciiStr {
     #[inline]
     #[must_use]
     pub fn first(&self) -> Option<AsciiChar> {
-        self.slice.first().cloned()
+        self.slice.first().copied()
     }
 
     /// Returns the last character if the string is not empty.
     #[inline]
     #[must_use]
     pub fn last(&self) -> Option<AsciiChar> {
-        self.slice.last().cloned()
+        self.slice.last().copied()
     }
 
     /// Converts a [`Box<AsciiStr>`] into a [`AsciiString`] without copying or allocating.
@@ -581,7 +581,7 @@ impl<'a> Iterator for Chars<'a> {
     type Item = AsciiChar;
     #[inline]
     fn next(&mut self) -> Option<AsciiChar> {
-        self.0.next().cloned()
+        self.0.next().copied()
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
@@ -590,7 +590,7 @@ impl<'a> Iterator for Chars<'a> {
 impl<'a> DoubleEndedIterator for Chars<'a> {
     #[inline]
     fn next_back(&mut self) -> Option<AsciiChar> {
-        self.0.next_back().cloned()
+        self.0.next_back().copied()
     }
 }
 impl<'a> ExactSizeIterator for Chars<'a> {
@@ -820,6 +820,7 @@ impl AsAsciiStrError {
     /// Returns a description for this error, like `std::error::Error::description`.
     #[inline]
     #[must_use]
+    #[allow(clippy::unused_self)]
     pub const fn description(&self) -> &'static str {
         ERRORMSG_STR
     }
@@ -1051,7 +1052,7 @@ impl AsAsciiStr for [AsciiChar] {
 
     #[inline]
     fn get_ascii(&self, index: usize) -> Option<AsciiChar> {
-        self.get(index).cloned()
+        self.get(index).copied()
     }
 }
 impl AsMutAsciiStr for [AsciiChar] {
@@ -1173,7 +1174,7 @@ impl AsMutAsciiStr for str {
             // Valid ascii slice
             Some(slice) if slice.is_ascii() => {
                 // SAFETY: All bytes are ascii, so this cast is valid
-                let ptr = slice.as_mut_ptr() as *mut AsciiChar;
+                let ptr = slice.as_mut_ptr().cast::<AsciiChar>();
                 let len = slice.len();
 
                 // SAFETY: The pointer is valid for `len` elements, as it came
@@ -1249,8 +1250,8 @@ mod tests {
         let ascii_str = arr.as_ref().into();
         let mut mut_arr = arr; // Note: We need a second copy to prevent overlapping mutable borrows.
         let mut_ascii_str = mut_arr.as_mut().into();
-		let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
-		let mut string_bytes = [b'A'];
+        let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
+        let mut string_bytes = [b'A'];
         let string_mut = unsafe { core::str::from_utf8_unchecked_mut(&mut string_bytes) }; // SAFETY: 'A' is a valid string.
         let string_mut_bytes: &mut [u8] = &mut [b'A'];
 
@@ -1374,6 +1375,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::redundant_slicing)]
     fn index() {
         let mut arr = [AsciiChar::A, AsciiChar::B, AsciiChar::C, AsciiChar::D];
         {
@@ -1442,7 +1444,7 @@ mod tests {
             b'h', b'e', b'l', b'l', b'o', b' ', b'w', b'o', b'r', b'l', b'd', b'\0',
         ];
         let ascii = AsciiStr::from_ascii(chars).unwrap();
-        for (achar, byte) in ascii.chars().zip(chars.iter().cloned()) {
+        for (achar, byte) in ascii.chars().zip(chars.iter().copied()) {
             assert_eq!(achar, byte);
         }
     }
