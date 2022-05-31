@@ -321,6 +321,7 @@ impl AsciiStr {
     /// Converts a [`Box<AsciiStr>`] into a [`AsciiString`] without copying or allocating.
     #[cfg(feature = "alloc")]
     #[inline]
+    #[must_use]
     pub fn into_ascii_string(self: Box<Self>) -> AsciiString {
         let slice = Box::<[AsciiChar]>::from(self);
         AsciiString::from(slice.into_vec())

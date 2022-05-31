@@ -58,6 +58,7 @@ mod tests {
     const UNICODE_CHAR: char = 'é';
 
     #[test]
+    #[allow(clippy::items_after_statements)]
     fn basic() {
         fn assert_serialize<T: Serialize>() {}
         assert_serialize::<AsciiChar>();

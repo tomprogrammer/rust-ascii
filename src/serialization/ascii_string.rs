@@ -32,7 +32,7 @@ impl<'de> Visitor<'de> for AsciiStringVisitor {
     }
 
     fn visit_bytes<E: Error>(self, v: &[u8]) -> Result<Self::Value, E> {
-        AsciiString::from_ascii(v).map_err(|_| Error::invalid_value(Unexpected::Bytes(&v), &self))
+        AsciiString::from_ascii(v).map_err(|_| Error::invalid_value(Unexpected::Bytes(v), &self))
     }
 
     fn visit_byte_buf<E: Error>(self, v: Vec<u8>) -> Result<Self::Value, E> {
@@ -115,6 +115,7 @@ mod tests {
     const UNICODE: &str = "Français";
 
     #[test]
+    #[allow(clippy::items_after_statements)]
     fn basic() {
         fn assert_serialize<T: Serialize>() {}
         assert_serialize::<AsciiString>();
