@@ -375,9 +375,9 @@ impl AsciiChar {
     /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
     #[must_use]
-    pub unsafe fn from_ascii_unchecked(ch: u8) -> Self {
+    pub const unsafe fn from_ascii_unchecked(ch: u8) -> Self {
         // SAFETY: Caller guarantees `ch` is within bounds of ascii.
-        unsafe { ch.to_ascii_char_unchecked() }
+        unsafe { mem::transmute(ch) }
     }
 
     /// Converts an ASCII character into a `u8`.
@@ -659,14 +659,15 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('p').as_printable_char(), 'p');
     /// ```
     #[must_use]
-    pub fn as_printable_char(self) -> char {
+    pub const fn as_printable_char(self) -> char {
+        #![allow(clippy::transmute_int_to_char)] // from_utf32_unchecked() is not const fn yet.
         match self as u8 {
             // Non printable characters
             // SAFETY: From codepoint 0x2400 ('␀') to 0x241f (`␟`), there are characters representing
             //         the unprintable characters from 0x0 to 0x1f, ordered correctly.
             //         As `b` is guaranteed to be within 0x0 to 0x1f, the conversion represents a
             //         valid character.
-            b @ 0x0..=0x1f => unsafe { char::from_u32_unchecked(u32::from('␀') + u32::from(b)) },
+            b @ 0x0..=0x1f => unsafe { mem::transmute('␀' as u32 + b as u32) },
 
             // 0x7f (delete) has it's own character at codepoint 0x2420, not 0x247f, so it is special
             // cased to return it's character
