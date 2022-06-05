@@ -278,7 +278,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace", example.trim());
     /// ```
     #[must_use]
-    pub fn trim(&self) -> &Self {
+    pub const fn trim(&self) -> &Self {
         self.trim_start().trim_end()
     }
 
@@ -291,14 +291,16 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_start());
     /// ```
     #[must_use]
-    pub fn trim_start(&self) -> &Self {
-        let whitespace_len = self
-            .chars()
-            .position(|ch| !ch.is_whitespace())
-            .unwrap_or_else(|| self.len());
-
-        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice.
-        unsafe { self.as_slice().get_unchecked(whitespace_len..).into() }
+    pub const fn trim_start(&self) -> &Self {
+        let mut trimmed = &self.slice;
+        while let Some((first, rest)) = trimmed.split_first() {
+            if first.is_whitespace() {
+                trimmed = rest;
+            } else {
+                break;
+            }
+        }
+        AsciiStr::new(trimmed)
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -310,20 +312,16 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_end());
     /// ```
     #[must_use]
-    pub fn trim_end(&self) -> &Self {
-        // Number of whitespace characters counting from the end
-        let whitespace_len = self
-            .chars()
-            .rev()
-            .position(|ch| !ch.is_whitespace())
-            .unwrap_or_else(|| self.len());
-
-        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice, and at least `0`, which is the whole slice.
-        unsafe {
-            self.as_slice()
-                .get_unchecked(..self.len() - whitespace_len)
-                .into()
+    pub const fn trim_end(&self) -> &Self {
+        let mut trimmed = &self.slice;
+        while let Some((last, rest)) = trimmed.split_last() {
+            if last.is_whitespace() {
+                trimmed = rest;
+            } else {
+                break;
+            }
         }
+        AsciiStr::new(trimmed)
     }
 
     /// Compares two strings case-insensitively.
