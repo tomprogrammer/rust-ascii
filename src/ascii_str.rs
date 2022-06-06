@@ -48,17 +48,17 @@ impl AsciiStr {
     /// Converts `&self` to a `&str` slice.
     #[inline]
     #[must_use]
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         // SAFETY: All variants of `AsciiChar` are valid bytes for a `str`.
-        unsafe { &*(self as *const AsciiStr as *const str) }
+        unsafe { mem::transmute(self) }
     }
 
     /// Converts `&self` into a byte slice.
     #[inline]
     #[must_use]
-    pub fn as_bytes(&self) -> &[u8] {
+    pub const fn as_bytes(&self) -> &[u8] {
         // SAFETY: All variants of `AsciiChar` are valid `u8`, given they're `repr(u8)`.
-        unsafe { &*(self as *const AsciiStr as *const [u8]) }
+        unsafe { mem::transmute(self) }
     }
 
     /// Returns the entire string as slice of `AsciiChar`s.
