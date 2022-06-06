@@ -125,6 +125,53 @@ impl AsciiStr {
         bytes.as_ref().as_ascii_str()
     }
 
+    /// Convert a byte slice innto an `AsciiStr`.
+    ///
+    /// [`from_ascii()`](#method.from_ascii) should be preferred outside of `const` contexts
+    /// as it might be faster due to using functions that are not `const fn`.
+    ///
+    /// # Errors
+    /// Returns `Err` if not all bytes are valid ASCII values.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// assert!(AsciiStr::from_ascii_bytes(b"\x00\x22\x44").is_ok());
+    /// assert!(AsciiStr::from_ascii_bytes(b"\x66\x77\x88").is_err());
+    /// ```
+    pub const fn from_ascii_bytes(b: &[u8]) -> Result<&Self, AsAsciiStrError> {
+        #![allow(clippy::indexing_slicing)] // .get() is not const yes (as of Rust 1.61)
+        let mut valid = 0;
+        loop {
+            if valid == b.len() {
+                // SAFETY: `is_ascii` having returned true for all bytes guarantees all bytes are within ascii range.
+                return unsafe { Ok(mem::transmute(b)) };
+            } else if b[valid].is_ascii() {
+                valid += 1;
+            } else {
+                return Err(AsAsciiStrError(valid));
+            }
+        }
+    }
+
+    /// Convert a `str` innto an `AsciiStr`.
+    ///
+    /// [`from_ascii()`](#method.from_ascii) should be preferred outside of `const` contexts
+    /// as it might be faster due to using functions that are not `const fn`.
+    ///
+    /// # Errors
+    /// Returns `Err` if it contains non-ASCII codepoints.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// assert!(AsciiStr::from_ascii_str("25 C").is_ok());
+    /// assert!(AsciiStr::from_ascii_str("35°C").is_err());
+    /// ```
+    pub const fn from_ascii_str(s: &str) -> Result<&Self, AsAsciiStrError> {
+        Self::from_ascii_bytes(s.as_bytes())
+    }
+
     /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking
     /// for non-ASCII characters..
     ///
