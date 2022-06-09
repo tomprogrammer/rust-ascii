@@ -55,7 +55,7 @@
 #![allow(unused_unsafe)]
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(test, macro_use)]
+#[macro_use]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate core;
