@@ -2,6 +2,9 @@ use alloc::borrow::{Borrow, BorrowMut, Cow, ToOwned};
 use alloc::fmt;
 use alloc::string::String;
 use alloc::vec::Vec;
+use alloc::boxed::Box;
+use alloc::rc::Rc;
+use alloc::sync::Arc;
 #[cfg(feature = "std")]
 use core::any::Any;
 use core::iter::FromIterator;
@@ -15,8 +18,6 @@ use std::ffi::{CStr, CString};
 
 use ascii_char::AsciiChar;
 use ascii_str::{AsAsciiStr, AsAsciiStrError, AsciiStr};
-use std::rc::Rc;
-use std::sync::Arc;
 
 /// A growable string stored as an ASCII encoded buffer.
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -978,12 +979,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::AsciiString;
-    #[cfg(feature = "std")]
-    use super::IntoAsciiString;
+    use super::{AsciiString, IntoAsciiString};
     use alloc::str::FromStr;
     use alloc::string::{String, ToString};
     use alloc::vec::Vec;
+    use alloc::boxed::Box;
     #[cfg(feature = "std")]
     use std::ffi::CString;
     use {AsciiChar, AsciiStr};
