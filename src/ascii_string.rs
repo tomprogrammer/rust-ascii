@@ -515,6 +515,7 @@ impl Into<Vec<u8>> for AsciiString {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<Vec<AsciiChar>> for AsciiString {
     fn into(self) -> Vec<AsciiChar> {
         self.vec
@@ -561,6 +562,7 @@ impl From<AsciiString> for Box<AsciiStr> {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<Rc<AsciiStr>> for AsciiString {
     fn into(self) -> Rc<AsciiStr> {
         let var: Rc<[AsciiChar]> = self.vec.into();
@@ -569,6 +571,7 @@ impl Into<Rc<AsciiStr>> for AsciiString {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<Arc<AsciiStr>> for AsciiString {
     fn into(self) -> Arc<AsciiStr> {
         let var: Arc<[AsciiChar]> = self.vec.into();
