@@ -20,6 +20,7 @@ jobs:
         with:
           rust-version: ${{ matrix.rust }}
       - run: cargo test --verbose --all-features
+      - run: cargo test --verbose --no-default-features --features alloc
       - run: cargo test --verbose --no-default-features
 
   clippy:
