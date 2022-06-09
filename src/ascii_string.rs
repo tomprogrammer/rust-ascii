@@ -411,7 +411,6 @@ impl AsciiString {
     /// Converts this [`AsciiString`] into a [`Box`]`<`[`AsciiStr`]`>`.
     ///
     /// This will drop any excess capacity
-    #[cfg(feature = "alloc")]
     #[inline]
     #[must_use]
     pub fn into_boxed_ascii_str(self) -> Box<AsciiStr> {
@@ -547,7 +546,6 @@ impl Into<String> for AsciiString {
     }
 }
 
-#[cfg(feature = "alloc")]
 impl From<Box<AsciiStr>> for AsciiString {
     #[inline]
     fn from(boxed: Box<AsciiStr>) -> Self {
@@ -555,7 +553,6 @@ impl From<Box<AsciiStr>> for AsciiString {
     }
 }
 
-#[cfg(feature = "alloc")]
 impl From<AsciiString> for Box<AsciiStr> {
     #[inline]
     fn from(string: AsciiString) -> Self {
@@ -1056,7 +1053,6 @@ mod tests {
         assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
     }
 
-    #[cfg(feature = "alloc")]
     #[test]
     fn to_and_from_box() {
         let string = "abc".into_ascii_string().unwrap();
