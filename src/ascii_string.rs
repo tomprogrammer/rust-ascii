@@ -497,16 +497,14 @@ impl From<AsciiChar> for AsciiString {
     }
 }
 
-// FIXME? Turn this into a `From` impl
-#[allow(clippy::from_over_into)]
-impl Into<Vec<u8>> for AsciiString {
-    fn into(mut self) -> Vec<u8> {
+impl From<AsciiString> for Vec<u8> {
+    fn from(mut s: AsciiString) -> Vec<u8> {
         // SAFETY: All ascii bytes are valid `u8`, as we are `repr(u8)`.
         // Note: We forget `self` to avoid `self.vec` from being deallocated.
-        let ptr = self.vec.as_mut_ptr().cast::<u8>();
-        let length = self.vec.len();
-        let capacity = self.vec.capacity();
-        mem::forget(self);
+        let ptr = s.vec.as_mut_ptr().cast::<u8>();
+        let length = s.vec.len();
+        let capacity = s.vec.capacity();
+        mem::forget(s);
 
         // SAFETY: We guarantee all invariants due to getting `ptr`, `length`
         //         and `capacity` from a `Vec`. We also guarantee `ptr` is valid
@@ -515,10 +513,9 @@ impl Into<Vec<u8>> for AsciiString {
     }
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<Vec<AsciiChar>> for AsciiString {
-    fn into(self) -> Vec<AsciiChar> {
-        self.vec
+impl From<AsciiString> for Vec<AsciiChar> {
+    fn from(s: AsciiString) -> Vec<AsciiChar> {
+        s.vec
     }
 }
 
@@ -536,13 +533,11 @@ impl<'a> From<&'a [AsciiChar]> for AsciiString {
     }
 }
 
-// FIXME? Turn this into a `From` impl
-#[allow(clippy::from_over_into)]
-impl Into<String> for AsciiString {
+impl From<AsciiString> for String {
     #[inline]
-    fn into(self) -> String {
+    fn from(s: AsciiString) -> String {
         // SAFETY: All ascii bytes are `utf8`.
-        unsafe { String::from_utf8_unchecked(self.into()) }
+        unsafe { String::from_utf8_unchecked(s.into()) }
     }
 }
 
@@ -560,19 +555,17 @@ impl From<AsciiString> for Box<AsciiStr> {
     }
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<Rc<AsciiStr>> for AsciiString {
-    fn into(self) -> Rc<AsciiStr> {
-        let var: Rc<[AsciiChar]> = self.vec.into();
+impl From<AsciiString> for Rc<AsciiStr> {
+    fn from(s: AsciiString) -> Rc<AsciiStr> {
+        let var: Rc<[AsciiChar]> = s.vec.into();
         // SAFETY: AsciiStr is repr(transparent) and thus has the same layout as [AsciiChar]
         unsafe { Rc::from_raw(Rc::into_raw(var) as *const AsciiStr) }
     }
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<Arc<AsciiStr>> for AsciiString {
-    fn into(self) -> Arc<AsciiStr> {
-        let var: Arc<[AsciiChar]> = self.vec.into();
+impl From<AsciiString> for Arc<AsciiStr> {
+    fn from(s: AsciiString) -> Arc<AsciiStr> {
+        let var: Arc<[AsciiChar]> = s.vec.into();
         // SAFETY: AsciiStr is repr(transparent) and thus has the same layout as [AsciiChar]
         unsafe { Arc::from_raw(Arc::into_raw(var) as *const AsciiStr) }
     }
