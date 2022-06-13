@@ -28,6 +28,13 @@ fn to_ascii() {
 }
 
 #[test]
+fn deprecated_variant() {
+    #![allow(deprecated)]
+    use AsciiChar::*;
+    assert_eq!(AsciiChar::STX, SOX);
+}
+
+#[test]
 #[cfg(feature = "std")]
 fn into_ascii() {
     let arr = [AsciiChar::ParenOpen, AsciiChar::Space, AsciiChar::Semicolon];
