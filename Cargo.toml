@@ -2,7 +2,7 @@
 authors = ["Thomas Bahn <thomas@thomas-bahn.net>", "Torbjørn Birch Moltu <t.b.moltu@lyse.net>", "Simon Sapin <simon.sapin@exyr.org>"]
 description = "ASCII-only equivalents to `char`, `str` and `String`."
 documentation = "https://docs.rs/ascii"
-license = "Apache-2.0 / MIT"
+license = "Apache-2.0 OR MIT"
 name = "ascii"
 readme = "README.md"
 repository = "https://github.com/tomprogrammer/rust-ascii"
