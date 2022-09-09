@@ -65,6 +65,7 @@ impl AsciiString {
     ///
     /// * The memory at `buf` need to have been previously allocated by the same allocator this
     ///   library uses.
+    /// * `buf` must be obtained from a valid `&mut` reference to guarentee exclusive ownership.
     /// * `length` needs to be less than or equal to `capacity`.
     /// * `capacity` needs to be the correct value.
     /// * `buf` must have `length` valid ascii elements and contain a total of `capacity` total,
@@ -81,14 +82,14 @@ impl AsciiString {
     /// use std::mem;
     ///
     /// unsafe {
-    ///    let s = AsciiString::from_ascii("hello").unwrap();
-    ///    let ptr = s.as_ptr();
+    ///    let mut s = AsciiString::from_ascii("hello").unwrap();
+    ///    let ptr = s.as_mut_ptr();
     ///    let len = s.len();
     ///    let capacity = s.capacity();
     ///
     ///    mem::forget(s);
     ///
-    ///    let s = AsciiString::from_raw_parts(ptr as *mut _, len, capacity);
+    ///    let s = AsciiString::from_raw_parts(ptr, len, capacity);
     ///
     ///    assert_eq!(AsciiString::from_ascii("hello").unwrap(), s);
     /// }
@@ -98,8 +99,8 @@ impl AsciiString {
     pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
         AsciiString {
             // SAFETY: Caller guarantees `buf` was previously allocated by this library,
-            //         that `buf` contains `length` valid ascii elements and has a total
-            //         capacity of `capacity` elements.
+            //         is a unique pointer, `buf` contains `length` valid ascii elements,
+            //         and has a total capacity of `capacity` elements.
             vec: unsafe { Vec::from_raw_parts(buf, length, capacity) },
         }
     }
