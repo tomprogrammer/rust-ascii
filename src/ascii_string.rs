@@ -451,7 +451,7 @@ impl PartialEq<AsciiString> for str {
 
 macro_rules! impl_eq {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a> PartialEq<$rhs> for $lhs {
+        impl PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
                 PartialEq::eq(&**self, &**other)
@@ -462,24 +462,24 @@ macro_rules! impl_eq {
 
 impl_eq! { AsciiString, String }
 impl_eq! { String, AsciiString }
-impl_eq! { &'a AsciiStr, String }
-impl_eq! { String, &'a AsciiStr }
-impl_eq! { &'a AsciiStr, AsciiString }
-impl_eq! { AsciiString, &'a AsciiStr }
-impl_eq! { &'a str, AsciiString }
-impl_eq! { AsciiString, &'a str }
+impl_eq! { &AsciiStr, String }
+impl_eq! { String, &AsciiStr }
+impl_eq! { &AsciiStr, AsciiString }
+impl_eq! { AsciiString, &AsciiStr }
+impl_eq! { &str, AsciiString }
+impl_eq! { AsciiString, &str }
 
 impl Borrow<AsciiStr> for AsciiString {
     #[inline]
     fn borrow(&self) -> &AsciiStr {
-        &*self
+        &**self
     }
 }
 
 impl BorrowMut<AsciiStr> for AsciiString {
     #[inline]
     fn borrow_mut(&mut self) -> &mut AsciiStr {
-        &mut *self
+        &mut **self
     }
 }
 
@@ -599,7 +599,7 @@ impl<'a> From<&'a AsciiStr> for Cow<'a, AsciiStr> {
 impl AsRef<AsciiStr> for AsciiString {
     #[inline]
     fn as_ref(&self) -> &AsciiStr {
-        &*self
+        &**self
     }
 }
 
