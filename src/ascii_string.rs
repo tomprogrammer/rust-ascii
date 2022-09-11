@@ -940,9 +940,9 @@ impl<'a> IntoAsciiString for &'a CStr {
     }
 }
 
-impl<'a, B: ?Sized> IntoAsciiString for Cow<'a, B>
+impl<'a, B> IntoAsciiString for Cow<'a, B>
 where
-    B: 'a + ToOwned,
+    B: 'a + ToOwned + ?Sized,
     &'a B: IntoAsciiString,
     <B as ToOwned>::Owned: IntoAsciiString,
 {
