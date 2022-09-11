@@ -45,3 +45,13 @@ jobs:
         with:
           rust-version: nightly
       - run: cargo test -Zminimal-versions --verbose --all-features
+
+  miri:
+    name: Run tests under `miri` to check for UB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - run: cargo miri test --all-features
