@@ -101,9 +101,9 @@ impl AsciiStr {
     /// assert_eq!(err.unwrap_err().valid_up_to(), 0);
     /// ```
     #[inline]
-    pub fn from_ascii<B: ?Sized>(bytes: &B) -> Result<&AsciiStr, AsAsciiStrError>
+    pub fn from_ascii<B>(bytes: &B) -> Result<&AsciiStr, AsAsciiStrError>
     where
-        B: AsRef<[u8]>,
+        B: AsRef<[u8]> + ?Sized,
     {
         bytes.as_ref().as_ascii_str()
     }
@@ -937,9 +937,9 @@ pub trait AsMutAsciiStr: AsAsciiStr {
 }
 
 // These generic implementations mirror the generic implementations for AsRef<T> in core.
-impl<'a, T: ?Sized> AsAsciiStr for &'a T
+impl<'a, T> AsAsciiStr for &'a T
 where
-    T: AsAsciiStr,
+    T: AsAsciiStr + ?Sized,
 {
     type Inner = <T as AsAsciiStr>::Inner;
     fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
@@ -955,9 +955,9 @@ where
     }
 }
 
-impl<'a, T: ?Sized> AsAsciiStr for &'a mut T
+impl<'a, T> AsAsciiStr for &'a mut T
 where
-    T: AsAsciiStr,
+    T: AsAsciiStr + ?Sized,
 {
     type Inner = <T as AsAsciiStr>::Inner;
     fn slice_ascii<R>(&self, range: R) -> Result<&AsciiStr, AsAsciiStrError>
@@ -973,9 +973,9 @@ where
     }
 }
 
-impl<'a, T: ?Sized> AsMutAsciiStr for &'a mut T
+impl<'a, T> AsMutAsciiStr for &'a mut T
 where
-    T: AsMutAsciiStr,
+    T: AsMutAsciiStr + ?Sized,
 {
     fn slice_ascii_mut<R>(&mut self, range: R) -> Result<&mut AsciiStr, AsAsciiStrError>
     where
