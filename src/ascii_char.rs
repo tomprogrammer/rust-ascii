@@ -970,6 +970,7 @@ mod tests {
 
     #[test]
     fn is_all() {
+        #![allow(clippy::is_digit_ascii_radix)] // testing it
         for byte in 0..128_u8 {
             let ch = byte as char;
             let ascii = AsciiChar::new(ch);
