@@ -64,14 +64,14 @@ impl AsciiString {
     /// This is highly unsafe, due to the number of invariants that aren't checked:
     ///
     /// * The memory at `buf` need to have been previously allocated by the same allocator this
-    ///   library uses.
-    /// * `buf` must be obtained from a valid `&mut` reference to guarentee exclusive ownership.
+    ///   library uses, with an alignment of 1.
     /// * `length` needs to be less than or equal to `capacity`.
     /// * `capacity` needs to be the correct value.
     /// * `buf` must have `length` valid ascii elements and contain a total of `capacity` total,
     ///   possibly, uninitialized, elements.
+    /// * Nothing else must be using the memory `buf` points to.
     ///
-    /// Violating these may cause problems like corrupting the allocator's internal datastructures.
+    /// Violating these may cause problems like corrupting the allocator's internal data structures.
     ///
     /// # Examples
     ///
@@ -98,9 +98,9 @@ impl AsciiString {
     #[must_use]
     pub unsafe fn from_raw_parts(buf: *mut AsciiChar, length: usize, capacity: usize) -> Self {
         AsciiString {
-            // SAFETY: Caller guarantees `buf` was previously allocated by this library,
-            //         is a unique pointer, `buf` contains `length` valid ascii elements,
-            //         and has a total capacity of `capacity` elements.
+            // SAFETY: Caller guarantees that `buf` was previously allocated by this library,
+            //         that `buf` contains `length` valid ascii elements and has a total capacity
+            //         of `capacity` elements, and that nothing else is using the momory.
             vec: unsafe { Vec::from_raw_parts(buf, length, capacity) },
         }
     }
