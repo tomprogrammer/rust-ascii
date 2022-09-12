@@ -452,6 +452,13 @@ impl AsMut<AsciiStr> for [AsciiChar] {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl Clone for Box<AsciiStr> {
+    fn clone(&self) -> Box<AsciiStr> {
+        self.to_ascii_string().into()
+    }
+}
+
 impl<'a> From<&'a AsciiStr> for &'a [AsciiChar] {
     #[inline]
     fn from(astr: &AsciiStr) -> &[AsciiChar] {
@@ -1431,10 +1438,9 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn to_and_from_byte_box() {
-        let s = "abc".as_ascii_str().unwrap().to_ascii_string();
-        let boxed = s.clone().into_boxed_ascii_str();
+        let s = "abc".as_ascii_str().unwrap().to_ascii_string().into_boxed_ascii_str();
         unsafe {
-            let converted = boxed.into_boxed_bytes();
+            let converted = s.clone().into_boxed_bytes();
             assert_eq!(&converted[..], &b"abc"[..]);
             let converted_back = AsciiStr::from_boxed_ascii_bytes_unchecked(converted);
             assert_eq!(&converted_back[..], &s[..]);
