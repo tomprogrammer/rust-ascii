@@ -10,7 +10,7 @@ dependencies section in `Cargo.toml`:
 
 ```toml
 [dependencies]
-ascii = "1.0"
+ascii = "1.1"
 ```
 
 ## Using ascii without libstd
@@ -30,17 +30,17 @@ just add the following dependency declaration in `Cargo.toml`:
 
 ```toml
 [dependencies]
-ascii = { version = "1.0", default-features = false, features = ["alloc"] }
+ascii = { version = "1.1", default-features = false, features = ["alloc"] }
 ```
 
 ## Minimum supported Rust version
 
-The minimum Rust version for 1.0.\* releases is 1.33.0.
+The minimum Rust version for 1.1.\* releases is 1.41.1.
 Later 1.y.0 releases might require newer Rust versions, but the three most
 recent stable releases at the time of publishing will always be supported.  
-For example this means that if the current stable Rust version is 1.38 when
-ascii 1.1.0 is released, then ascii 1.1.\* will not require a newer
-Rust version than 1.36.
+For example this means that if the current stable Rust version is 1.70 when
+ascii 1.2.0 is released, then ascii 1.2.\* will not require a newer
+Rust version than 1.68.
 
 ## History
 

@@ -1,3 +1,13 @@
+Version 1.1.0 (2022-09-18)
+==========================
+* Add alloc feature.
+  This enables `AsciiString` and methods that take or return `Box<[AsciiStr]>` in `!#[no_std]`-mode.
+* Add `AsciiStr::into_ascii_string()`, `AsciiString::into_boxed_ascii_str()` and `AsciiString::insert_str()`.
+* Implement `From<Box<AsciiStr>>` and `From<AsciiChar>` for `AsciiString`.
+* Implement `From<AsciiString>` for `Box<AsciiStr>`, `Rc<AsciiStr>`, `Arc<AsciiStr>` and `Vec<AsciiChar>`.
+* Make `AsciiString::new()`, `AsciiStr::len()` and `AsciiStr::is_empty()` `const fn`. 
+* Require Rust 1.44.1.
+
 Version 1.0.0 (2019-08-26)
 ==========================
 
