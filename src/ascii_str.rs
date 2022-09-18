@@ -2,7 +2,7 @@
 use alloc::borrow::ToOwned;
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
-use core::fmt;
+use core::{fmt, mem};
 use core::ops::{Index, IndexMut};
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use core::slice::{self, Iter, IterMut, SliceIndex};
@@ -28,20 +28,37 @@ pub struct AsciiStr {
 }
 
 impl AsciiStr {
+    /// Coerces into an `AsciiStr` slice.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::{AsciiChar, AsciiStr};
+    /// const HELLO: &AsciiStr = AsciiStr::new(
+    ///     &[AsciiChar::H, AsciiChar::e, AsciiChar::l, AsciiChar::l, AsciiChar::o]
+    /// );
+    ///
+    /// assert_eq!(HELLO.as_str(), "Hello");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn new(s: &[AsciiChar]) -> &Self {
+        unsafe { mem::transmute(s) }
+    }
+
     /// Converts `&self` to a `&str` slice.
     #[inline]
     #[must_use]
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         // SAFETY: All variants of `AsciiChar` are valid bytes for a `str`.
-        unsafe { &*(self as *const AsciiStr as *const str) }
+        unsafe { mem::transmute(self) }
     }
 
     /// Converts `&self` into a byte slice.
     #[inline]
     #[must_use]
-    pub fn as_bytes(&self) -> &[u8] {
+    pub const fn as_bytes(&self) -> &[u8] {
         // SAFETY: All variants of `AsciiChar` are valid `u8`, given they're `repr(u8)`.
-        unsafe { &*(self as *const AsciiStr as *const [u8]) }
+        unsafe { mem::transmute(self) }
     }
 
     /// Returns the entire string as slice of `AsciiChar`s.
@@ -106,6 +123,53 @@ impl AsciiStr {
         B: AsRef<[u8]> + ?Sized,
     {
         bytes.as_ref().as_ascii_str()
+    }
+
+    /// Convert a byte slice innto an `AsciiStr`.
+    ///
+    /// [`from_ascii()`](#method.from_ascii) should be preferred outside of `const` contexts
+    /// as it might be faster due to using functions that are not `const fn`.
+    ///
+    /// # Errors
+    /// Returns `Err` if not all bytes are valid ASCII values.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// assert!(AsciiStr::from_ascii_bytes(b"\x00\x22\x44").is_ok());
+    /// assert!(AsciiStr::from_ascii_bytes(b"\x66\x77\x88").is_err());
+    /// ```
+    pub const fn from_ascii_bytes(b: &[u8]) -> Result<&Self, AsAsciiStrError> {
+        #![allow(clippy::indexing_slicing)] // .get() is not const yes (as of Rust 1.61)
+        let mut valid = 0;
+        loop {
+            if valid == b.len() {
+                // SAFETY: `is_ascii` having returned true for all bytes guarantees all bytes are within ascii range.
+                return unsafe { Ok(mem::transmute(b)) };
+            } else if b[valid].is_ascii() {
+                valid += 1;
+            } else {
+                return Err(AsAsciiStrError(valid));
+            }
+        }
+    }
+
+    /// Convert a `str` innto an `AsciiStr`.
+    ///
+    /// [`from_ascii()`](#method.from_ascii) should be preferred outside of `const` contexts
+    /// as it might be faster due to using functions that are not `const fn`.
+    ///
+    /// # Errors
+    /// Returns `Err` if it contains non-ASCII codepoints.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiStr;
+    /// assert!(AsciiStr::from_ascii_str("25 C").is_ok());
+    /// assert!(AsciiStr::from_ascii_str("35°C").is_err());
+    /// ```
+    pub const fn from_ascii_str(s: &str) -> Result<&Self, AsAsciiStrError> {
+        Self::from_ascii_bytes(s.as_bytes())
     }
 
     /// Converts anything that can be represented as a byte slice to an `AsciiStr` without checking
@@ -214,7 +278,7 @@ impl AsciiStr {
     /// assert_eq!("white \tspace", example.trim());
     /// ```
     #[must_use]
-    pub fn trim(&self) -> &Self {
+    pub const fn trim(&self) -> &Self {
         self.trim_start().trim_end()
     }
 
@@ -227,14 +291,16 @@ impl AsciiStr {
     /// assert_eq!("white \tspace  \t", example.trim_start());
     /// ```
     #[must_use]
-    pub fn trim_start(&self) -> &Self {
-        let whitespace_len = self
-            .chars()
-            .position(|ch| !ch.is_whitespace())
-            .unwrap_or_else(|| self.len());
-
-        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice.
-        unsafe { self.as_slice().get_unchecked(whitespace_len..).into() }
+    pub const fn trim_start(&self) -> &Self {
+        let mut trimmed = &self.slice;
+        while let Some((first, rest)) = trimmed.split_first() {
+            if first.is_whitespace() {
+                trimmed = rest;
+            } else {
+                break;
+            }
+        }
+        AsciiStr::new(trimmed)
     }
 
     /// Returns an ASCII string slice with trailing whitespace removed.
@@ -246,20 +312,16 @@ impl AsciiStr {
     /// assert_eq!("  \twhite \tspace", example.trim_end());
     /// ```
     #[must_use]
-    pub fn trim_end(&self) -> &Self {
-        // Number of whitespace characters counting from the end
-        let whitespace_len = self
-            .chars()
-            .rev()
-            .position(|ch| !ch.is_whitespace())
-            .unwrap_or_else(|| self.len());
-
-        // SAFETY: `whitespace_len` is `0..=len`, which is at most `len`, which is a valid empty slice, and at least `0`, which is the whole slice.
-        unsafe {
-            self.as_slice()
-                .get_unchecked(..self.len() - whitespace_len)
-                .into()
+    pub const fn trim_end(&self) -> &Self {
+        let mut trimmed = &self.slice;
+        while let Some((last, rest)) = trimmed.split_last() {
+            if last.is_whitespace() {
+                trimmed = rest;
+            } else {
+                break;
+            }
         }
+        AsciiStr::new(trimmed)
     }
 
     /// Compares two strings case-insensitively.

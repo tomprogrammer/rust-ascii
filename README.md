@@ -35,11 +35,11 @@ ascii = { version = "1.1", default-features = false, features = ["alloc"] }
 
 ## Minimum supported Rust version
 
-The minimum Rust version for 1.1.\* releases is 1.41.1.
+The minimum Rust version for 1.2.\* releases is 1.56.1.
 Later 1.y.0 releases might require newer Rust versions, but the three most
 recent stable releases at the time of publishing will always be supported.  
 For example this means that if the current stable Rust version is 1.70 when
-ascii 1.2.0 is released, then ascii 1.2.\* will not require a newer
+ascii 1.3.0 is released, then ascii 1.3.\* will not require a newer
 Rust version than 1.68.
 
 ## History

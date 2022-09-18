@@ -360,6 +360,32 @@ impl AsciiChar {
         ALL[ch as usize]
     }
 
+    /// Create an `AsciiChar` from a `char`, in a `const fn` way.
+    ///
+    /// Within non-`const fn` functions the more general
+    /// [`from_ascii()`](#method.from_ascii) should be used instead.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ascii::AsciiChar;
+    /// assert!(AsciiChar::try_new('-').is_ok());
+    /// assert!(AsciiChar::try_new('—').is_err());
+    /// assert_eq!(AsciiChar::try_new('\x7f'), Ok(AsciiChar::DEL));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Fails for non-ASCII characters.
+    #[inline]
+    pub const fn try_new(ch: char) -> Result<Self, ToAsciiCharError> {
+        unsafe {
+            match ch as u32 {
+                0..=127 => Ok(mem::transmute(ch as u8)),
+                _ => Err(ToAsciiCharError(())),
+            }
+        }
+    }
+
     /// Constructs an ASCII character from a `u8`, `char` or other character
     /// type without any checks.
     ///
@@ -375,9 +401,9 @@ impl AsciiChar {
     /// and `Some(AsciiChar::from_ascii_unchecked(128))` might be `None`.
     #[inline]
     #[must_use]
-    pub unsafe fn from_ascii_unchecked(ch: u8) -> Self {
+    pub const unsafe fn from_ascii_unchecked(ch: u8) -> Self {
         // SAFETY: Caller guarantees `ch` is within bounds of ascii.
-        unsafe { ch.to_ascii_char_unchecked() }
+        unsafe { mem::transmute(ch) }
     }
 
     /// Converts an ASCII character into a `u8`.
@@ -411,7 +437,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_alphabetic(self) -> bool {
-        (self.to_not_upper() >= b'a') & (self.to_not_upper() <= b'z')
+        (self.to_not_upper() >= b'a') && (self.to_not_upper() <= b'z')
     }
 
     /// Check if the character is a letter (a-z, A-Z).
@@ -457,14 +483,14 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_digit(&self) -> bool {
-        (*self as u8 >= b'0') & (*self as u8 <= b'9')
+        (*self as u8 >= b'0') && (*self as u8 <= b'9')
     }
 
     /// Check if the character is a letter or number
     #[inline]
     #[must_use]
     pub const fn is_alphanumeric(self) -> bool {
-        self.is_alphabetic() | self.is_ascii_digit()
+        self.is_alphabetic() || self.is_ascii_digit()
     }
 
     /// Check if the character is a letter or number
@@ -491,7 +517,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_blank(&self) -> bool {
-        (*self as u8 == b' ') | (*self as u8 == b'\t')
+        (*self as u8 == b' ') || (*self as u8 == b'\t')
     }
 
     /// Check if the character one of ' ', '\t', '\n', '\r',
@@ -500,7 +526,7 @@ impl AsciiChar {
     #[must_use]
     pub const fn is_whitespace(self) -> bool {
         let b = self as u8;
-        self.is_ascii_blank() | (b == b'\n') | (b == b'\r') | (b == 0x0b) | (b == 0x0c)
+        self.is_ascii_blank() || (b == b'\n') || (b == b'\r') || (b == 0x0b) || (b == 0x0c)
     }
 
     /// Check if the character is a ' ', '\t', '\n', '\r' or '\0xc' (form feed).
@@ -510,9 +536,9 @@ impl AsciiChar {
     #[must_use]
     pub const fn is_ascii_whitespace(&self) -> bool {
         self.is_ascii_blank()
-            | (*self as u8 == b'\n')
-            | (*self as u8 == b'\r')
-            | (*self as u8 == 0x0c/*form feed*/)
+            || (*self as u8 == b'\n')
+            || (*self as u8 == b'\r')
+            || (*self as u8 == 0x0c/*form feed*/)
     }
 
     /// Check if the character is a control character
@@ -530,7 +556,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_control(&self) -> bool {
-        ((*self as u8) < b' ') | (*self as u8 == 127)
+        ((*self as u8) < b' ') || (*self as u8 == 127)
     }
 
     /// Checks if the character is printable (except space)
@@ -624,7 +650,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_punctuation(&self) -> bool {
-        self.is_ascii_graphic() & !self.is_alphanumeric()
+        self.is_ascii_graphic() && !self.is_alphanumeric()
     }
 
     /// Checks if the character is a valid hex digit
@@ -641,7 +667,7 @@ impl AsciiChar {
     #[inline]
     #[must_use]
     pub const fn is_ascii_hexdigit(&self) -> bool {
-        self.is_ascii_digit() | ((*self as u8 | 0x20_u8).wrapping_sub(b'a') < 6)
+        self.is_ascii_digit() || ((*self as u8 | 0x20u8).wrapping_sub(b'a') < 6)
     }
 
     /// Unicode has printable versions of the ASCII control codes, like '␛'.
@@ -659,14 +685,15 @@ impl AsciiChar {
     /// assert_eq!(AsciiChar::new('p').as_printable_char(), 'p');
     /// ```
     #[must_use]
-    pub fn as_printable_char(self) -> char {
+    pub const fn as_printable_char(self) -> char {
+        #![allow(clippy::transmute_int_to_char)] // from_utf32_unchecked() is not const fn yet.
         match self as u8 {
             // Non printable characters
             // SAFETY: From codepoint 0x2400 ('␀') to 0x241f (`␟`), there are characters representing
             //         the unprintable characters from 0x0 to 0x1f, ordered correctly.
             //         As `b` is guaranteed to be within 0x0 to 0x1f, the conversion represents a
             //         valid character.
-            b @ 0x0..=0x1f => unsafe { char::from_u32_unchecked(u32::from('␀') + u32::from(b)) },
+            b @ 0x0..=0x1f => unsafe { mem::transmute('␀' as u32 + b as u32) },
 
             // 0x7f (delete) has it's own character at codepoint 0x2420, not 0x247f, so it is special
             // cased to return it's character
@@ -728,7 +755,7 @@ impl AsciiChar {
     #[must_use]
     pub const fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         (self.as_byte() == other.as_byte())
-            | (self.is_alphabetic() & (self.to_not_upper() == other.to_not_upper()))
+            || (self.is_alphabetic() && (self.to_not_upper() == other.to_not_upper()))
     }
 }
 
