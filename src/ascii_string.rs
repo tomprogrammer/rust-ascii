@@ -308,6 +308,7 @@ impl AsciiString {
     ///
     /// # Examples
     /// ```
+    /// # #![allow(bindings_with_variant_name)]
     /// # use ascii::AsciiString;
     /// let mut s = AsciiString::from_ascii("foo").unwrap();
     /// assert_eq!(s.pop().map(|c| c.as_char()), Some('o'));
