@@ -295,6 +295,7 @@ impl AsciiChar {
     ///
     /// # Example
     /// ```
+    /// # #![allow(bindings_with_variant_name)]
     /// # use ascii::AsciiChar;
     /// let a = AsciiChar::from_ascii('g').unwrap();
     /// assert_eq!(a.as_char(), 'g');
