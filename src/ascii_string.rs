@@ -473,14 +473,15 @@ impl_eq! { AsciiString, &str }
 impl Borrow<AsciiStr> for AsciiString {
     #[inline]
     fn borrow(&self) -> &AsciiStr {
-        &**self
+        self
     }
 }
 
 impl BorrowMut<AsciiStr> for AsciiString {
     #[inline]
     fn borrow_mut(&mut self) -> &mut AsciiStr {
-        &mut **self
+        #![allow(clippy::explicit_auto_deref)] // would cause infinite recursion
+        self
     }
 }
 
@@ -1045,6 +1046,15 @@ mod tests {
         let sparkle_heart_bytes = [240, 159, 146, 150];
         let sparkle_heart = str::from_utf8(&sparkle_heart_bytes).unwrap();
         assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
+    }
+
+    #[test]
+    fn borrow() {
+        let mut s = AsciiString::from_ascii(&[b'1', b'2', b'3'][..]).unwrap();
+        let borrowed: &AsciiStr = &s;
+        assert_eq!(borrowed.len(), s.len());
+        let borrowed: &AsciiStr = &mut s;
+        assert_eq!(borrowed.len(), s.len());
     }
 
     #[test]

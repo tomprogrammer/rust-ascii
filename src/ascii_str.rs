@@ -104,7 +104,7 @@ impl AsciiStr {
         AsciiString::from(self.slice.to_vec())
     }
 
-    /// for compatibility with `str`
+    // for compatibility with `str`
     #[cfg(feature = "alloc")]
     #[must_use]
     pub fn into_boxed_bytes(self: Box<Self>) -> Box<[u8]> {
@@ -112,6 +112,12 @@ impl AsciiStr {
     }
 
     /// Convert a `Box<[u8]>` to `Box<AsciiStr>` without allocating.
+    ///
+    /// # Safety
+    ///
+    /// The box must only contain ASCII bytes
+    /// If any of the bytes in `bytes` do not represent valid ascii characters, calling
+    /// this function is undefined behavior.
     #[cfg(feature = "alloc")]
     #[must_use]
     pub unsafe fn from_boxed_ascii_bytes_unchecked(box_not_checked: Box<[u8]>) -> Box<Self> {
@@ -1636,12 +1642,12 @@ mod tests {
                 assert_eq!(asciis.size_hint(), strs.size_hint());
                 let (a, s) = (asciis.next(), strs.next());
                 assert_eq!(a, s);
-                if a == None {
+                if a.is_none() {
                     break;
                 }
             }
             // test fusedness if str's version is fused
-            if strs.next() == None {
+            if strs.next().is_none() {
                 assert_eq!(asciis.next(), None);
             }
         }

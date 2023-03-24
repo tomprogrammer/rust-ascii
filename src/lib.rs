@@ -47,6 +47,10 @@
 #![allow(clippy::shadow_unrelated, clippy::shadow_reuse, clippy::shadow_same)]
 // A `if let` / `else` sometimes looks better than using iterator adaptors
 #![allow(clippy::option_if_let_else)]
+// 
+#![allow(clippy::uninlined_format_args)]
+// #[default]-on-enum-variant was added in 1.66.0.
+#![allow(clippy::derivable_impls)]
 // In tests, we're fine with indexing, since a panic is a failure.
 #![cfg_attr(test, allow(clippy::indexing_slicing))]
 // for compatibility with methods on char and u8
