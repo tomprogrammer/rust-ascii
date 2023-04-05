@@ -104,6 +104,20 @@ impl AsciiStr {
         AsciiString::from(self.slice.to_vec())
     }
 
+    /// for compatibility with `str`
+    #[cfg(feature = "alloc")]
+    #[must_use]
+    pub fn into_boxed_bytes(self: Box<Self>) -> Box<[u8]> {
+        self.into()
+    }
+
+    /// Convert a `Box<[u8]>` to `Box<AsciiStr>` without allocating.
+    #[cfg(feature = "alloc")]
+    #[must_use]
+    pub unsafe fn from_boxed_ascii_bytes_unchecked(box_not_checked: Box<[u8]>) -> Box<Self> {
+        Box::from_raw(Box::into_raw(box_not_checked) as *mut AsciiStr)
+    }
+
     /// Converts anything that can represent a byte slice into an `AsciiStr`.
     ///
     /// # Errors
@@ -497,6 +511,13 @@ impl AsMut<AsciiStr> for [AsciiChar] {
     #[inline]
     fn as_mut(&mut self) -> &mut AsciiStr {
         self.into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl Clone for Box<AsciiStr> {
+    fn clone(&self) -> Box<AsciiStr> {
+        self.to_ascii_string().into()
     }
 }
 
@@ -1474,6 +1495,18 @@ mod tests {
         let v = AsciiStr::from_ascii(b).unwrap();
         assert_eq!(v.as_bytes(), b"( ;");
         assert_eq!(AsRef::<[u8]>::as_ref(v), b"( ;");
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn to_and_from_byte_box() {
+        let s = "abc".as_ascii_str().unwrap().to_ascii_string().into_boxed_ascii_str();
+        unsafe {
+            let converted = s.clone().into_boxed_bytes();
+            assert_eq!(&converted[..], &b"abc"[..]);
+            let converted_back = AsciiStr::from_boxed_ascii_bytes_unchecked(converted);
+            assert_eq!(&converted_back[..], &s[..]);
+        }
     }
 
     #[test]
