@@ -14,6 +14,7 @@ use std::ffi::CStr;
 use ascii_char::AsciiChar;
 #[cfg(feature = "alloc")]
 use ascii_string::AsciiString;
+use std::str::pattern::{Pattern, ReverseSearcher, Searcher};
 
 /// [`AsciiStr`] represents a byte or string slice that only contains ASCII characters.
 ///
@@ -250,11 +251,13 @@ impl AsciiStr {
     /// assert_eq!(words, ["apple", "banana", "lemon"]);
     /// ```
     #[must_use]
-    pub fn split(&self, on: AsciiChar) -> impl DoubleEndedIterator<Item = &AsciiStr> {
+    pub fn split<T: Pattern>(&self, on: T) -> impl DoubleEndedIterator<Item = &AsciiStr> {
         Split {
-            on,
+            matcher: on.into_searcher(self.as_str()),
             ended: false,
-            chars: self.chars(),
+            start: 0,
+            end: self.len(),
+            allow_trailing_empty: false
         }
     }
 
@@ -724,47 +727,69 @@ impl<'a> DoubleEndedIterator for CharsRef<'a> {
 /// An iterator over parts of an `AsciiStr` separated by an `AsciiChar`.
 ///
 /// This type is created by [`AsciiChar::split()`](struct.AsciiChar.html#method.split).
-#[derive(Clone, Debug)]
-struct Split<'a> {
-    on: AsciiChar,
+struct Split<'a, T> where T: Pattern<'a> {
+    // Safety invariant: matcher.haystack() must be valid ASCII
+    matcher: T::Searcher,
     ended: bool,
-    chars: Chars<'a>,
+    start: usize,
+    end: usize,
+    allow_trailing_empty: bool,
 }
-impl<'a> Iterator for Split<'a> {
+impl<'a, T> Iterator for Split<'a, T> where T: Pattern<'a> {
     type Item = &'a AsciiStr;
 
-    fn next(&mut self) -> Option<&'a AsciiStr> {
+    fn next(&mut self) -> Option<Self::Item> {
         if !self.ended {
-            let start: &AsciiStr = self.chars.as_str();
-            let split_on = self.on;
-
-            if let Some(at) = self.chars.position(|ch| ch == split_on) {
-                // SAFETY: `at` is guaranteed to be in bounds, as `position` returns `Ok(0..len)`.
-                Some(unsafe { start.as_slice().get_unchecked(..at).into() })
-            } else {
-                self.ended = true;
-                Some(start)
+            let haystack = self.matcher.haystack();
+            match self.matcher.next_match() {
+                // SAFETY: `Searcher` guarantees that `a` and `b` lie on unicode boundaries.
+                Some((a, b)) => unsafe {
+                    let elt = haystack.get_unchecked(self.start..a);
+                    self.start = b;
+                    // SAFETY: Value given to matcher is guaranteed ASCII, so any slice of it is
+                    //         ASCII as well
+                    Some(AsciiStr::from_ascii_unchecked(elt.as_bytes()))
+                },
+                None => self.get_end(),
             }
         } else {
             None
         }
     }
 }
-impl<'a> DoubleEndedIterator for Split<'a> {
-    fn next_back(&mut self) -> Option<&'a AsciiStr> {
-        if !self.ended {
-            let start: &AsciiStr = self.chars.as_str();
-            let split_on = self.on;
+impl<'a, T> DoubleEndedIterator for Split<'a, T> where T: Pattern<'a>, T::Searcher: ReverseSearcher<'a>, {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.ended {
+            return None;
+        }
 
-            if let Some(at) = self.chars.rposition(|ch| ch == split_on) {
-                // SAFETY: `at` is guaranteed to be in bounds, as `rposition` returns `Ok(0..len)`, and slices `1..`, `2..`, etc... until `len..` inclusive, are valid.
-                Some(unsafe { start.as_slice().get_unchecked(at + 1..).into() })
-            } else {
-                self.ended = true;
-                Some(start)
+        if !self.allow_trailing_empty {
+            self.allow_trailing_empty = true;
+            match self.next_back() {
+                Some(elt) if !elt.is_empty() => return Some(elt),
+                _ => {
+                    if self.ended {
+                        return None;
+                    }
+                }
             }
-        } else {
-            None
+        }
+
+        let haystack = self.matcher.haystack();
+        match self.matcher.next_match_back() {
+            // SAFETY: `haystack` is always ASCII, so all indices are valid
+            Some((a, b)) => unsafe {
+                let elt = haystack.get_unchecked(b..self.end);
+                self.end = a;
+                // SAFETY: Value given to matcher is guaranteed ASCII, so any slice of it is
+                //         ASCII as well
+                Some(AsciiStr::from_ascii_unchecked(elt.as_bytes()))
+            },
+            // SAFETY: `haystack` is always ASCII, so all indices are valid
+            None => unsafe {
+                self.ended = true;
+                Some(haystack.get_unchecked(self.start..self.end))
+            },
         }
     }
 }
