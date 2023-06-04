@@ -474,14 +474,14 @@ impl_eq! { AsciiString, &str }
 impl Borrow<AsciiStr> for AsciiString {
     #[inline]
     fn borrow(&self) -> &AsciiStr {
-        &**self
+        self
     }
 }
 
 impl BorrowMut<AsciiStr> for AsciiString {
     #[inline]
     fn borrow_mut(&mut self) -> &mut AsciiStr {
-        &mut **self
+        self
     }
 }
 
@@ -594,7 +594,7 @@ impl<'a> From<&'a AsciiStr> for Cow<'a, AsciiStr> {
 impl AsRef<AsciiStr> for AsciiString {
     #[inline]
     fn as_ref(&self) -> &AsciiStr {
-        &**self
+        self
     }
 }
 
@@ -1046,6 +1046,24 @@ mod tests {
         let sparkle_heart_bytes = [240, 159, 146, 150];
         let sparkle_heart = str::from_utf8(&sparkle_heart_bytes).unwrap();
         assert!(fmt::write(&mut s2, format_args!("{}", sparkle_heart)).is_err());
+    }
+
+    #[test]
+    fn as_ref() {
+        let mut s = AsciiString::from_ascii(&[b'a', b'b', b'c'][..]).unwrap();
+        let as_ref: &AsciiStr = s.as_ref();
+        assert_eq!(as_ref, AsciiStr::from_ascii_str("abc").unwrap());
+        let as_mut: &mut AsciiStr = s.as_mut();
+        assert_eq!(as_mut.len(), s.len());
+    }
+
+    #[test]
+    fn borrow() {
+        let mut s = AsciiString::from_ascii(&[b'1', b'2', b'3'][..]).unwrap();
+        let borrowed: &AsciiStr = &s;
+        assert_eq!(borrowed, AsciiStr::from_ascii_str("123").unwrap());
+        let borrowed: &mut AsciiStr = &mut s;
+        assert_eq!(borrowed.len(), s.len());
     }
 
     #[test]

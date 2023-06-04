@@ -47,10 +47,16 @@
 #![allow(clippy::shadow_unrelated, clippy::shadow_reuse, clippy::shadow_same)]
 // A `if let` / `else` sometimes looks better than using iterator adaptors
 #![allow(clippy::option_if_let_else)]
+// 
+#![allow(clippy::uninlined_format_args)]
+// #[default]-on-enum-variant was added in 1.66.0.
+#![allow(clippy::derivable_impls)]
 // In tests, we're fine with indexing, since a panic is a failure.
 #![cfg_attr(test, allow(clippy::indexing_slicing))]
 // for compatibility with methods on char and u8
 #![allow(clippy::trivially_copy_pass_by_ref)]
+// requires 1.65, might not be worth it
+#![allow(clippy::manual_let_else)]
 // In preparation for feature `unsafe_block_in_unsafe_fn` (https://github.com/rust-lang/rust/issues/71668)
 #![allow(unused_unsafe)]
 
