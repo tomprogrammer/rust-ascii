@@ -1603,12 +1603,12 @@ mod tests {
                 assert_eq!(asciis.size_hint(), strs.size_hint());
                 let (a, s) = (asciis.next(), strs.next());
                 assert_eq!(a, s);
-                if a == None {
+                if a.is_none() {
                     break;
                 }
             }
             // test fusedness if str's version is fused
-            if strs.next() == None {
+            if strs.next().is_none() {
                 assert_eq!(asciis.next(), None);
             }
         }
