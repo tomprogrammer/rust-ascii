@@ -371,6 +371,42 @@ impl AsciiChar {
         ALL[ch as usize]
     }
 
+    /// Converts a digit in base 36 to an `AsciiChar`.
+    ///
+    /// This is ASCII version of `char::from_digit(digit, 36)` call.
+    ///
+    /// `from_digit()` will return `None` if the input is greater or equal 36.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ascii::AsciiChar;
+    /// assert_eq!(AsciiChar::from_digit(5), Some(AsciiChar::_5));
+    /// assert_eq!(AsciiChar::from_digit(15), Some(AsciiChar::f));
+    /// assert_eq!(AsciiChar::from_digit(25), Some(AsciiChar::p));
+    /// assert_eq!(AsciiChar::from_digit(37), None);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn from_digit(digit: u32) -> Option<Self> {
+        // It's restricted to this function, and without it
+        // we'd need to specify `AsciiChar::` or `Self::` 37 times.
+        #[allow(clippy::enum_glob_use)]
+        use AsciiChar::*;
+
+        #[rustfmt::skip]
+        const ALL: [AsciiChar; 36] = [
+            _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, a, b, c, d, e, f,
+            g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z,
+        ];
+
+        if digit < 36 {
+            Some(ALL[digit as usize])
+        } else {
+            None
+        }
+    }
+
     /// Create an `AsciiChar` from a `char`, in a `const fn` way.
     ///
     /// Within non-`const fn` functions the more general
@@ -794,8 +830,8 @@ macro_rules! impl_into_partial_eq_ord {
     ($wider:ty, $to_wider:expr) => {
         impl From<AsciiChar> for $wider {
             #[inline]
-            fn from(a: AsciiChar) -> $wider {
-                $to_wider(a)
+            fn from(ch: AsciiChar) -> $wider {
+                $to_wider(ch)
             }
         }
         impl PartialEq<$wider> for AsciiChar {
