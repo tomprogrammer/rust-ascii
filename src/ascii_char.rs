@@ -431,6 +431,18 @@ impl AsciiChar {
         self as u8 as char
     }
 
+    /// Converts an ASCII character into a `&str`.
+    #[inline]
+    pub const fn as_str(&self) -> &str {
+        unsafe {
+            // SAFETY: Self is repr(u8) so casting *const Self to *const u8 is valid,
+            // and casting a *const T to *const [T; 1] is always valid (see core::array::from_ref).
+            let slice = &*(self as *const Self as *const [u8; 1]);
+            // SAFETY: an ASCII char is always valid UTF-8
+            core::str::from_utf8_unchecked(slice)
+        }
+    }
+
     // the following methods are like ctype, and the implementation is inspired by musl.
     // The ascii_ methods take self by reference for maximum compatibility
     // with the corresponding methods on u8 and char.
@@ -997,6 +1009,11 @@ mod tests {
     fn as_byte_and_char() {
         assert_eq!(AsciiChar::A.as_byte(), b'A');
         assert_eq!(AsciiChar::A.as_char(), 'A');
+    }
+
+    #[test]
+    fn as_str() {
+        assert_eq!(AsciiChar::A.as_str(), "A");
     }
 
     #[test]
