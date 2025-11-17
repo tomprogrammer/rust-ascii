@@ -466,6 +466,22 @@ impl<'a> From<&'a mut [AsciiChar]> for &'a mut AsciiStr {
         unsafe { &mut *ptr }
     }
 }
+impl<'a, const N: usize> From<&'a [AsciiChar; N]> for &'a AsciiStr {
+    #[inline]
+    fn from(array: &[AsciiChar; N]) -> &AsciiStr {
+        let slice = array.as_slice();
+        let ptr = slice as *const [AsciiChar] as *const AsciiStr;
+        unsafe { &*ptr }
+    }
+}
+impl<'a, const N: usize> From<&'a mut [AsciiChar; N]> for &'a mut AsciiStr {
+    #[inline]
+    fn from(array: &mut [AsciiChar; N]) -> &mut AsciiStr {
+        let slice = array.as_mut_slice();
+        let ptr = slice as *mut [AsciiChar] as *mut AsciiStr;
+        unsafe { &mut *ptr }
+    }
+}
 #[cfg(feature = "alloc")]
 impl From<Box<[AsciiChar]>> for Box<AsciiStr> {
     #[inline]
@@ -494,6 +510,18 @@ impl AsRef<AsciiStr> for [AsciiChar] {
     }
 }
 impl AsMut<AsciiStr> for [AsciiChar] {
+    #[inline]
+    fn as_mut(&mut self) -> &mut AsciiStr {
+        self.into()
+    }
+}
+impl<const N: usize> AsRef<AsciiStr> for [AsciiChar; N] {
+    #[inline]
+    fn as_ref(&self) -> &AsciiStr {
+        self.into()
+    }
+}
+impl<const N: usize> AsMut<AsciiStr> for [AsciiChar; N] {
     #[inline]
     fn as_mut(&mut self) -> &mut AsciiStr {
         self.into()
@@ -1310,9 +1338,9 @@ mod tests {
         }
 
         let arr = [AsciiChar::A];
-        let ascii_str = arr.as_ref().into();
+        let ascii_str = arr.as_ref();
         let mut mut_arr = arr; // Note: We need a second copy to prevent overlapping mutable borrows.
-        let mut_ascii_str = mut_arr.as_mut().into();
+        let mut_ascii_str = mut_arr.as_mut();
         let mut_arr_mut_ref: &mut [AsciiChar] = &mut [AsciiChar::A];
         let mut string_bytes = [b'A'];
         let string_mut = unsafe { core::str::from_utf8_unchecked_mut(&mut string_bytes) }; // SAFETY: 'A' is a valid string.
@@ -1345,7 +1373,7 @@ mod tests {
             c.as_ascii_str()
         }
         let arr = [AsciiChar::A];
-        let ascii_str: &AsciiStr = arr.as_ref().into();
+        let ascii_str: &AsciiStr = arr.as_ref();
         let cstr = CString::new("A").unwrap();
         assert_eq!(generic(&*cstr), Ok(ascii_str));
     }
@@ -1359,10 +1387,10 @@ mod tests {
         }
 
         let mut arr_mut = [AsciiChar::B];
-        let mut ascii_str_mut: &mut AsciiStr = arr_mut.as_mut().into();
+        let mut ascii_str_mut: &mut AsciiStr = arr_mut.as_mut();
         // Need a second reference to prevent overlapping mutable borrows
         let mut arr_mut_2 = [AsciiChar::B];
-        let ascii_str_mut_2: &mut AsciiStr = arr_mut_2.as_mut().into();
+        let ascii_str_mut_2: &mut AsciiStr = arr_mut_2.as_mut();
         assert_eq!(generic_mut(&mut ascii_str_mut), Ok(&mut *ascii_str_mut_2));
         assert_eq!(generic_mut(ascii_str_mut), Ok(&mut *ascii_str_mut_2));
     }

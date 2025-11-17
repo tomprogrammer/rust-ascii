@@ -17,7 +17,7 @@
 //!
 //! The minimum Rust version for 1.2.\* releases is 1.56.1.
 //! Later 1.y.0 releases might require newer Rust versions, but the three most
-//! recent stable releases at the time of publishing will always be supported.  
+//! recent stable releases at the time of publishing will always be supported.
 //! For example this means that if the current stable Rust version is 1.70 when
 //! ascii 1.3.0 is released, then ascii 1.3.\* will not require a newer
 //! Rust version than 1.68.
@@ -80,3 +80,72 @@ pub use ascii_str::{Chars, CharsMut, CharsRef};
 #[cfg(feature = "alloc")]
 pub use ascii_string::{AsciiString, FromAsciiError, IntoAsciiString};
 pub use free_functions::{caret_decode, caret_encode};
+
+extern crate ascii_macros;
+
+/// Creates a `&'static [AsciiChar; N]` from a string literal, or an [`AsciiChar`] from a
+/// char literal.
+///
+/// This is identical to how a byte string literal `b"abc"` creates a `&'static [u8; N]`, and a
+/// byte char literal `b"z"` creates a `u8`.
+///
+/// This can be used in `const` contexts. If the string/char is not valid ASCII, produces
+/// a **compile-time error**.
+///
+/// # Examples
+/// ```
+/// # use ascii::{AsciiChar, AsciiStr};
+/// const HELLO: &[AsciiChar; 15] = ascii::literal!("Hello in ASCII!");
+/// assert_eq!(AsciiStr::new(HELLO).as_str(), "Hello in ASCII!");
+/// ```
+///
+/// ```
+/// # use ascii::{AsciiChar, AsciiStr};
+/// // Can also coerce to an `&'static [AsciiChar]`, just like a byte string literal can.
+/// const SLICE: &[AsciiChar] = ascii::literal!("Slice of ASCII\n");
+/// # assert_eq!(AsciiStr::new(SLICE).as_str(), "Slice of ASCII\n");
+/// ```
+///
+/// ```
+/// # use ascii::{AsciiChar, AsciiStr};
+/// // Or directly to a `&AsciiStr`.
+/// const STR: &AsciiStr = AsciiStr::new(ascii::literal!("Str of ASCII"));
+/// # assert_eq!(STR.as_str(), "Str of ASCII");
+/// ```
+///
+/// ```
+/// # use ascii::{AsciiChar, AsciiStr};
+/// // A char literal produces an `AsciiChar`.
+/// const CHAR: AsciiChar = ascii::literal!('@');
+/// # assert_eq!(CHAR, AsciiChar::At);
+/// ```
+///
+/// ```compile_fail
+/// // This doesn't compile!
+/// let oops = ascii_literal::literal!("💥");
+/// ```
+pub use ascii_macros::literal;
+
+#[allow(dead_code)]
+/// ```compile_fail
+/// let _ = ascii::literal!("kaboom 💥");
+/// ```
+fn test_literal_compile_fail_1() {}
+
+#[allow(dead_code)]
+/// ```compile_fail
+/// let _ = ascii::literal!("Torbjørn");
+/// ```
+fn test_literal_compile_fail_2() {}
+
+#[allow(dead_code)]
+/// ```compile_fail
+/// let _ = ascii::literal!('é');
+/// ```
+fn test_literal_compile_fail_3() {}
+
+#[allow(dead_code)]
+/// ```compile_fail
+/// let _ = ascii::literal!(invalid,);
+/// ```
+fn test_literal_compile_fail_4() {}
