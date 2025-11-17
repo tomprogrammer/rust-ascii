@@ -704,7 +704,7 @@ impl AsciiChar {
             //         the unprintable characters from 0x0 to 0x1f, ordered correctly.
             //         As `b` is guaranteed to be within 0x0 to 0x1f, the conversion represents a
             //         valid character.
-            b @ 0x0..=0x1f => unsafe { mem::transmute('␀' as u32 + b as u32) },
+            b @ 0x0..=0x1f => unsafe { char::from_u32_unchecked('␀' as u32 + b as u32) },
 
             // 0x7f (delete) has it's own character at codepoint 0x2420, not 0x247f, so it is special
             // cased to return it's character
@@ -794,8 +794,8 @@ macro_rules! impl_into_partial_eq_ord {
     ($wider:ty, $to_wider:expr) => {
         impl From<AsciiChar> for $wider {
             #[inline]
-            fn from(a: AsciiChar) -> $wider {
-                $to_wider(a)
+            fn from(chr: AsciiChar) -> $wider {
+                $to_wider(chr)
             }
         }
         impl PartialEq<$wider> for AsciiChar {
