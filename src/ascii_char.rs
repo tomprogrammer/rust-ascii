@@ -468,15 +468,15 @@ impl AsciiChar {
     ///
     /// # Panics
     ///
-    /// Radixes greater than 36 are not supported and will result in a panic.
+    /// Panics if given a radix smaller than 2 or larger than 36.
     #[must_use]
     pub fn is_digit(self, radix: u32) -> bool {
         match (self as u8, radix) {
-            (b'0'..=b'9', 0..=36) => u32::from(self as u8 - b'0') < radix,
+            (b'0'..=b'9', 2..=36) => u32::from(self as u8 - b'0') < radix,
             (b'a'..=b'z', 11..=36) => u32::from(self as u8 - b'a') < radix - 10,
             (b'A'..=b'Z', 11..=36) => u32::from(self as u8 - b'A') < radix - 10,
-            (_, 0..=36) => false,
-            (_, _) => panic!("radixes greater than 36 are not supported"),
+            (_, 2..=36) => false,
+            (_, _) => panic!("radix must be in the range 2 to 36 inclusive"),
         }
     }
 
@@ -1050,15 +1050,22 @@ mod tests {
 
     #[test]
     fn is_digit_strange_radixes() {
-        assert_eq!(AsciiChar::_0.is_digit(0), '0'.is_digit(0));
-        assert_eq!(AsciiChar::_0.is_digit(1), '0'.is_digit(1));
+        assert_eq!(AsciiChar::_0.is_digit(2), '0'.is_digit(2));
+        assert_eq!(AsciiChar::_1.is_digit(2), '1'.is_digit(2));
+        assert_eq!(AsciiChar::_2.is_digit(2), '2'.is_digit(2));
         assert_eq!(AsciiChar::_5.is_digit(5), '5'.is_digit(5));
         assert_eq!(AsciiChar::z.is_digit(35), 'z'.is_digit(35));
     }
 
     #[test]
     #[should_panic]
-    fn is_digit_bad_radix() {
+    fn is_digit_bad_radix_small() {
+        let _ = AsciiChar::_0.is_digit(1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn is_digit_bad_radix_big() {
         let _ = AsciiChar::_7.is_digit(37);
     }
 
