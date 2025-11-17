@@ -226,7 +226,7 @@ impl AsciiStr {
     /// Returns an iterator over the characters of the `AsciiStr`.
     #[inline]
     #[must_use]
-    pub fn chars(&self) -> Chars {
+    pub fn chars(&self) -> Chars<'_> {
         Chars(self.slice.iter())
     }
 
@@ -234,7 +234,7 @@ impl AsciiStr {
     /// value of each `AsciiChar`.
     #[inline]
     #[must_use]
-    pub fn chars_mut(&mut self) -> CharsMut {
+    pub fn chars_mut(&mut self) -> CharsMut<'_> {
         CharsMut(self.slice.iter_mut())
     }
 
