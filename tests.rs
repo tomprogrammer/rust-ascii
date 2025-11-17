@@ -148,3 +148,19 @@ fn extend_from_iterator() {
     s.extend(&[AsciiChar::LineFeed]);
     assert_eq!(s, "abcabconetwothreeASCIIASCIIASCII\n");
 }
+
+#[test]
+fn literal() {
+    use ascii::literal;
+
+    const MESSAGE: &[AsciiChar; 15] = literal!("Hello in ASCII!");
+    let ascii_str: &AsciiStr = MESSAGE.into();
+    assert_eq!(ascii_str.as_str(), "Hello in ASCII!");
+
+    const EMPTY: &[AsciiChar; 0] = literal!("");
+    let ascii_str: &AsciiStr = EMPTY.into();
+    assert_eq!(ascii_str.as_str(), "");
+
+    const CHAR: AsciiChar = literal!('Z');
+    assert_eq!(CHAR.as_byte(), b'Z');
+}
